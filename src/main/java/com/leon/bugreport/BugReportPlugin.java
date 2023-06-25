@@ -12,16 +12,18 @@ public class BugReportPlugin extends JavaPlugin {
         reportManager = new BugReportManager(this, dbFilePath);
         registerCommands();
         registerListeners();
+
     }
 
     @Override
     public void onDisable() {
-        // No need to close the H2 database connection
+        reportManager.saveConfig();
     }
 
     private void registerCommands() {
         getCommand("bugreport").setExecutor(new BugReportCommand(reportManager));
         getCommand("buglist").setExecutor(new BugListCommand(reportManager));
+        getCommand("buglinkdiscord").setExecutor(new LinkDiscordCommand(reportManager));
     }
 
     private void registerListeners() {

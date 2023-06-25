@@ -3,6 +3,8 @@ package com.leon.bugreport;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -12,6 +14,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 
+import java.io.File;
 import java.util.*;
 
 public class BugReportManager {
@@ -20,11 +23,42 @@ public class BugReportManager {
     private BugReportDatabase database;
     private static Plugin plugin;
 
+    private FileConfiguration config;
+    private File configFile;
+    private LinkDiscord discord;
+
+    public boolean isWebhookURLValid(String webhookURL) {
+        String url = webhookURL.toLowerCase();
+        return url.startsWith("https://discord.com/api/webhooks/");
+    }
+
+
     public BugReportManager(Plugin plugin, String dbFilePath) {
         BugReportManager.plugin = plugin;
         bugReports = new HashMap<>();
         database = new BugReportDatabase(dbFilePath);
         loadBugReports();
+
+        configFile = new File(plugin.getDataFolder(), "config.yml");
+        config = YamlConfiguration.loadConfiguration(configFile);
+        config.options().copyDefaults(true);
+
+        String webhookURL = config.getString("webhookURL", "");
+        discord = new LinkDiscord(webhookURL);
+    }
+
+    public void saveConfig() {
+        try {
+            config.save(configFile);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void setWebhookURL(String webhookURL) {
+        config.set("webhookURL", webhookURL);
+        saveConfig();
+        discord.setWebhookURL(webhookURL);
     }
 
     public void submitBugReport(Player player, String message) {
@@ -46,6 +80,13 @@ public class BugReportManager {
         String header = "Username: " + playerName + "\nUUID: " + playerUUID + "\nWorld: " + worldName;
 
         database.addBugReport(playerName, playerId, worldName, header, message);
+
+        try {
+            discord.sendBugReport(message, playerId, worldName, playerName);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     public Inventory getBugReportGUI(Player player) {
