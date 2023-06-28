@@ -5,10 +5,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class BugReportPlugin extends JavaPlugin {
 
     private BugReportManager reportManager;
-    private String dbFilePath = "bugreports.db";
 
     @Override
     public void onEnable() {
+        String dbFilePath = "plugins/BugReport/bugreports.db";
         reportManager = new BugReportManager(this, dbFilePath);
         registerCommands();
         registerListeners();
@@ -27,6 +27,6 @@ public class BugReportPlugin extends JavaPlugin {
     }
 
     private void registerListeners() {
-        getServer().getPluginManager().registerEvents(new BugReportManager.BugReportListener(reportManager, this), this);
+        getServer().getPluginManager().registerEvents(new BugReportManager.BugReportListener(reportManager), this);
     }
 }

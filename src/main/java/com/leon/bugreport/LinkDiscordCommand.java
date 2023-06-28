@@ -30,7 +30,7 @@ public class LinkDiscordCommand implements CommandExecutor {
 
             String webhookURL = args[0];
 
-            if (!reportManager.isWebhookURLValid(webhookURL)) {
+            if (!isWebhookURLValid(webhookURL)) {
                 player.sendMessage(ChatColor.RED + "Invalid webhook URL.");
                 return true;
             }
@@ -43,5 +43,9 @@ public class LinkDiscordCommand implements CommandExecutor {
         }
 
         return true;
+    }
+
+    private boolean isWebhookURLValid(String webhookURL) {
+        return webhookURL.startsWith("https://discord.com/api/webhooks/");
     }
 }
