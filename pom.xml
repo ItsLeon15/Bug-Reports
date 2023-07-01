@@ -6,7 +6,7 @@
 
     <groupId>com.leon.bugreport</groupId>
     <artifactId>BugReports</artifactId>
-    <version>0.3.0</version>
+    <version>0.3.1</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -33,4 +33,16 @@
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
     </repositories>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <outputDirectory>C:/Users/itsja/Downloads/Test Minecraft Server/plugins</outputDirectory>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

@@ -21,9 +21,9 @@ import java.util.*;
 
 public class BugReportManager {
 
-    private static Map<UUID, List<String>> bugReports;
-    private final BugReportDatabase database;
-    private static Plugin plugin;
+    static Map<UUID, List<String>> bugReports;
+    private static BugReportDatabase database;
+    public static Plugin plugin;
 
     private final FileConfiguration config;
     private final File configFile;
@@ -66,24 +66,23 @@ public class BugReportManager {
         String playerUUID = playerId.toString();
         String worldName = player.getWorld().getName();
 
-        String formattedReport = "Username: " + playerName + "\n" +
+        String header = "Username: " + playerName + "\n" +
                 "UUID: " + playerUUID + "\n" +
                 "World: " + worldName + "\n" +
-                "Full Message: " + message;
+                "hasBeenRead: 0"; // Set the initial value to 0
 
-        reports.add(formattedReport);
+        reports.add(header);
         bugReports.put(playerId, reports);
-
-        String header = "Username: " + playerName + "\nUUID: " + playerUUID + "\nWorld: " + worldName;
 
         database.addBugReport(playerName, playerId, worldName, header, message);
 
-        try {
-            discord.sendBugReport(message, playerId, worldName, playerName);
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (!config.getString("webhookURL", "").isEmpty()) {
+            try {
+                discord.sendBugReport(message, playerId, worldName, playerName);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
-
     }
 
     private int currentPage = 1;
@@ -98,7 +97,7 @@ public class BugReportManager {
 
         totalPages = (int) Math.ceil((double) reports.size() / itemsPerPage);
 
-        currentPage = Math.max(1, Math.min(currentPage, totalPages)); // Ensure the currentPage is within the valid range
+        currentPage = Math.max(1, Math.min(currentPage, totalPages));
 
         Inventory gui = Bukkit.createInventory(null, 45, ChatColor.RESET + "Bug Reports - Page " + currentPage);
 
@@ -106,19 +105,29 @@ public class BugReportManager {
         int endIndex = Math.min(startIndex + itemsPerPage, reports.size());
         for (int i = startIndex; i < endIndex; i++) {
             String report = reports.get(i);
+            String firstLine = report.split("\n")[0];
 
-            ItemStack reportItem = new ItemStack(Material.PAPER);
-            ItemMeta meta = reportItem.getItemMeta();
-            meta.setDisplayName(ChatColor.YELLOW + "Bug Report #" + (i + 1));
-            meta.setLore(Collections.singletonList(ChatColor.GRAY + report));
-            reportItem.setItemMeta(meta);
+            ItemStack reportItem = null;
+            if (report.contains("hasBeenRead: 0")) {
+                reportItem = new ItemStack(Material.ENCHANTED_BOOK);
+            } else if (report.contains("hasBeenRead: 1")) {
+                reportItem = new ItemStack(Material.BOOK);
+            } else {
+                reportItem = new ItemStack(Material.BOOK);
+            }
+
+            ItemMeta itemMeta = reportItem.getItemMeta();
+            itemMeta.setDisplayName(ChatColor.YELLOW + "Bug Report #" + (i + 1));
+            itemMeta.setLore(Collections.singletonList(ChatColor.GRAY + firstLine));
+            reportItem.setItemMeta(itemMeta);
 
             gui.setItem(i - startIndex, reportItem);
         }
 
         ItemStack backButton = createButton(Material.ARROW, ChatColor.GREEN + "Back");
         ItemStack forwardButton = createButton(Material.ARROW, ChatColor.GREEN + "Forward");
-        ItemStack pageIndicator = createButton(Material.PAPER, ChatColor.YELLOW + "Page " + currentPage + " of " + totalPages);
+        ItemStack pageIndicator = createButton(Material.PAPER,
+                ChatColor.YELLOW + "Page " + currentPage + " of " + totalPages);
 
         if (currentPage > 1) {
             gui.setItem(navigationRow, backButton);
@@ -198,10 +207,16 @@ public class BugReportManager {
                 int startIndex = (reportManager.getCurrentPage() - 1) * 27;
                 int reportIndex = startIndex + itemSlot;
                 UUID playerId = player.getUniqueId();
-                List<String> reports = BugReportManager.bugReports.getOrDefault(playerId, new ArrayList<>());
+                List<String> reports = bugReports.getOrDefault(playerId, new ArrayList<>());
 
+                String report = reports.get(reportIndex);
+                if (report.contains("hasBeenRead: 0")) {
+                    report = report.replace("hasBeenRead: 0", "hasBeenRead: 1");
+                    reports.set(reportIndex, report);
+                    bugReports.put(playerId, reports);
+                    database.updateBugReportHeader(playerId, reportIndex, 1);
+                }
                 if (reportIndex >= 0 && reportIndex < reports.size()) {
-                    String report = reports.get(reportIndex);
                     openBugReportDetailsGUI(player, report, reportIndex + 1);
                 }
             }
@@ -243,7 +258,8 @@ public class BugReportManager {
         Inventory gui = player.getOpenInventory().getTopInventory();
         int navigationRow = 36;
         int pageIndicatorSlot = navigationRow + 4;
-        ItemStack pageIndicator = createButton(Material.PAPER, ChatColor.YELLOW + "Page " + currentPage + " of " + totalPages);
+        ItemStack pageIndicator = createButton(Material.PAPER,
+                ChatColor.YELLOW + "Page " + currentPage + " of " + totalPages);
         gui.setItem(pageIndicatorSlot, pageIndicator);
 
         ItemStack backButton = gui.getItem(navigationRow);
@@ -278,19 +294,25 @@ public class BugReportManager {
         for (String line : reportLines) {
             String trimmed = line.substring(line.indexOf(":") + 1).trim();
 
-            if (line.startsWith("Username:")) username = trimmed;
-            else if (line.startsWith("UUID:")) uuid = trimmed;
-            else if (line.startsWith("World:")) world = trimmed;
-            else if (line.startsWith("Full Message:")) fullMessage = trimmed;
+            if (line.startsWith("Username:"))
+                username = trimmed;
+            else if (line.startsWith("UUID:"))
+                uuid = trimmed;
+            else if (line.startsWith("World:"))
+                world = trimmed;
+            else if (line.startsWith("Full Message:"))
+                fullMessage = trimmed;
 
             longMessage = fullMessage.length() > 32;
         }
 
         ItemStack emptyItem = createEmptyItem();
-        ItemStack usernameItem = createInfoItem(Material.NAME_TAG, ChatColor.GOLD + "Username", ChatColor.WHITE + username);
+        ItemStack usernameItem = createInfoItem(Material.NAME_TAG, ChatColor.GOLD + "Username",
+                ChatColor.WHITE + username);
         ItemStack uuidItem = createInfoItem(Material.NAME_TAG, ChatColor.GOLD + "UUID", ChatColor.WHITE + uuid);
         ItemStack worldItem = createInfoItem(Material.GRASS_BLOCK, ChatColor.GOLD + "World", ChatColor.WHITE + world);
-        ItemStack messageItem = createInfoItem(Material.PAPER, ChatColor.GOLD + "Full Message", ChatColor.WHITE + fullMessage, longMessage);
+        ItemStack messageItem = createInfoItem(Material.PAPER, ChatColor.GOLD + "Full Message",
+                ChatColor.WHITE + fullMessage, longMessage);
 
         for (int i = 0; i < gui.getSize(); i++) {
             gui.setItem(i, emptyItem);
@@ -308,13 +330,13 @@ public class BugReportManager {
 
     private record BugReportDetailsListener(Inventory gui) implements Listener {
         @EventHandler(priority = EventPriority.NORMAL)
-            public void onInventoryClick(InventoryClickEvent event) {
-                Inventory clickedInventory = event.getClickedInventory();
-                if (clickedInventory != null && clickedInventory.equals(gui)) {
-                    event.setCancelled(true);
-                }
+        public void onInventoryClick(InventoryClickEvent event) {
+            Inventory clickedInventory = event.getClickedInventory();
+            if (clickedInventory != null && clickedInventory.equals(gui)) {
+                event.setCancelled(true);
             }
         }
+    }
 
     private static ItemStack createEmptyItem() {
         ItemStack item = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);

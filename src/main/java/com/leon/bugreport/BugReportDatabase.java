@@ -14,7 +14,7 @@ import java.util.UUID;
 
 public class BugReportDatabase {
     private Connection connection;
-    private String databaseFilePath;
+    private final String databaseFilePath;
 
     public BugReportDatabase(String databaseFilePath) {
         this.databaseFilePath = databaseFilePath;
@@ -51,9 +51,10 @@ public class BugReportDatabase {
                 String fullMessage = resultSet.getString("message");
                 String username = resultSet.getString("username");
                 String world = resultSet.getString("world");
+                String header = resultSet.getString("header");
 
                 List<String> reports = bugReports.getOrDefault(playerId, new ArrayList<>());
-                reports.add("Username: " + username + "\nUUID: " + playerId.toString() + "\nWorld: " + world + "\nFull Message: " + fullMessage);
+                reports.add("Username: " + username + "\nUUID: " + playerId.toString() + "\nWorld: " + world + "\nFull Message: " + fullMessage + "\nHeader: " + header);
                 bugReports.put(playerId, reports);
             }
 
@@ -84,9 +85,27 @@ public class BugReportDatabase {
         }
     }
 
-    public void closeDatabase() {
+    public void updateBugReportHeader(UUID playerId, int reportIndex, int hasBeenRead) {
         try {
-            connection.close();
+            PreparedStatement statement = connection.prepareStatement("UPDATE bug_reports SET header = ? WHERE player_id = ? AND rowid = ?");
+            String existingHeader = BugReportManager.bugReports.get(playerId).get(reportIndex);
+
+            String[] lines = existingHeader.split("\n");
+            StringBuilder newHeader = new StringBuilder();
+            for (String line : lines) {
+                if (line.startsWith("hasBeenRead:")) {
+                    newHeader.append("hasBeenRead: ").append(hasBeenRead);
+                } else {
+                    newHeader.append(line);
+                }
+                newHeader.append("\n");
+            }
+
+            statement.setString(1, newHeader.toString().trim());
+            statement.setString(2, playerId.toString());
+            statement.setInt(3, reportIndex + 1);
+            statement.executeUpdate();
+            statement.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }

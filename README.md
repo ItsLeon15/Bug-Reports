@@ -12,10 +12,12 @@ BugReport is a tool that helps server owners manage any bug reports found by pla
 - **bugreport.admin** - Allows a user to access the buglist command.
 
 ## Fixes for future releases
-- Allow more than 9 bug reports with multiple pages.
-- Allow support for Bungeecord Servers.
+- [x] Allow more than 9 bug reports with multiple pages.
+- [x] Add a command to link a Discord Webhook to send all Bug Reports to.
+- Add an option to edit the GUI options in the config.
 - Add support for multiple languages.
 
 ## Current working versions
-- 1.17.1
-- 1.19.X
+- [x] 1.17.X
+- [x] 1.18.X
+- [x] 1.19.X
