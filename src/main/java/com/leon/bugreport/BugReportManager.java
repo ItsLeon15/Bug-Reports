@@ -14,6 +14,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
@@ -23,11 +24,11 @@ public class BugReportManager {
 
     static Map<UUID, List<String>> bugReports;
     private static BugReportDatabase database;
-    public static Plugin plugin;
-
-    private final FileConfiguration config;
-    private final File configFile;
+    static Plugin plugin;
+    public static FileConfiguration config;
+    private File configFile;
     private final LinkDiscord discord;
+    private final List<Category> reportCategories;
 
     public BugReportManager(Plugin plugin, String dbFilePath) {
         BugReportManager.plugin = plugin;
@@ -35,13 +36,53 @@ public class BugReportManager {
         database = new BugReportDatabase(dbFilePath);
 
         loadBugReports();
-
-        configFile = new File(plugin.getDataFolder(), "config.yml");
-        config = YamlConfiguration.loadConfiguration(configFile);
-        config.options().copyDefaults(true);
+        loadConfig();
 
         String webhookURL = config.getString("webhookURL", "");
         discord = new LinkDiscord(webhookURL);
+
+        reportCategories = loadReportCategories();
+    }
+
+    private void loadConfig() {
+        configFile = new File(plugin.getDataFolder(), "config.yml");
+
+        if (!configFile.exists()) {
+            plugin.saveResource("config.yml", false);
+        }
+
+        config = YamlConfiguration.loadConfiguration(configFile);
+    }
+
+    private List<Category> loadReportCategories() {
+        List<Category> categories = new ArrayList<>();
+
+        List<Map<?, ?>> categoryList = config.getMapList("reportCategories");
+
+        for (Map<?, ?> categoryMap : categoryList) {
+            String name = categoryMap.get("name").toString();
+            int id = Integer.parseInt(categoryMap.get("id").toString());
+            String description = categoryMap.get("description").toString();
+            String itemString = categoryMap.get("item").toString();
+
+            Material itemMaterial = Material.matchMaterial(itemString);
+            if (itemMaterial == null) {
+                continue;
+            }
+
+            ItemStack itemStack = new ItemStack(itemMaterial);
+            ItemMeta itemMeta = itemStack.getItemMeta();
+            itemMeta.setDisplayName(ChatColor.YELLOW + name);
+            itemMeta.setLore(Collections.singletonList(ChatColor.GRAY + description));
+            itemStack.setItemMeta(itemMeta);
+            categories.add(new Category(id, name, itemStack));
+        }
+
+        return categories;
+    }
+
+    public List<Category> getReportCategories() {
+        return reportCategories;
     }
 
     public void saveConfig() {
@@ -58,7 +99,7 @@ public class BugReportManager {
         discord.setWebhookURL(webhookURL);
     }
 
-    public void submitBugReport(Player player, String message) {
+    public void submitBugReport(Player player, String message, Integer categoryId) {
         UUID playerId = player.getUniqueId();
         List<String> reports = bugReports.getOrDefault(playerId, new ArrayList<>());
 
@@ -69,7 +110,9 @@ public class BugReportManager {
         String header = "Username: " + playerName + "\n" +
                 "UUID: " + playerUUID + "\n" +
                 "World: " + worldName + "\n" +
-                "hasBeenRead: 0"; // Set the initial value to 0
+                "hasBeenRead: 0" + "\n" +
+                "Category ID: " + categoryId + "\n" +
+                "Full Message: " + message;
 
         reports.add(header);
         bugReports.put(playerId, reports);
@@ -85,19 +128,16 @@ public class BugReportManager {
         }
     }
 
-    private int currentPage = 1;
-    private int totalPages = 1;
 
-    public Inventory getBugReportGUI(Player player) {
+    public static Inventory getBugReportGUI(Player player) {
         int itemsPerPage = 27;
         int navigationRow = 36;
 
         UUID playerId = player.getUniqueId();
         List<String> reports = bugReports.getOrDefault(playerId, new ArrayList<>());
 
-        totalPages = (int) Math.ceil((double) reports.size() / itemsPerPage);
-
-        currentPage = Math.max(1, Math.min(currentPage, totalPages));
+        int totalPages = (int) Math.ceil((double) reports.size() / itemsPerPage);
+        int currentPage = Math.max(1, Math.min(getCurrentPage(player), totalPages));
 
         Inventory gui = Bukkit.createInventory(null, 45, ChatColor.RESET + "Bug Reports - Page " + currentPage);
 
@@ -141,7 +181,7 @@ public class BugReportManager {
         return gui;
     }
 
-    private ItemStack createButton(Material material, String displayName) {
+    private static ItemStack createButton(Material material, String displayName) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(displayName);
@@ -193,21 +233,27 @@ public class BugReportManager {
 
             String displayName = itemMeta.getDisplayName();
             if (displayName.equals(ChatColor.GREEN + "Back")) {
-                int currentPage = reportManager.getCurrentPage();
+                int currentPage = getCurrentPage(player);
                 if (currentPage > 1) {
-                    reportManager.setCurrentPage(currentPage - 1, player);
+                    setCurrentPage(player, currentPage - 1);
+                    player.openInventory(getBugReportGUI(player));
                 }
             } else if (displayName.equals(ChatColor.GREEN + "Forward")) {
-                int currentPage = reportManager.getCurrentPage();
-                if (currentPage < reportManager.getTotalPages()) {
-                    reportManager.setCurrentPage(currentPage + 1, player);
+                int currentPage = getCurrentPage(player);
+                if (currentPage < reportManager.getTotalPages(player)) {
+                    setCurrentPage(player, currentPage + 1);
+                    player.openInventory(getBugReportGUI(player));
                 }
             } else if (displayName.startsWith(ChatColor.YELLOW + "Bug Report #")) {
                 int itemSlot = event.getSlot();
-                int startIndex = (reportManager.getCurrentPage() - 1) * 27;
+                int startIndex = (getCurrentPage(player) - 1) * 27;
                 int reportIndex = startIndex + itemSlot;
                 UUID playerId = player.getUniqueId();
                 List<String> reports = bugReports.getOrDefault(playerId, new ArrayList<>());
+
+                System.out.println("---------------------");
+                System.out.println(reports);
+                System.out.println("---------------------");
 
                 String report = reports.get(reportIndex);
                 if (report.contains("hasBeenRead: 0")) {
@@ -217,6 +263,7 @@ public class BugReportManager {
                     database.updateBugReportHeader(playerId, reportIndex, 1);
                 }
                 if (reportIndex >= 0 && reportIndex < reports.size()) {
+                    reports.set(reportIndex, report);
                     openBugReportDetailsGUI(player, report, reportIndex + 1);
                 }
             }
@@ -238,49 +285,25 @@ public class BugReportManager {
         }
     }
 
-    public int getCurrentPage() {
-        return currentPage;
+    public static int getCurrentPage(Player player) {
+        return player.getMetadata("currentPage").get(0).asInt();
     }
 
-    public int getTotalPages() {
+    public int getTotalPages(Player player) {
+        UUID playerId = player.getUniqueId();
+        List<String> reports = bugReports.getOrDefault(playerId, new ArrayList<>());
+        int totalPages = (int) Math.ceil((double) reports.size() / 27);
         return totalPages;
     }
 
-    public void setCurrentPage(int page, Player player) {
-        if (currentPage == page) {
-            return;
-        }
-
-        currentPage = Math.max(1, Math.min(page, totalPages));
-
-        player.openInventory(getBugReportGUI(player));
-
-        Inventory gui = player.getOpenInventory().getTopInventory();
-        int navigationRow = 36;
-        int pageIndicatorSlot = navigationRow + 4;
-        ItemStack pageIndicator = createButton(Material.PAPER,
-                ChatColor.YELLOW + "Page " + currentPage + " of " + totalPages);
-        gui.setItem(pageIndicatorSlot, pageIndicator);
-
-        ItemStack backButton = gui.getItem(navigationRow);
-        if (currentPage == 1) {
-            gui.setItem(navigationRow, null);
-        } else if (backButton == null) {
-            backButton = createButton(Material.ARROW, ChatColor.GREEN + "Back");
-            gui.setItem(navigationRow, backButton);
-        }
-
-        ItemStack forwardButton = gui.getItem(navigationRow + 8);
-        if (currentPage == totalPages) {
-            gui.setItem(navigationRow + 8, null);
-        } else if (forwardButton == null) {
-            forwardButton = createButton(Material.ARROW, ChatColor.GREEN + "Forward");
-            gui.setItem(navigationRow + 8, forwardButton);
-        }
+    public static void setCurrentPage(Player player, int page) {
+        player.setMetadata("currentPage", new FixedMetadataValue(plugin, page));
     }
 
     private static void openBugReportDetailsGUI(Player player, String report, Integer ID) {
         Inventory gui = Bukkit.createInventory(player, 27, ChatColor.YELLOW + "Bug Report Details - #" + ID);
+
+        System.out.println(report);
 
         String[] reportLines = report.split("\n");
 
@@ -288,31 +311,38 @@ public class BugReportManager {
         String uuid = "";
         String world = "";
         String fullMessage = "";
-
+        String category = "";
+        ItemStack categoryItem = null;
         boolean longMessage = false;
 
         for (String line : reportLines) {
             String trimmed = line.substring(line.indexOf(":") + 1).trim();
 
-            if (line.startsWith("Username:"))
-                username = trimmed;
-            else if (line.startsWith("UUID:"))
-                uuid = trimmed;
-            else if (line.startsWith("World:"))
-                world = trimmed;
-            else if (line.startsWith("Full Message:"))
-                fullMessage = trimmed;
+            System.out.println("______________________");
+            System.out.println(line);
+            System.out.println("______________________");
 
-            longMessage = fullMessage.length() > 32;
+            if (line.startsWith("Username:")) {
+                username = trimmed;
+            } else if (line.startsWith("UUID:")) {
+                uuid = trimmed;
+            } else if (line.startsWith("World:")) {
+                world = trimmed;
+            } else if (line.startsWith("Full Message:")) {
+                fullMessage = trimmed;
+            } else if (line.startsWith("Category ID:")) {
+                category = trimmed;
+            }
         }
 
+        longMessage = fullMessage.length() > 32;
+
         ItemStack emptyItem = createEmptyItem();
-        ItemStack usernameItem = createInfoItem(Material.NAME_TAG, ChatColor.GOLD + "Username",
-                ChatColor.WHITE + username);
+        ItemStack usernameItem = createInfoItem(Material.PLAYER_HEAD, ChatColor.GOLD + "Username", ChatColor.WHITE + username);
         ItemStack uuidItem = createInfoItem(Material.NAME_TAG, ChatColor.GOLD + "UUID", ChatColor.WHITE + uuid);
         ItemStack worldItem = createInfoItem(Material.GRASS_BLOCK, ChatColor.GOLD + "World", ChatColor.WHITE + world);
-        ItemStack messageItem = createInfoItem(Material.PAPER, ChatColor.GOLD + "Full Message",
-                ChatColor.WHITE + fullMessage, longMessage);
+        ItemStack messageItem = createInfoItem(Material.PAPER, ChatColor.GOLD + "Full Message", ChatColor.WHITE + fullMessage, longMessage);
+
 
         for (int i = 0; i < gui.getSize(); i++) {
             gui.setItem(i, emptyItem);
@@ -322,6 +352,24 @@ public class BugReportManager {
         gui.setItem(12, uuidItem);
         gui.setItem(14, worldItem);
         gui.setItem(16, messageItem);
+
+        if (!category.equals("null") && !category.equals("")) {
+            String categoryName = "";
+            List<Map<?, ?>> categoryList = config.getMapList("reportCategories");
+
+            for (Map<?, ?> categoryMap : categoryList) {
+                String name = categoryMap.get("name").toString();
+                int id = Integer.parseInt(categoryMap.get("id").toString());
+
+                if (id == Integer.parseInt(category)) {
+                    categoryName = name;
+                    break;
+                }
+            }
+
+            categoryItem = createInfoItem(Material.CHEST, ChatColor.GOLD + "Category Name", ChatColor.WHITE + categoryName, false);
+            gui.setItem(22, categoryItem);
+        }
 
         player.openInventory(gui);
 
@@ -355,18 +403,18 @@ public class BugReportManager {
         if (longMessage.length > 0 && longMessage[0]) {
             List<String> lore = new ArrayList<>();
             String[] words = value.split(" ");
-            String currentLine = "";
+            StringBuilder currentLine = new StringBuilder();
             for (String word : words) {
                 if (currentLine.length() + word.length() > 30) {
-                    lore.add(currentLine);
-                    currentLine = "";
+                    lore.add(currentLine.toString());
+                    currentLine = new StringBuilder();
                 }
 
-                currentLine += word + " ";
+                currentLine.append(word).append(" ");
             }
 
             if (currentLine.length() > 0) {
-                lore.add(currentLine);
+                lore.add(currentLine.toString());
             }
 
             meta.setLore(lore);

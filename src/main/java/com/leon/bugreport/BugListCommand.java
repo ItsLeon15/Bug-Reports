@@ -25,12 +25,12 @@ public class BugListCommand implements CommandExecutor {
         }
 
         if (player.hasPermission("bugreport.admin")) {
-            reportManager.setCurrentPage(1, player);
+            BugReportManager.setCurrentPage(player, 1);
 
-            Inventory bugReportGUI = reportManager.getBugReportGUI(player);
+            Inventory bugReportGUI = BugReportManager.getBugReportGUI(player);
 
             ItemStack backButton = null;
-            if (reportManager.getCurrentPage() == 1) {
+            if (BugReportManager.getCurrentPage(player) == 1) {
                 bugReportGUI.setItem(36, new ItemStack(Material.AIR));
             } else {
                 backButton = new ItemStack(Material.ARROW);
