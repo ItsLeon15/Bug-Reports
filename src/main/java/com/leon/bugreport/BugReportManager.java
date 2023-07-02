@@ -251,10 +251,6 @@ public class BugReportManager {
                 UUID playerId = player.getUniqueId();
                 List<String> reports = bugReports.getOrDefault(playerId, new ArrayList<>());
 
-                System.out.println("---------------------");
-                System.out.println(reports);
-                System.out.println("---------------------");
-
                 String report = reports.get(reportIndex);
                 if (report.contains("hasBeenRead: 0")) {
                     report = report.replace("hasBeenRead: 0", "hasBeenRead: 1");
@@ -303,8 +299,6 @@ public class BugReportManager {
     private static void openBugReportDetailsGUI(Player player, String report, Integer ID) {
         Inventory gui = Bukkit.createInventory(player, 27, ChatColor.YELLOW + "Bug Report Details - #" + ID);
 
-        System.out.println(report);
-
         String[] reportLines = report.split("\n");
 
         String username = "";
@@ -317,10 +311,6 @@ public class BugReportManager {
 
         for (String line : reportLines) {
             String trimmed = line.substring(line.indexOf(":") + 1).trim();
-
-            System.out.println("______________________");
-            System.out.println(line);
-            System.out.println("______________________");
 
             if (line.startsWith("Username:")) {
                 username = trimmed;
