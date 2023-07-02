@@ -44,6 +44,27 @@ public class BugReportManager {
         reportCategories = loadReportCategories();
     }
 
+    public static boolean checkCategoryConfig() {
+        if (config.contains("reportCategories")) {
+            List<Map<?, ?>> categoryList = config.getMapList("reportCategories");
+            for (Map<?, ?> categoryMap : categoryList) {
+                Object[] keys = categoryMap.keySet().toArray();
+                Object[] values = categoryMap.values().toArray();
+
+                for (int i = 0; i < keys.length; i++) {
+                    if (values[i] == null) {
+                        plugin.getLogger().warning("Error: Missing " + keys[i] + " in reportCategories in config.");
+                        return false;
+                    }
+                }
+            }
+        } else {
+            plugin.getLogger().warning("Error: Missing reportCategories in config.");
+            return false;
+        }
+        return true;
+    }
+
     private void loadConfig() {
         configFile = new File(plugin.getDataFolder(), "config.yml");
 
@@ -55,30 +76,37 @@ public class BugReportManager {
     }
 
     private List<Category> loadReportCategories() {
-        List<Category> categories = new ArrayList<>();
+        if (checkCategoryConfig()) {
+            List<Category> categories = new ArrayList<>();
 
-        List<Map<?, ?>> categoryList = config.getMapList("reportCategories");
+            List<Map<?, ?>> categoryList = config.getMapList("reportCategories");
 
-        for (Map<?, ?> categoryMap : categoryList) {
-            String name = categoryMap.get("name").toString();
-            int id = Integer.parseInt(categoryMap.get("id").toString());
-            String description = categoryMap.get("description").toString();
-            String itemString = categoryMap.get("item").toString();
+            for (Map<?, ?> categoryMap : categoryList) {
+                String name = categoryMap.get("name").toString();
+                int id = Integer.parseInt(categoryMap.get("id").toString());
 
-            Material itemMaterial = Material.matchMaterial(itemString);
-            if (itemMaterial == null) {
-                continue;
+                String description = categoryMap.get("description").toString();
+                String itemString = categoryMap.get("item").toString();
+                String color = categoryMap.get("color").toString().toUpperCase();
+
+                Material itemMaterial = Material.matchMaterial(itemString);
+                if (itemMaterial == null) {
+                    continue;
+                }
+
+                ItemStack itemStack = new ItemStack(itemMaterial);
+                ItemMeta itemMeta = itemStack.getItemMeta();
+                itemMeta.setDisplayName(ChatColor.YELLOW + name);
+                itemMeta.setLore(Collections.singletonList(ChatColor.GRAY + description));
+                itemStack.setItemMeta(itemMeta);
+              categories.add(new Category(id, name, color, itemStack));
             }
 
-            ItemStack itemStack = new ItemStack(itemMaterial);
-            ItemMeta itemMeta = itemStack.getItemMeta();
-            itemMeta.setDisplayName(ChatColor.YELLOW + name);
-            itemMeta.setLore(Collections.singletonList(ChatColor.GRAY + description));
-            itemStack.setItemMeta(itemMeta);
-            categories.add(new Category(id, name, itemStack));
+            return categories;
+        } else {
+            plugin.getLogger().warning("Error: Something went wrong while loading the report categories.");
+            return null;
         }
-
-        return categories;
     }
 
     public List<Category> getReportCategories() {

@@ -24,6 +24,7 @@ import java.util.UUID;
 public class BugReportCommand implements CommandExecutor, Listener {
     private final BugReportManager reportManager;
     private final Map<UUID, Integer> categorySelectionMap;
+    private ItemStack categoryItem;
 
     public BugReportCommand(BugReportManager reportManager) {
         this.reportManager = reportManager;
@@ -37,9 +38,15 @@ public class BugReportCommand implements CommandExecutor, Listener {
             return true;
         }
 
-        if (BugReportManager.config.getBoolean("enablePluginReportCategories", true)) {
-            openCategorySelectionGUI(player);
-            return true;
+        if (BugReportManager.config.contains("enablePluginReportCategories")) {
+            if (BugReportManager.config.getBoolean("enablePluginReportCategories", true)) {
+                if (!BugReportManager.checkCategoryConfig()) {
+                    player.sendMessage(ChatColor.RED + "Bug report categories are not configured correctly. Please contact an administrator.");
+                    return true;
+                }
+                openCategorySelectionGUI(player);
+                return true;
+            }
         }
 
         if (args.length >= 1) {
@@ -54,12 +61,12 @@ public class BugReportCommand implements CommandExecutor, Listener {
     }
 
     private void openCategorySelectionGUI(Player player) {
-        Inventory gui = Bukkit.createInventory(null, 9, ChatColor.RESET + "Bug Report Categories");
+        Inventory gui = Bukkit.createInventory(null, 9, ChatColor.YELLOW + "Bug Report Categories");
 
         List<Category> categories = reportManager.getReportCategories();
 
         for (Category category : categories) {
-            ItemStack categoryItem = createCategoryItem(category);
+            categoryItem = createCategoryItem(category);
             gui.addItem(categoryItem);
         }
 
@@ -68,7 +75,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 
     @EventHandler(priority = EventPriority.NORMAL)
     public void onInventoryClick(InventoryClickEvent event) {
-        if (!event.getView().getTitle().equals(ChatColor.RESET + "Bug Report Categories")) {
+        if (!event.getView().getTitle().equals(ChatColor.YELLOW + "Bug Report Categories")) {
             return;
         }
 
@@ -100,7 +107,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
         if (selectedCategory != null) {
             categorySelectionMap.put(player.getUniqueId(), selectedCategory.getId());
             player.closeInventory();
-            player.sendMessage(ChatColor.YELLOW + "Please enter your bug report message in chat.");
+            player.sendMessage(ChatColor.YELLOW + "Please enter your bug report in chat. Type 'cancel' to cancel.");
         }
     }
 
@@ -113,6 +120,10 @@ public class BugReportCommand implements CommandExecutor, Listener {
             event.setCancelled(true);
             categorySelectionMap.remove(player.getUniqueId());
             String message = event.getMessage();
+            if (message.equalsIgnoreCase("cancel")) {
+                player.sendMessage(ChatColor.RED + "Bug report cancelled.");
+                return;
+            }
             reportManager.submitBugReport(player, message, categoryId);
             player.sendMessage(ChatColor.GREEN + "Bug report submitted successfully!");
         }
@@ -121,26 +132,54 @@ public class BugReportCommand implements CommandExecutor, Listener {
     private ItemStack createCategoryItem(Category category) {
         ItemStack itemStack = new ItemStack(category.getItem());
         ItemMeta itemMeta = itemStack.getItemMeta();
-        itemMeta.setDisplayName(ChatColor.YELLOW + category.getName());
+        itemMeta.setDisplayName(stringColorToColorCode(category.getColor()) + category.getName());
         itemMeta.setLore(List.of(ChatColor.GRAY + category.getDescription()));
         itemStack.setItemMeta(itemMeta);
         return itemStack;
+    }
+
+    private ChatColor stringColorToColorCode(String color) {
+        return switch (color) {
+            case "AQUA" -> ChatColor.AQUA;
+            case "BLACK" -> ChatColor.BLACK;
+            case "BLUE" -> ChatColor.BLUE;
+            case "DARK_AQUA" -> ChatColor.DARK_AQUA;
+            case "DARK_BLUE" -> ChatColor.DARK_BLUE;
+            case "DARK_GRAY" -> ChatColor.DARK_GRAY;
+            case "DARK_GREEN" -> ChatColor.DARK_GREEN;
+            case "DARK_PURPLE" -> ChatColor.DARK_PURPLE;
+            case "DARK_RED" -> ChatColor.DARK_RED;
+            case "GOLD" -> ChatColor.GOLD;
+            case "GRAY" -> ChatColor.GRAY;
+            case "GREEN" -> ChatColor.GREEN;
+            case "LIGHT_PURPLE" -> ChatColor.LIGHT_PURPLE;
+            case "RED" -> ChatColor.RED;
+            case "WHITE" -> ChatColor.WHITE;
+            case "YELLOW" -> ChatColor.YELLOW;
+            default -> ChatColor.WHITE;
+        };
     }
 }
 
 class Category {
     private final int id;
+    private final String color;
     private final String name;
     private final ItemStack itemStack;
 
-    public Category(int id, String name, ItemStack itemStack) {
+    public Category(int id, String name, String color, ItemStack itemStack) {
         this.id = id;
         this.name = name;
+        this.color = color;
         this.itemStack = itemStack;
     }
 
     public int getId() {
         return id;
+    }
+
+    public String getColor() {
+        return color;
     }
 
     public String getName() {
