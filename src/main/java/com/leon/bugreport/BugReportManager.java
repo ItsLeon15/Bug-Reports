@@ -25,8 +25,10 @@ public class BugReportManager {
     static Map<UUID, List<String>> bugReports;
     private static BugReportDatabase database;
     static Plugin plugin;
+
     public static FileConfiguration config;
-    private File configFile;
+    public static File configFile;
+
     private final LinkDiscord discord;
     private final List<Category> reportCategories;
 
@@ -39,8 +41,8 @@ public class BugReportManager {
         loadConfig();
 
         String webhookURL = config.getString("webhookURL", "");
-        discord = new LinkDiscord(webhookURL);
 
+        discord = new LinkDiscord(webhookURL);
         reportCategories = loadReportCategories();
     }
 
@@ -65,7 +67,7 @@ public class BugReportManager {
         return true;
     }
 
-    private void loadConfig() {
+    public static void loadConfig() {
         configFile = new File(plugin.getDataFolder(), "config.yml");
 
         if (!configFile.exists()) {
@@ -99,7 +101,7 @@ public class BugReportManager {
                 itemMeta.setDisplayName(ChatColor.YELLOW + name);
                 itemMeta.setLore(Collections.singletonList(ChatColor.GRAY + description));
                 itemStack.setItemMeta(itemMeta);
-              categories.add(new Category(id, name, color, itemStack));
+                categories.add(new Category(id, name, color, itemStack));
             }
 
             return categories;
@@ -113,7 +115,7 @@ public class BugReportManager {
         return reportCategories;
     }
 
-    public void saveConfig() {
+    public static void saveConfig() {
         try {
             config.save(configFile);
         } catch (Exception e) {
@@ -147,11 +149,23 @@ public class BugReportManager {
 
         database.addBugReport(playerName, playerId, worldName, header, message);
 
-        if (!config.getString("webhookURL", "").isEmpty()) {
-            try {
-                discord.sendBugReport(message, playerId, worldName, playerName);
-            } catch (Exception e) {
-                e.printStackTrace();
+        if (config.getBoolean("enableBugReportNotifications", true)) {
+            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                if (onlinePlayer.hasPermission("bugreport.notify")) {
+                    onlinePlayer.sendMessage(ChatColor.YELLOW + "[Bug Report] " + ChatColor.GRAY + "A new bug report has been submitted by " + ChatColor.YELLOW + playerName + ChatColor.GRAY + ".");
+                }
+            }
+        }
+
+        if (config.getBoolean("enableDiscordWebhook", true)) {
+            if (!config.getString("webhookURL", "").isEmpty()) {
+                try {
+                    discord.sendBugReport(message, playerId, worldName, playerName);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else {
+                plugin.getLogger().warning("Error: Missing Discord webhookURL in config.");
             }
         }
     }
@@ -167,7 +181,7 @@ public class BugReportManager {
         int totalPages = (int) Math.ceil((double) reports.size() / itemsPerPage);
         int currentPage = Math.max(1, Math.min(getCurrentPage(player), totalPages));
 
-        Inventory gui = Bukkit.createInventory(null, 45, ChatColor.RESET + "Bug Reports - Page " + currentPage);
+        Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Reports - Page " + currentPage);
 
         int startIndex = (currentPage - 1) * itemsPerPage;
         int endIndex = Math.min(startIndex + itemsPerPage, reports.size());
@@ -194,8 +208,9 @@ public class BugReportManager {
 
         ItemStack backButton = createButton(Material.ARROW, ChatColor.GREEN + "Back");
         ItemStack forwardButton = createButton(Material.ARROW, ChatColor.GREEN + "Forward");
-        ItemStack pageIndicator = createButton(Material.PAPER,
-                ChatColor.YELLOW + "Page " + currentPage + " of " + totalPages);
+        ItemStack pageIndicator = createButton(Material.PAPER, ChatColor.YELLOW + "Page " + currentPage + " of " + totalPages);
+        ItemStack settingsButton = createButton(Material.CHEST, ChatColor.YELLOW + "Settings");
+        ItemStack closeButton = createButton(Material.BARRIER, ChatColor.RED + "Close");
 
         if (currentPage > 1) {
             gui.setItem(navigationRow, backButton);
@@ -204,7 +219,9 @@ public class BugReportManager {
             gui.setItem(navigationRow + 8, forwardButton);
         }
 
+        gui.setItem(navigationRow + 2, settingsButton);
         gui.setItem(navigationRow + 4, pageIndicator);
+        gui.setItem(navigationRow + 6, closeButton);
 
         return gui;
     }
@@ -236,7 +253,7 @@ public class BugReportManager {
 
         @EventHandler(priority = EventPriority.NORMAL)
         public void onInventoryClick(InventoryClickEvent event) {
-            if (!event.getView().getTitle().startsWith(ChatColor.RESET + "Bug Reports")) {
+            if (!event.getView().getTitle().startsWith(ChatColor.YELLOW + "Bug Reports")) {
                 return;
             }
 
@@ -290,12 +307,17 @@ public class BugReportManager {
                     reports.set(reportIndex, report);
                     openBugReportDetailsGUI(player, report, reportIndex + 1);
                 }
+            } else if (displayName.equals(ChatColor.YELLOW + "Settings")) {
+                player.openInventory(BugReportSettings.getSettingsGUI());
+            } else if (displayName.equals(ChatColor.RED + "Close")) {
+                closingInventoryMap.put(player.getUniqueId(), true);
+                player.closeInventory();
             }
         }
 
         @EventHandler(priority = EventPriority.NORMAL)
         public void onInventoryClose(InventoryCloseEvent event) {
-            if (event.getView().getTitle().startsWith(ChatColor.RESET + "Bug Reports")) {
+            if (event.getView().getTitle().startsWith(ChatColor.YELLOW + "Bug Reports")) {
                 Player player = (Player) event.getPlayer();
                 UUID playerId = player.getUniqueId();
 

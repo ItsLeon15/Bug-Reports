@@ -4,7 +4,7 @@ import java.util.UUID;
 
 public class LinkDiscord {
     private static final String EMBED_TITLE = "New Bug Report";
-    private static final String EMBED_FOOTER_TEXT = "Bug Report V0.2.0";
+    private static final String EMBED_FOOTER_TEXT = "Bug Report V0.4.0";
 
     private String webhookURL;
 

@@ -16,10 +16,9 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+
+import static com.leon.bugreport.BugReportManager.config;
 
 public class BugReportCommand implements CommandExecutor, Listener {
     private final BugReportManager reportManager;
@@ -38,26 +37,48 @@ public class BugReportCommand implements CommandExecutor, Listener {
             return true;
         }
 
-        if (BugReportManager.config.contains("enablePluginReportCategories")) {
-            if (BugReportManager.config.getBoolean("enablePluginReportCategories", true)) {
-                if (!BugReportManager.checkCategoryConfig()) {
-                    player.sendMessage(ChatColor.RED + "Bug report categories are not configured correctly. Please contact an administrator.");
-                    return true;
-                }
-                openCategorySelectionGUI(player);
+        if (config.getBoolean("enablePluginReportCategories", true)) {
+            if (!BugReportManager.checkCategoryConfig()) {
+                player.sendMessage(ChatColor.RED + "Bug report categories are not configured correctly. Please contact an administrator.");
                 return true;
             }
+            openCategorySelectionGUI(player);
+            return true;
         }
 
         if (args.length >= 1) {
             String message = String.join(" ", args);
+            if (config.getInt("max-reports-per-player") != 0) {
+                int maxReports = config.getInt("max-reports-per-player");
+                int reportsLeft = maxReports - getReportCount(player.getUniqueId());
+
+                if (reportsLeft <= 0) {
+                    player.sendMessage(ChatColor.RED + "You have reached the maximum amount of reports you can submit.");
+                    return true;
+                }
+            }
             reportManager.submitBugReport(player, message, null);
-            player.sendMessage(ChatColor.GREEN + "Bug report submitted successfully!");
+
+            if (config.getString("report-confirmation-message") == null) {
+                player.sendMessage(ChatColor.GREEN + "Bug report submitted successfully!");
+            } else {
+                player.sendMessage(ChatColor.GREEN + config.getString("report-confirmation-message"));
+            }
         } else {
             player.sendMessage(ChatColor.RED + "Usage: /bugreport <message>");
         }
 
         return true;
+    }
+
+    private int getReportCount(UUID playerId) {
+        int count = 0;
+        BugReportManager.bugReports.getOrDefault(playerId, new ArrayList<>());
+        for (String report : BugReportManager.bugReports.get(playerId)) {
+            if (report.contains(playerId.toString())) {
+                count++;
+            }
+        } return count;
     }
 
     private void openCategorySelectionGUI(Player player) {
@@ -125,7 +146,11 @@ public class BugReportCommand implements CommandExecutor, Listener {
                 return;
             }
             reportManager.submitBugReport(player, message, categoryId);
-            player.sendMessage(ChatColor.GREEN + "Bug report submitted successfully!");
+            if (config.getString("report-confirmation-message") == null) {
+                player.sendMessage(ChatColor.GREEN + "Bug report submitted successfully!");
+            } else {
+                player.sendMessage(ChatColor.GREEN + config.getString("report-confirmation-message"));
+            }
         }
     }
 
