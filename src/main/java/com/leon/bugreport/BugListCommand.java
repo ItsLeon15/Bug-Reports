@@ -30,18 +30,20 @@ public class BugListCommand implements CommandExecutor {
             Inventory bugReportGUI = BugReportManager.getBugReportGUI(player);
 
             ItemStack backButton = null;
+            ItemStack forwardButton;
+
             if (BugReportManager.getCurrentPage(player) == 1) {
                 bugReportGUI.setItem(36, new ItemStack(Material.AIR));
             } else {
                 backButton = new ItemStack(Material.ARROW);
                 ItemMeta backMeta = backButton.getItemMeta();
-                backMeta.setDisplayName(ChatColor.GREEN + "Back");
+                backMeta.setDisplayName(ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage()[0]);
                 backButton.setItemMeta(backMeta);
             }
 
-            ItemStack forwardButton = new ItemStack(Material.ARROW);
+            forwardButton = new ItemStack(Material.ARROW);
             ItemMeta forwardMeta = forwardButton.getItemMeta();
-            forwardMeta.setDisplayName(ChatColor.GREEN + "Forward");
+            forwardMeta.setDisplayName(ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage()[1]);
             forwardButton.setItemMeta(forwardMeta);
 
             bugReportGUI.setItem(36, backButton);

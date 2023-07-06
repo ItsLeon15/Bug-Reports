@@ -16,7 +16,7 @@ public class LinkDiscordCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("Only players can use this command.");
+            sender.sendMessage("Only players can use this command."); // TODO
             return true;
         }
 
@@ -24,22 +24,22 @@ public class LinkDiscordCommand implements CommandExecutor {
 
         if (player.hasPermission("bugreport.admin")) {
             if (args.length < 1) {
-                player.sendMessage(ChatColor.RED + "Usage: /buglinkdiscord <webhook URL>");
+                player.sendMessage(ChatColor.RED + "Usage: /buglinkdiscord <webhook URL>"); // TODO
                 return true;
             }
 
             String webhookURL = args[0];
 
             if (!isWebhookURLValid(webhookURL)) {
-                player.sendMessage(ChatColor.RED + "Invalid webhook URL.");
+                player.sendMessage(ChatColor.RED + "Invalid webhook URL."); // TODO
                 return true;
             }
 
             reportManager.setWebhookURL(webhookURL);
 
-            player.sendMessage(ChatColor.GREEN + "Webhook URL has been set successfully.");
+            player.sendMessage(ChatColor.GREEN + "Webhook URL has been set successfully."); // TODO
         } else {
-            player.sendMessage(ChatColor.RED + "You don't have permission to use this command.");
+            player.sendMessage(ChatColor.RED + "You don't have permission to use this command."); // TODO
         }
 
         return true;

@@ -18,7 +18,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
 
-import static com.leon.bugreport.BugReportManager.config;
+import static com.leon.bugreport.BugReportManager.*;
 
 public class BugReportCommand implements CommandExecutor, Listener {
     private final BugReportManager reportManager;
@@ -33,13 +33,17 @@ public class BugReportCommand implements CommandExecutor, Listener {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("This command can only be run by a player.");
+            sender.sendMessage("This command can only be run by a player."); // TODO
             return true;
         }
 
         if (config.getBoolean("enablePluginReportCategories", true)) {
             if (!BugReportManager.checkCategoryConfig()) {
-                player.sendMessage(ChatColor.RED + "Bug report categories are not configured correctly. Please contact an administrator.");
+                if (lang.getText(language, "bugReportCategoriesNotConfiguredMessage") != null) {
+                    player.sendMessage(lang.getText(language, "bugReportCategoriesNotConfiguredMessage"));
+                } else {
+                    player.sendMessage(ChatColor.RED + "Bug report categories are not configured");
+                }
                 return true;
             }
             openCategorySelectionGUI(player);
@@ -53,19 +57,23 @@ public class BugReportCommand implements CommandExecutor, Listener {
                 int reportsLeft = maxReports - getReportCount(player.getUniqueId());
 
                 if (reportsLeft <= 0) {
-                    player.sendMessage(ChatColor.RED + "You have reached the maximum amount of reports you can submit.");
+                    if (lang.getText(language, "maxReportsPerPlayerMessage") != null) {
+                        player.sendMessage(lang.getText(language, "maxReportsPerPlayerMessage"));
+                    } else {
+                        player.sendMessage(ChatColor.RED + "You have reached the maximum amount of reports you can submit");
+                    }
                     return true;
                 }
             }
             reportManager.submitBugReport(player, message, null);
 
-            if (config.getString("report-confirmation-message") == null) {
-                player.sendMessage(ChatColor.GREEN + "Bug report submitted successfully!");
+            if (lang.getText(player.getLocale(), "bugReportConfirmationMessage") != null) {
+                player.sendMessage(lang.getText(player.getLocale(), "bugReportConfirmationMessage"));
             } else {
-                player.sendMessage(ChatColor.GREEN + config.getString("report-confirmation-message"));
+                player.sendMessage(ChatColor.GREEN + "Bug report submitted successfully!");
             }
         } else {
-            player.sendMessage(ChatColor.RED + "Usage: /bugreport <message>");
+            player.sendMessage(ChatColor.RED + "Usage: /bugreport <message>"); // TODO
         }
 
         return true;
@@ -128,7 +136,11 @@ public class BugReportCommand implements CommandExecutor, Listener {
         if (selectedCategory != null) {
             categorySelectionMap.put(player.getUniqueId(), selectedCategory.getId());
             player.closeInventory();
-            player.sendMessage(ChatColor.YELLOW + "Please enter your bug report in chat. Type 'cancel' to cancel.");
+            if (lang.getText(language, "enterBugReportMessageCategory") == null) {
+                player.sendMessage(ChatColor.YELLOW + "Please enter your bug report in chat. Type 'cancel' to cancel");
+            } else {
+                player.sendMessage(ChatColor.YELLOW + lang.getText(language, "enterBugReportMessageCategory"));
+            }
         }
     }
 
@@ -142,14 +154,18 @@ public class BugReportCommand implements CommandExecutor, Listener {
             categorySelectionMap.remove(player.getUniqueId());
             String message = event.getMessage();
             if (message.equalsIgnoreCase("cancel")) {
-                player.sendMessage(ChatColor.RED + "Bug report cancelled.");
+                if (lang.getText(language, "cancelledBugReportMessage") == null) {
+                    player.sendMessage(ChatColor.RED + "Bug report cancelled.");
+                } else {
+                    player.sendMessage(ChatColor.RED + lang.getText(language, "cancelledBugReportMessage"));
+                }
                 return;
             }
             reportManager.submitBugReport(player, message, categoryId);
-            if (config.getString("report-confirmation-message") == null) {
+            if (lang.getText(language, "bugReportConfirmationMessage") == null) {
                 player.sendMessage(ChatColor.GREEN + "Bug report submitted successfully!");
             } else {
-                player.sendMessage(ChatColor.GREEN + config.getString("report-confirmation-message"));
+                player.sendMessage(ChatColor.GREEN + lang.getText(language, "bugReportConfirmationMessage"));
             }
         }
     }

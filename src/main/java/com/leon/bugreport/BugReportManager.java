@@ -29,6 +29,9 @@ public class BugReportManager {
     public static FileConfiguration config;
     public static File configFile;
 
+    public static String language;
+    public static BugReportLanguage lang;
+
     private final LinkDiscord discord;
     private final List<Category> reportCategories;
 
@@ -55,13 +58,21 @@ public class BugReportManager {
 
                 for (int i = 0; i < keys.length; i++) {
                     if (values[i] == null) {
-                        plugin.getLogger().warning("Error: Missing " + keys[i] + " in reportCategories in config.");
+                        if (lang.getText(language, "missingValueMessage") != null) {
+                            plugin.getLogger().warning(lang.getText(language, "missingValueMessage").replace("%key%", keys[i].toString()));
+                        } else {
+                            plugin.getLogger().warning("Error: Missing " + keys[i] + " in reportCategories in config.");
+                        }
                         return false;
                     }
                 }
             }
         } else {
-            plugin.getLogger().warning("Error: Missing reportCategories in config.");
+            if (lang.getText(language, "missingReportCategoryMessage") != null) {
+                plugin.getLogger().warning(lang.getText(language, "missingReportCategoryMessage"));
+            } else {
+                plugin.getLogger().warning("Error: Missing reportCategories in config.");
+            }
             return false;
         }
         return true;
@@ -75,6 +86,9 @@ public class BugReportManager {
         }
 
         config = YamlConfiguration.loadConfiguration(configFile);
+
+        language = config.getString("language", "en");
+        lang = new BugReportLanguage(plugin, "languages.yml");
     }
 
     private List<Category> loadReportCategories() {
@@ -106,7 +120,11 @@ public class BugReportManager {
 
             return categories;
         } else {
-            plugin.getLogger().warning("Error: Something went wrong while loading the report categories.");
+            if (lang.getText(language, "wentWrongLoadingCategoriesMessage") != null) {
+                plugin.getLogger().warning(lang.getText(language, "wentWrongLoadingCategoriesMessage"));
+            } else {
+                plugin.getLogger().warning("Error: Something went wrong while loading the report categories.");
+            }
             return null;
         }
     }
@@ -152,7 +170,11 @@ public class BugReportManager {
         if (config.getBoolean("enableBugReportNotifications", true)) {
             for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
                 if (onlinePlayer.hasPermission("bugreport.notify")) {
-                    onlinePlayer.sendMessage(ChatColor.YELLOW + "[Bug Report] " + ChatColor.GRAY + "A new bug report has been submitted by " + ChatColor.YELLOW + playerName + ChatColor.GRAY + ".");
+                    if (lang.getText(language, "bugReportNotificationMessage") != null) {
+                        onlinePlayer.sendMessage(ChatColor.YELLOW + "[Bug Report] " + ChatColor.GRAY + lang.getText(language, "bugReportNotificationMessage").replace("%player%", playerName) + ChatColor.GRAY + ".");
+                    } else {
+                        onlinePlayer.sendMessage(ChatColor.YELLOW + "[Bug Report] " + ChatColor.GRAY + "A new bug report has been submitted by " + ChatColor.YELLOW + playerName + ChatColor.GRAY + ".");
+                    }
                 }
             }
         }
@@ -165,7 +187,11 @@ public class BugReportManager {
                     e.printStackTrace();
                 }
             } else {
-                plugin.getLogger().warning("Error: Missing Discord webhookURL in config.");
+                if (lang.getText(language, "missingDiscordWebhookURLMessage") != null) {
+                    plugin.getLogger().warning(lang.getText(language, "missingDiscordWebhookURLMessage"));
+                } else {
+                    plugin.getLogger().warning("Missing webhookURL in config.yml");
+                }
             }
         }
     }
@@ -181,7 +207,7 @@ public class BugReportManager {
         int totalPages = (int) Math.ceil((double) reports.size() / itemsPerPage);
         int currentPage = Math.max(1, Math.min(getCurrentPage(player), totalPages));
 
-        Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Reports - Page " + currentPage);
+        Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Report - " + BugReportLanguage.getTitleFromLanguage()[5] + " " + currentPage);
 
         int startIndex = (currentPage - 1) * itemsPerPage;
         int endIndex = Math.min(startIndex + itemsPerPage, reports.size());
@@ -206,11 +232,11 @@ public class BugReportManager {
             gui.setItem(i - startIndex, reportItem);
         }
 
-        ItemStack backButton = createButton(Material.ARROW, ChatColor.GREEN + "Back");
-        ItemStack forwardButton = createButton(Material.ARROW, ChatColor.GREEN + "Forward");
-        ItemStack pageIndicator = createButton(Material.PAPER, ChatColor.YELLOW + "Page " + currentPage + " of " + totalPages);
-        ItemStack settingsButton = createButton(Material.CHEST, ChatColor.YELLOW + "Settings");
-        ItemStack closeButton = createButton(Material.BARRIER, ChatColor.RED + "Close");
+        ItemStack backButton = createButton(Material.ARROW, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage()[0]);
+        ItemStack forwardButton = createButton(Material.ARROW, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage()[1]);
+        ItemStack pageIndicator = createButton(Material.PAPER, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage()[2].replace("%currentPage%", String.valueOf(currentPage)).replace("%totalPages%", String.valueOf(totalPages)));
+        ItemStack settingsButton = createButton(Material.CHEST, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage()[3]);
+        ItemStack closeButton = createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage()[4]);
 
         if (currentPage > 1) {
             gui.setItem(navigationRow, backButton);
@@ -253,7 +279,7 @@ public class BugReportManager {
 
         @EventHandler(priority = EventPriority.NORMAL)
         public void onInventoryClick(InventoryClickEvent event) {
-            if (!event.getView().getTitle().startsWith(ChatColor.YELLOW + "Bug Reports")) {
+            if (!event.getView().getTitle().startsWith(ChatColor.YELLOW + "Bug Report")) {
                 return;
             }
 
@@ -277,19 +303,26 @@ public class BugReportManager {
             }
 
             String displayName = itemMeta.getDisplayName();
-            if (displayName.equals(ChatColor.GREEN + "Back")) {
+
+            String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(displayName);
+
+            if (customDisplayName.equals("Back")) {
                 int currentPage = getCurrentPage(player);
                 if (currentPage > 1) {
                     setCurrentPage(player, currentPage - 1);
                     player.openInventory(getBugReportGUI(player));
                 }
-            } else if (displayName.equals(ChatColor.GREEN + "Forward")) {
+            }
+
+            if (customDisplayName.equals("Forward")) {
                 int currentPage = getCurrentPage(player);
                 if (currentPage < reportManager.getTotalPages(player)) {
                     setCurrentPage(player, currentPage + 1);
                     player.openInventory(getBugReportGUI(player));
                 }
-            } else if (displayName.startsWith(ChatColor.YELLOW + "Bug Report #")) {
+            }
+
+            if (displayName.startsWith(ChatColor.YELLOW + "Bug Report #")) {
                 int itemSlot = event.getSlot();
                 int startIndex = (getCurrentPage(player) - 1) * 27;
                 int reportIndex = startIndex + itemSlot;
@@ -307,9 +340,13 @@ public class BugReportManager {
                     reports.set(reportIndex, report);
                     openBugReportDetailsGUI(player, report, reportIndex + 1);
                 }
-            } else if (displayName.equals(ChatColor.YELLOW + "Settings")) {
+            }
+
+            if (customDisplayName.equals("Settings")) {
                 player.openInventory(BugReportSettings.getSettingsGUI());
-            } else if (displayName.equals(ChatColor.RED + "Close")) {
+            }
+
+            if (customDisplayName.equals("Close")) {
                 closingInventoryMap.put(player.getUniqueId(), true);
                 player.closeInventory();
             }
@@ -317,7 +354,7 @@ public class BugReportManager {
 
         @EventHandler(priority = EventPriority.NORMAL)
         public void onInventoryClose(InventoryCloseEvent event) {
-            if (event.getView().getTitle().startsWith(ChatColor.YELLOW + "Bug Reports")) {
+            if (event.getView().getTitle().startsWith(ChatColor.YELLOW + "Bug Report")) {
                 Player player = (Player) event.getPlayer();
                 UUID playerId = player.getUniqueId();
 
@@ -378,6 +415,7 @@ public class BugReportManager {
         longMessage = fullMessage.length() > 32;
 
         ItemStack emptyItem = createEmptyItem();
+
         ItemStack usernameItem = createInfoItem(Material.PLAYER_HEAD, ChatColor.GOLD + "Username", ChatColor.WHITE + username);
         ItemStack uuidItem = createInfoItem(Material.NAME_TAG, ChatColor.GOLD + "UUID", ChatColor.WHITE + uuid);
         ItemStack worldItem = createInfoItem(Material.GRASS_BLOCK, ChatColor.GOLD + "World", ChatColor.WHITE + world);

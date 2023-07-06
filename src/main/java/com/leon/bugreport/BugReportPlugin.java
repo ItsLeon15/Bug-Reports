@@ -6,7 +6,6 @@ import org.bstats.bukkit.Metrics;
 public class BugReportPlugin extends JavaPlugin {
 
     private BugReportManager reportManager;
-    private Metrics metrics;
 
     @Override
     public void onEnable() {
@@ -17,7 +16,9 @@ public class BugReportPlugin extends JavaPlugin {
         reportManager = new BugReportManager(this, dbFilePath);
         registerCommands();
         registerListeners();
-        metrics = new Metrics(this, 18974);
+        Metrics metrics = new Metrics(this, 18974);
+
+        BugReportLanguage.loadLanguageTexts();
     }
 
     private void registerCommands() {

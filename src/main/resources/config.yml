@@ -1,1 +1,30 @@
-webhookUrl: 'YOUR_WEBHOOK_URL'
+webhookURL: https://discord.com/api/webhooks/
+
+enableDiscordWebhook: true
+enablePluginReportCategories: false
+enableBugReportNotifications: false
+
+max-reports-per-player: 50
+report-confirmation-message: Thanks for submitting a report!
+
+reportCategories:
+  - name: Plugin Bug
+    id: 1
+    description: Report a bug with a plugin
+    item: minecraft:book
+    color: red
+  - name: Server Bug
+    id: 2
+    description: Report a bug with the server
+    item: minecraft:emerald
+    color: green
+  - name: Resource Bug
+    id: 3
+    description: Report a bug with the resource pack
+    item: minecraft:map
+    color: blue
+  - name: Other
+    id: 4
+    description: Report something else
+    item: minecraft:paper
+    color: yellow

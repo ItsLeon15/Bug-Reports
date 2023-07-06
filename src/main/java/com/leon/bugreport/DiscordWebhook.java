@@ -18,7 +18,6 @@ public class DiscordWebhook {
     private String content;
     private String username;
     private String avatarUrl;
-    private boolean tts;
     private List<EmbedObject> embeds = new ArrayList<>();
 
 
