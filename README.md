@@ -10,7 +10,7 @@ BugReport is a tool that helps server owners manage any bug reports found by pla
 - **buglinkdiscord <Webhook URL>** - Link a Discord Webhook to send all Bug Reports to.
 ## Permissions
 - **bugreport.admin** - Allows a user to access the buglist command.
-- **bugreport.notify** - Let's a player be notified every time a bug report is sent.
+- **bugreport.notify** - Allows a player be notified every time a bug report is sent.
 
 ## Fixes for future releases
 - [x] Allow more than 9 bug reports with multiple pages.
@@ -22,4 +22,4 @@ BugReport is a tool that helps server owners manage any bug reports found by pla
 - [x] 1.17.X
 - [x] 1.18.X
 - [x] 1.19.X
-- [x] 1.12.X
+- [x] 1.20.X

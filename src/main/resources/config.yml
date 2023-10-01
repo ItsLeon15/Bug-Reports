@@ -4,8 +4,30 @@ enableDiscordWebhook: true
 enablePluginReportCategories: false
 enableBugReportNotifications: false
 
+language: en
 max-reports-per-player: 50
 report-confirmation-message: Thanks for submitting a report!
+
+## Available placeholders:
+#
+# Aqua, Black, Blue, Dark_Aqua, Dark_Blue
+# Dark_Gray, Dark_Green, Dark_Purple, Dark_Red
+# Gold, Gray, Green, Light_Purple, Red, White, Yellow
+#
+## The default color is Yellow
+pluginColor: Yellow
+pluginTitle: "[Bug Report]"
+
+# This can either be "mysql" or "local".
+# If you choose "mysql", you must fill out the database section below.
+# If you choose "local", no configuration is required.
+databaseType: mysql
+database:
+  host: localhost
+  port: 3306
+  database: database
+  username: root
+  password: password
 
 reportCategories:
   - name: Plugin Bug

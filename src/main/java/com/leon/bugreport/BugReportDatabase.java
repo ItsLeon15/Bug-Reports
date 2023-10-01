@@ -1,28 +1,49 @@
 package com.leon.bugreport;
 
+import org.bukkit.configuration.ConfigurationSection;
+import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+
+import static com.leon.bugreport.BugReportManager.*;
 
 public class BugReportDatabase {
     private Connection connection;
-    private final String databaseFilePath;
 
-    public BugReportDatabase(String databaseFilePath) {
-        this.databaseFilePath = databaseFilePath;
-        connect();
-        createTables();
+    public BugReportDatabase() {
+        connectLocalOrRemote();
     }
 
-    public void addBugReport(String username, UUID playerId, String world, String header, String fullMessage) {
+    private void connectLocalOrRemote() {
+        loadConfig();
+
+        String databaseType = Objects.requireNonNull(config.getString("databaseType"));
+        ConfigurationSection databaseSection = config.getConfigurationSection("database");
+
+		if (databaseType.equalsIgnoreCase("local")) {
+            System.out.println("Connecting to local database");
+            connectLocal();
+        }
+
+        if (databaseType.equalsIgnoreCase("mysql")) {
+            System.out.println("Connecting to remote database");
+
+			String host = databaseSection.getString("host");
+            int port = databaseSection.getInt("port");
+            String database = databaseSection.getString("database");
+            String username = databaseSection.getString("username");
+            String password = databaseSection.getString("password");
+
+            connectRemote(host, port, database, username, password);
+        }
+    }
+
+    public void addBugReport(String username, @NotNull UUID playerId, String world, String header, String fullMessage) {
         try {
             PreparedStatement statement = connection.prepareStatement("INSERT INTO bug_reports (player_id, header, message, username, world) VALUES (?, ?, ?, ?, ?)");
 
@@ -35,7 +56,8 @@ public class BugReportDatabase {
             statement.executeUpdate();
             statement.close();
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.getLogger().severe("Failed to add bug report.");
+            plugin.getLogger().severe(e.getMessage());
         }
     }
 
@@ -54,34 +76,51 @@ public class BugReportDatabase {
                 String header = resultSet.getString("header");
 
                 List<String> reports = bugReports.getOrDefault(playerId, new ArrayList<>());
-                reports.add("Username: " + username + "\nUUID: " + playerId.toString() + "\nWorld: " + world + "\nFull Message: " + fullMessage + "\nHeader: " + header);
+                reports.add("Username: " + username + "\nUUID: " + playerId + "\nWorld: " + world + "\nFull Message: " + fullMessage + "\nHeader: " + header);
                 bugReports.put(playerId, reports);
             }
 
             resultSet.close();
             statement.close();
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.getLogger().severe("Failed to load bug reports.");
+            plugin.getLogger().severe(e.getMessage());
         }
 
         return bugReports;
     }
 
-    private void connect() {
+    private void connectRemote(String host, Integer port, String database, String username, String password) {
         try {
-            File databaseFile = new File(databaseFilePath);
+            String databaseURL = "jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false";
+            connection = DriverManager.getConnection(databaseURL, username, password);
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Failed to connect to remote database.");
+            plugin.getLogger().severe(e.getMessage());
+        }
+
+        createTables();
+    }
+
+    private void connectLocal() {
+        try {
+            File databaseFile = new File("plugins/BugReport/bugreports.db");
             String databaseURL = "jdbc:sqlite:" + databaseFile.getAbsolutePath();
             connection = DriverManager.getConnection(databaseURL);
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.getLogger().severe("Failed to connect to local database.");
+            plugin.getLogger().severe(e.getMessage());
         }
+
+        createTables();
     }
 
     private void createTables() {
         try {
-            connection.createStatement().execute("CREATE TABLE IF NOT EXISTS bug_reports (player_id TEXT, header TEXT, message TEXT, username TEXT, world TEXT)");
+            connection.createStatement().execute("CREATE TABLE IF NOT EXISTS bug_reports (rowid INTEGER, player_id TEXT, header TEXT, message TEXT, username TEXT, world TEXT)");
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.getLogger().severe("Failed to create tables.");
+            plugin.getLogger().severe(e.getMessage());
         }
     }
 
@@ -107,7 +146,8 @@ public class BugReportDatabase {
             statement.executeUpdate();
             statement.close();
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.getLogger().severe("Failed to update bug report header.");
+            plugin.getLogger().severe(e.getMessage());
         }
     }
 }

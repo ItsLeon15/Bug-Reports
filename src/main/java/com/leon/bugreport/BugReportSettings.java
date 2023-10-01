@@ -16,36 +16,31 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.scheduler.BukkitScheduler;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
+import static com.leon.bugreport.BugReportManager.pluginColor;
+import static com.leon.bugreport.BugReportManager.pluginTitle;
 
 public class BugReportSettings {
-
-    private final BugReportManager reportManager;
-
-    public BugReportSettings(BugReportManager reportManager) {
-        this.reportManager = reportManager;
-    }
+    public BugReportSettings(BugReportManager reportManager) { }
 
     public static Inventory getSettingsGUI() {
         int secondRow = 9;
         int thirdRow = 18;
         int fifthRow = 36;
 
-        Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Report - " + BugReportLanguage.getTitleFromLanguage()[3]);
+        Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Report - " + BugReportLanguage.getTitleFromLanguage("settings"));
 
-        ItemStack setDiscordWebhook = createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGQ0MjMzN2JlMGJkY2EyMTI4MDk3ZjFjNWJiMTEwOWU1YzYzM2MxNzkyNmFmNWZiNmZjMjAwMDAwMTFhZWI1MyJ9fX0=", BugReportLanguage.getTitleFromLanguage()[6], 1);
-        ItemStack setLanguage = createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODc5ZTU0Y2JlODc4NjdkMTRiMmZiZGYzZjE4NzA4OTQzNTIwNDhkZmVjZDk2Mjg0NmRlYTg5M2IyMTU0Yzg1In19fQ==", BugReportLanguage.getTitleFromLanguage()[10], 2);
+        ItemStack setDiscordWebhook = createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGQ0MjMzN2JlMGJkY2EyMTI4MDk3ZjFjNWJiMTEwOWU1YzYzM2MxNzkyNmFmNWZiNmZjMjAwMDAwMTFhZWI1MyJ9fX0=", BugReportLanguage.getTitleFromLanguage("enableDiscordWebhook"), 1);
+        ItemStack setLanguage = createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODc5ZTU0Y2JlODc4NjdkMTRiMmZiZGYzZjE4NzA4OTQzNTIwNDhkZmVjZDk2Mjg0NmRlYTg5M2IyMTU0Yzg1In19fQ==", BugReportLanguage.getTitleFromLanguage("setLanguage"), 2);
 
-        ItemStack maxReportsPerPlayer = createButton(Material.PAPER, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage()[9]);
-        ItemStack toggleCategorySelection = createButton(Material.CHEST, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage()[8]);
-        ItemStack setBugReportNotifications = createButton(Material.BELL, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage()[7]);
-        //        ItemStack setReportCooldown = createButton(Material.CLOCK, ChatColor.YELLOW + "Set Report Cooldown");
-        ItemStack onIcon = createButton(Material.LIME_DYE, ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage()[11]);
-        ItemStack offIcon = createButton(Material.GRAY_DYE, ChatColor.RED + BugReportLanguage.getTitleFromLanguage()[12]);
+        ItemStack maxReportsPerPlayer = createButton(Material.PAPER, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("setMaxReportsPerPlayer"));
+        ItemStack toggleCategorySelection = createButton(Material.CHEST, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("enableCategorySelection"));
+        ItemStack setBugReportNotifications = createButton(Material.BELL, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("enableBugReportNotifications"));
+        ItemStack onIcon = createButton(Material.LIME_DYE, ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage("on"));
+        ItemStack offIcon = createButton(Material.GRAY_DYE, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("off"));
 
         for (int i = 0; i < 9; i++) {
             gui.setItem(i, createButton(Material.GRAY_STAINED_GLASS_PANE, " "));
@@ -66,13 +61,11 @@ public class BugReportSettings {
         gui.setItem(secondRow + 3, toggleCategorySelection);
         gui.setItem(secondRow + 4, maxReportsPerPlayer);
         gui.setItem(secondRow + 5, setLanguage);
-//        gui.setItem(secondRow + 6, setReportCooldown);
-
         gui.setItem(thirdRow + 1, getDiscordWebhookToggle() ? onIcon : offIcon);
         gui.setItem(thirdRow + 2, getBugReportNotificationsToggle() ? onIcon : offIcon);
         gui.setItem(thirdRow + 3, getCategorySelectionToggle() ? onIcon : offIcon);
 
-        gui.setItem(fifthRow + 4, createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage()[0]));
+        gui.setItem(fifthRow + 4, createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("back")));
 
         return gui;
     }
@@ -93,7 +86,7 @@ public class BugReportSettings {
         boolean toggle = getDiscordWebhookToggle();
         BugReportManager.config.set("enableDiscordWebhook", !toggle);
         BugReportManager.saveConfig();
-        player.getOpenInventory().setItem(19, getDiscordWebhookToggle() ? createButton(Material.LIME_DYE, ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage()[11]) : createButton(Material.GRAY_DYE, ChatColor.RED + BugReportLanguage.getTitleFromLanguage()[12]));
+        player.getOpenInventory().setItem(19, getDiscordWebhookToggle() ? createButton(Material.LIME_DYE, ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage("on")) : createButton(Material.GRAY_DYE, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("off")));
     }
 
     private static boolean getBugReportNotificationsToggle() {
@@ -104,7 +97,7 @@ public class BugReportSettings {
         boolean toggle = getBugReportNotificationsToggle();
         BugReportManager.config.set("enableBugReportNotifications", !toggle);
         BugReportManager.saveConfig();
-        player.getOpenInventory().setItem(20, toggle ? createButton(Material.GRAY_DYE, ChatColor.RED + BugReportLanguage.getTitleFromLanguage()[12]) : createButton(Material.LIME_DYE, ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage()[11]));
+        player.getOpenInventory().setItem(20, toggle ? createButton(Material.GRAY_DYE, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("off")) : createButton(Material.LIME_DYE, ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage("on")));
     }
 
     private static boolean getCategorySelectionToggle() {
@@ -115,7 +108,7 @@ public class BugReportSettings {
         boolean toggle = getCategorySelectionToggle();
         BugReportManager.config.set("enablePluginReportCategories", !toggle);
         BugReportManager.saveConfig();
-        player.getOpenInventory().setItem(21, toggle ? createButton(Material.GRAY_DYE, ChatColor.RED + BugReportLanguage.getTitleFromLanguage()[12]) : createButton(Material.LIME_DYE, ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage()[11]));
+        player.getOpenInventory().setItem(21, toggle ? createButton(Material.GRAY_DYE, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("off")) : createButton(Material.LIME_DYE, ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage("on")));
     }
 
     private static void setLanguageToggle(Player player) {
@@ -123,7 +116,7 @@ public class BugReportSettings {
     }
 
     private static Inventory openLanguageGUI() {
-        Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Report - " + BugReportLanguage.getTitleFromLanguage()[13]);
+        Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Report - " + BugReportLanguage.getTitleFromLanguage("language"));
 
         for (int i = 0; i < 9; i++) {
             gui.setItem(i, createButton(Material.GRAY_STAINED_GLASS_PANE, " "));
@@ -144,7 +137,7 @@ public class BugReportSettings {
         gui.setItem(22, createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNWU3ODk5YjQ4MDY4NTg2OTdlMjgzZjA4NGQ5MTczZmU0ODc4ODY0NTM3NzQ2MjZiMjRiZDhjZmVjYzc3YjNmIn19fQ==", "German", 13));
         gui.setItem(23, createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzJkNzMwYjZkZGExNmI1ODQ3ODNiNjNkMDgyYTgwMDQ5YjVmYTcwMjI4YWJhNGFlODg0YzJjMWZjMGMzYThiYyJ9fX0=", "Spanish", 14));
         gui.setItem(24, createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODVjZTg5MjIzZmE0MmZlMDZhZDY1ZDhkNDRjYTQxMmFlODk5YzgzMTMwOWQ2ODkyNGRmZTBkMTQyZmRiZWVhNCJ9fX0=", "Italian", 15));
-        gui.setItem(40, createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage()[0]));
+        gui.setItem(40, createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("back")));
 
         return gui;
     }
@@ -176,10 +169,14 @@ public class BugReportSettings {
 
         @EventHandler(priority = EventPriority.NORMAL)
         public Object onInventoryClick(InventoryClickEvent event) {
-            String displayName = event.getView().getTitle();
-            String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(displayName);
-            if (customDisplayName.contains("Settings")) {
+            String displayName = ChatColor.stripColor(event.getView().getTitle());
+            if (displayName.contains("Bug Report - ")) {
+                displayName = displayName.substring(13);
+            }
 
+            String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(displayName);
+
+            if (customDisplayName.contains("Settings")) {
                 event.setCancelled(true);
 
                 Player player = (Player) event.getWhoClicked();
@@ -199,7 +196,7 @@ public class BugReportSettings {
                 }
 
                 String itemDisplayName = itemMeta.getDisplayName();
-                String customItemDisplayName = ChatColor.stripColor(BugReportLanguage.getEnglishVersionFromLanguage(itemDisplayName));
+                String customItemDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(itemDisplayName);
 
                 if (customItemDisplayName.equals("Back")) {
                     player.closeInventory();
@@ -220,17 +217,17 @@ public class BugReportSettings {
                     case "Enable Category Selection" -> setCategorySelectionToggle(player);
                     case "Set Max Reports Per Player" -> {
                         player.closeInventory();
-                        if (BugReportManager.lang.getText(BugReportManager.config.getString("language"), "enterMaxReportsPerPlayer") != null) {
-                            player.sendMessage(ChatColor.YELLOW + BugReportManager.lang.getText(BugReportManager.config.getString("language"), "enterMaxReportsPerPlayer"));
+                        if (BugReportLanguage.getText (BugReportManager.config.getString("language"), "enterMaxReportsPerPlayer") != null) {
+                            player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.YELLOW + BugReportLanguage.getText (BugReportManager.config.getString("language"), "enterMaxReportsPerPlayer"));
                         } else {
-                            player.sendMessage(ChatColor.YELLOW + "Enter the max reports a player can submit. Or type 'cancel' to cancel.");
+                            player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.YELLOW + "Enter the max reports a player can submit. Or type 'cancel' to cancel.");
                         }
                         setMaxReportsClickMap.put(player.getUniqueId(), String.valueOf(true));
                         setMaxReportsClickMap.put(player.getUniqueId(), customItemDisplayName);
                     }
                     case "Set Report Cooldown" -> {
                         player.closeInventory();
-                        player.sendMessage(ChatColor.YELLOW + "Enter the cooldown between reports in seconds. Or type 'cancel' to cancel."); // TODO
+                        player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.YELLOW + "Enter the cooldown between reports in seconds. Or type 'cancel' to cancel."); // TODO: Language support
                         setReportCooldownClickMap.put(player.getUniqueId(), String.valueOf(true));
                         setReportCooldownClickMap.put(player.getUniqueId(), customItemDisplayName);
                     }
@@ -255,7 +252,7 @@ public class BugReportSettings {
                 }
 
                 String itemDisplayName = itemMeta.getDisplayName();
-                String customItemDisplayName = ChatColor.stripColor(BugReportLanguage.getEnglishVersionFromLanguage(itemDisplayName));
+                String customItemDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(itemDisplayName);
 
                 if (customItemDisplayName.equals("Back")) {
                     player.openInventory(getSettingsGUI());
@@ -277,14 +274,15 @@ public class BugReportSettings {
         }
 
         private static void setLanguage(String languageCode, String languageName, Player player) {
-            if (BugReportManager.lang.getText(languageCode, "languageSetTo") != null) {
-                player.sendMessage(ChatColor.GREEN + BugReportManager.lang.getText(languageCode, "languageSetTo").replace("%language%", languageName));
+            player.closeInventory();
+            if (BugReportLanguage.getText(languageCode, "languageSetTo") != null) {
+                player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + BugReportLanguage.getText(languageCode, "languageSetTo").replace("%language%", languageName));
             } else {
-                player.sendMessage(ChatColor.GREEN + "Language set to " + languageName + ".");
+                player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + "Language set to " + languageName + ".");
             }
             BugReportManager.config.set("language", languageCode);
             BugReportManager.saveConfig();
-            player.openInventory(getSettingsGUI());
+            BugReportManager.loadConfig();
         }
 
         @EventHandler(priority = EventPriority.NORMAL)
@@ -292,7 +290,7 @@ public class BugReportSettings {
             Player player = event.getPlayer();
 
             if (setMaxReportsClickMap.containsKey(player.getUniqueId())) {
-                handleSettingUpdate(event, player, setMaxReportsClickMap, BugReportLanguage.getTitleFromLanguage()[9],
+                handleSettingUpdate(event, player, setMaxReportsClickMap, BugReportLanguage.getTitleFromLanguage("setMaxReportsPerPlayer"),
                         "max-reports-per-player", (value) -> {
                             int maxReports;
 
@@ -300,32 +298,32 @@ public class BugReportSettings {
                                 try {
                                     maxReports = Integer.parseInt(value);
                                 } catch (NumberFormatException e) {
-                                    if (BugReportManager.lang.getText(BugReportManager.config.getString("language"), "enterValidNumber") != null) {
-                                        player.sendMessage(ChatColor.RED + BugReportManager.lang.getText(BugReportManager.config.getString("language"), "enterValidNumber"));
+                                    if (BugReportLanguage.getText (BugReportManager.config.getString("language"), "enterValidNumber") != null) {
+                                        player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + BugReportLanguage.getText (BugReportManager.config.getString("language"), "enterValidNumber"));
                                     } else {
-                                        player.sendMessage(ChatColor.RED + "Please enter a valid number.");
+                                        player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + "Please enter a valid number.");
                                     }
                                     return;
                                 }
 
                                 BugReportManager.config.set("max-reports-per-player", maxReports);
                                 BugReportManager.saveConfig();
-                                if (BugReportManager.lang.getText(BugReportManager.config.getString("language"), "maxReportsPerPlayerSuccessMessage") != null) {
-                                    player.sendMessage(ChatColor.GREEN + BugReportManager.lang.getText(BugReportManager.config.getString("language"), "maxReportsPerPlayerSuccessMessage").replace("%amount%", String.valueOf(maxReports)));
+                                if (BugReportLanguage.getText (BugReportManager.config.getString("language"), "maxReportsPerPlayerSuccessMessage") != null) {
+                                    player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + BugReportLanguage.getText (BugReportManager.config.getString("language"), "maxReportsPerPlayerSuccessMessage").replace("%amount%", String.valueOf(maxReports)));
                                 } else {
-                                    player.sendMessage(ChatColor.GREEN + "Max reports per player has been set to " + maxReports + ".");
+                                    player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + "Max reports per player has been set to " + maxReports + ".");
                                 }
                             } else {
                                 value = value.substring(0, 1).toUpperCase() + value.substring(1).toLowerCase();
                                 String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(value);
 
                                 if (customDisplayName.contains("Cancel")) {
-                                    player.sendMessage(ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage()[14]);
+                                    player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage("cancelled"));
                                 } else {
-                                    if (BugReportManager.lang.getText(BugReportManager.config.getString("language"), "enterValidNumber") != null) {
-                                        player.sendMessage(ChatColor.RED + BugReportManager.lang.getText(BugReportManager.config.getString("language"), "enterValidNumber"));
+                                    if (BugReportLanguage.getText (BugReportManager.config.getString("language"), "enterValidNumber") != null) {
+                                        player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + BugReportLanguage.getText (BugReportManager.config.getString("language"), "enterValidNumber"));
                                     } else {
-                                        player.sendMessage(ChatColor.RED + "Please enter a valid number.");
+                                        player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + "Please enter a valid number.");
                                     }
                                 }
                             }
@@ -337,20 +335,20 @@ public class BugReportSettings {
                             try {
                                 reportCooldown = Integer.parseInt(value);
                             } catch (NumberFormatException e) {
-                                if (BugReportManager.lang.getText(BugReportManager.config.getString("language"), "enterValidNumber") != null) {
-                                    player.sendMessage(ChatColor.RED + BugReportManager.lang.getText(BugReportManager.config.getString("language"), "enterValidNumber"));
+                                if (BugReportLanguage.getText (BugReportManager.config.getString("language"), "enterValidNumber") != null) {
+                                    player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + BugReportLanguage.getText (BugReportManager.config.getString("language"), "enterValidNumber"));
                                 } else {
-                                    player.sendMessage(ChatColor.RED + "Please enter a valid number.");
+                                    player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + "Please enter a valid number.");
                                 }
                                 return;
                             }
 
                             BugReportManager.config.set("report-cooldown", reportCooldown);
                             BugReportManager.saveConfig();
-                            if (BugReportManager.lang.getText(BugReportManager.config.getString("language"), "reportCooldownSuccessMessage") != null) {
-                                player.sendMessage(ChatColor.GREEN + BugReportManager.lang.getText(BugReportManager.config.getString("language"), "reportCooldownSuccessMessage").replace("%cooldown%", String.valueOf(reportCooldown)));
+                            if (BugReportLanguage.getText (BugReportManager.config.getString("language"), "reportCooldownSuccessMessage") != null) {
+                                player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + BugReportLanguage.getText (BugReportManager.config.getString("language"), "reportCooldownSuccessMessage").replace("%cooldown%", String.valueOf(reportCooldown)));
                             } else {
-                                player.sendMessage(ChatColor.GREEN + "Report cooldown has been set to " + reportCooldown + " seconds.");
+                                player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + "Report cooldown has been set to " + reportCooldown + " seconds.");
                             }
                         });
             }

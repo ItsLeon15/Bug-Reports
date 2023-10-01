@@ -2,9 +2,9 @@ package com.leon.bugreport;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bstats.bukkit.Metrics;
+import static com.leon.bugreport.BugReportManager.plugin;
 
 public class BugReportPlugin extends JavaPlugin {
-
     private BugReportManager reportManager;
 
     @Override
@@ -12,13 +12,12 @@ public class BugReportPlugin extends JavaPlugin {
         if (!getDataFolder().exists()) {
             getDataFolder().mkdirs();
         }
-        String dbFilePath = "plugins/BugReport/bugreports.db";
-        reportManager = new BugReportManager(this, dbFilePath);
+        reportManager = new BugReportManager(this);
         registerCommands();
         registerListeners();
         Metrics metrics = new Metrics(this, 18974);
 
-        BugReportLanguage.loadLanguageTexts();
+        BugReportLanguage.loadLanguageTexts(plugin, "languages.yml");
     }
 
     private void registerCommands() {

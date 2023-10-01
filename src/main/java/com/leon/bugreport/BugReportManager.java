@@ -20,6 +20,8 @@ import org.bukkit.plugin.Plugin;
 import java.io.File;
 import java.util.*;
 
+import static com.leon.bugreport.BugReportSettings.getSettingsGUI;
+
 public class BugReportManager {
 
     static Map<UUID, List<String>> bugReports;
@@ -35,15 +37,20 @@ public class BugReportManager {
     private final LinkDiscord discord;
     private final List<Category> reportCategories;
 
-    public BugReportManager(Plugin plugin, String dbFilePath) {
+    static String pluginTitle;
+    static ChatColor pluginColor;
+
+    public BugReportManager(Plugin plugin) {
         BugReportManager.plugin = plugin;
         bugReports = new HashMap<>();
-        database = new BugReportDatabase(dbFilePath);
+        database = new BugReportDatabase();
 
         loadBugReports();
         loadConfig();
 
         String webhookURL = config.getString("webhookURL", "");
+        pluginTitle = Objects.requireNonNull(config.getString("pluginTitle", "[Bug Report]"));
+		pluginColor = BugReportCommand.stringColorToColorCode(Objects.requireNonNull(Objects.requireNonNull(config.getString ("pluginColor", "Yellow")).toUpperCase()));
 
         discord = new LinkDiscord(webhookURL);
         reportCategories = loadReportCategories();
@@ -58,8 +65,8 @@ public class BugReportManager {
 
                 for (int i = 0; i < keys.length; i++) {
                     if (values[i] == null) {
-                        if (lang.getText(language, "missingValueMessage") != null) {
-                            plugin.getLogger().warning(lang.getText(language, "missingValueMessage").replace("%key%", keys[i].toString()));
+                        if (BugReportLanguage.getText (language, "missingValueMessage") != null) {
+                            plugin.getLogger().warning(BugReportLanguage.getText (language, "missingValueMessage").replace("%key%", keys[i].toString()));
                         } else {
                             plugin.getLogger().warning("Error: Missing " + keys[i] + " in reportCategories in config.");
                         }
@@ -68,8 +75,8 @@ public class BugReportManager {
                 }
             }
         } else {
-            if (lang.getText(language, "missingReportCategoryMessage") != null) {
-                plugin.getLogger().warning(lang.getText(language, "missingReportCategoryMessage"));
+            if (BugReportLanguage.getText (language, "missingReportCategoryMessage") != null) {
+                plugin.getLogger().warning(BugReportLanguage.getText (language, "missingReportCategoryMessage"));
             } else {
                 plugin.getLogger().warning("Error: Missing reportCategories in config.");
             }
@@ -120,8 +127,8 @@ public class BugReportManager {
 
             return categories;
         } else {
-            if (lang.getText(language, "wentWrongLoadingCategoriesMessage") != null) {
-                plugin.getLogger().warning(lang.getText(language, "wentWrongLoadingCategoriesMessage"));
+            if (BugReportLanguage.getText (language, "wentWrongLoadingCategoriesMessage") != null) {
+                plugin.getLogger().warning(BugReportLanguage.getText (language, "wentWrongLoadingCategoriesMessage"));
             } else {
                 plugin.getLogger().warning("Error: Something went wrong while loading the report categories.");
             }
@@ -168,30 +175,31 @@ public class BugReportManager {
         database.addBugReport(playerName, playerId, worldName, header, message);
 
         if (config.getBoolean("enableBugReportNotifications", true)) {
+            String defaultMessage = pluginColor + pluginTitle + " " + ChatColor.GRAY + "A new bug report has been submitted by " + ChatColor.YELLOW + playerName + ChatColor.GRAY + ".";
+            String languageMessage = BugReportLanguage.getText(language, "bugReportNotificationMessage");
+            String notificationMessage = (languageMessage != null)
+                    ? pluginColor + pluginTitle + " " + ChatColor.GRAY + languageMessage.replace("%player%", playerName) + ChatColor.GRAY + "."
+                    : defaultMessage;
+
             for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
                 if (onlinePlayer.hasPermission("bugreport.notify")) {
-                    if (lang.getText(language, "bugReportNotificationMessage") != null) {
-                        onlinePlayer.sendMessage(ChatColor.YELLOW + "[Bug Report] " + ChatColor.GRAY + lang.getText(language, "bugReportNotificationMessage").replace("%player%", playerName) + ChatColor.GRAY + ".");
-                    } else {
-                        onlinePlayer.sendMessage(ChatColor.YELLOW + "[Bug Report] " + ChatColor.GRAY + "A new bug report has been submitted by " + ChatColor.YELLOW + playerName + ChatColor.GRAY + ".");
-                    }
+                    onlinePlayer.sendMessage(notificationMessage);
                 }
             }
         }
 
         if (config.getBoolean("enableDiscordWebhook", true)) {
-            if (!config.getString("webhookURL", "").isEmpty()) {
+            String webhookURL = config.getString("webhookURL", "");
+
+            if (!webhookURL.isEmpty()) {
                 try {
                     discord.sendBugReport(message, playerId, worldName, playerName);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             } else {
-                if (lang.getText(language, "missingDiscordWebhookURLMessage") != null) {
-                    plugin.getLogger().warning(lang.getText(language, "missingDiscordWebhookURLMessage"));
-                } else {
-                    plugin.getLogger().warning("Missing webhookURL in config.yml");
-                }
+                String warningMessage = BugReportLanguage.getText (language, "missingDiscordWebhookURLMessage");
+                plugin.getLogger().warning(Objects.requireNonNullElse(warningMessage, "Missing webhookURL in config.yml"));
             }
         }
     }
@@ -207,7 +215,7 @@ public class BugReportManager {
         int totalPages = (int) Math.ceil((double) reports.size() / itemsPerPage);
         int currentPage = Math.max(1, Math.min(getCurrentPage(player), totalPages));
 
-        Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Report - " + BugReportLanguage.getTitleFromLanguage()[5] + " " + currentPage);
+        Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Report - " + BugReportLanguage.getTitleFromLanguage("pageInfo").replace("%currentPage%", String.valueOf(currentPage)).replace("%totalPages%", String.valueOf(totalPages)));
 
         int startIndex = (currentPage - 1) * itemsPerPage;
         int endIndex = Math.min(startIndex + itemsPerPage, reports.size());
@@ -215,7 +223,7 @@ public class BugReportManager {
             String report = reports.get(i);
             String firstLine = report.split("\n")[0];
 
-            ItemStack reportItem = null;
+            ItemStack reportItem;
             if (report.contains("hasBeenRead: 0")) {
                 reportItem = new ItemStack(Material.ENCHANTED_BOOK);
             } else if (report.contains("hasBeenRead: 1")) {
@@ -232,11 +240,11 @@ public class BugReportManager {
             gui.setItem(i - startIndex, reportItem);
         }
 
-        ItemStack backButton = createButton(Material.ARROW, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage()[0]);
-        ItemStack forwardButton = createButton(Material.ARROW, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage()[1]);
-        ItemStack pageIndicator = createButton(Material.PAPER, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage()[2].replace("%currentPage%", String.valueOf(currentPage)).replace("%totalPages%", String.valueOf(totalPages)));
-        ItemStack settingsButton = createButton(Material.CHEST, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage()[3]);
-        ItemStack closeButton = createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage()[4]);
+        ItemStack backButton = createButton(Material.ARROW, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("back"));
+        ItemStack forwardButton = createButton(Material.ARROW, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("forward"));
+        ItemStack pageIndicator = createButton(Material.PAPER, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("pageInfo").replace("%currentPage%", String.valueOf(currentPage)).replace("%totalPages%", String.valueOf(totalPages)));
+        ItemStack settingsButton = createButton(Material.CHEST, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("settings"));
+        ItemStack closeButton = createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("close"));
 
         if (currentPage > 1) {
             gui.setItem(navigationRow, backButton);
@@ -303,7 +311,6 @@ public class BugReportManager {
             }
 
             String displayName = itemMeta.getDisplayName();
-
             String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(displayName);
 
             if (customDisplayName.equals("Back")) {
@@ -343,7 +350,7 @@ public class BugReportManager {
             }
 
             if (customDisplayName.equals("Settings")) {
-                player.openInventory(BugReportSettings.getSettingsGUI());
+                player.openInventory(getSettingsGUI());
             }
 
             if (customDisplayName.equals("Close")) {
@@ -388,39 +395,28 @@ public class BugReportManager {
 
         String[] reportLines = report.split("\n");
 
-        String username = "";
-        String uuid = "";
-        String world = "";
-        String fullMessage = "";
-        String category = "";
-        ItemStack categoryItem = null;
-        boolean longMessage = false;
+        Map<String, String> reportData = new HashMap<>();
 
         for (String line : reportLines) {
-            String trimmed = line.substring(line.indexOf(":") + 1).trim();
-
-            if (line.startsWith("Username:")) {
-                username = trimmed;
-            } else if (line.startsWith("UUID:")) {
-                uuid = trimmed;
-            } else if (line.startsWith("World:")) {
-                world = trimmed;
-            } else if (line.startsWith("Full Message:")) {
-                fullMessage = trimmed;
-            } else if (line.startsWith("Category ID:")) {
-                category = trimmed;
+            int colonIndex = line.indexOf(":");
+            if (colonIndex >= 0) {
+                String key = line.substring(0, colonIndex).trim();
+                String value = line.substring(colonIndex + 1).trim();
+                reportData.put(key, value);
             }
         }
 
-        longMessage = fullMessage.length() > 32;
-
+        String username = reportData.get("Username");
+        String uuid = reportData.get("UUID");
+        String world = reportData.get("World");
+        String fullMessage = reportData.get("Full Message");
+        String category = reportData.get("Category ID");
         ItemStack emptyItem = createEmptyItem();
 
         ItemStack usernameItem = createInfoItem(Material.PLAYER_HEAD, ChatColor.GOLD + "Username", ChatColor.WHITE + username);
         ItemStack uuidItem = createInfoItem(Material.NAME_TAG, ChatColor.GOLD + "UUID", ChatColor.WHITE + uuid);
         ItemStack worldItem = createInfoItem(Material.GRASS_BLOCK, ChatColor.GOLD + "World", ChatColor.WHITE + world);
-        ItemStack messageItem = createInfoItem(Material.PAPER, ChatColor.GOLD + "Full Message", ChatColor.WHITE + fullMessage, longMessage);
-
+        ItemStack messageItem = createInfoItem(Material.PAPER, ChatColor.GOLD + "Full Message", ChatColor.WHITE + fullMessage, fullMessage.length() > 32);
 
         for (int i = 0; i < gui.getSize(); i++) {
             gui.setItem(i, emptyItem);
@@ -431,22 +427,19 @@ public class BugReportManager {
         gui.setItem(14, worldItem);
         gui.setItem(16, messageItem);
 
-        if (!category.equals("null") && !category.equals("")) {
-            String categoryName = "";
+        if (!"null".equals(category) && !"".equals(category)) {
             List<Map<?, ?>> categoryList = config.getMapList("reportCategories");
 
-            for (Map<?, ?> categoryMap : categoryList) {
-                String name = categoryMap.get("name").toString();
-                int id = Integer.parseInt(categoryMap.get("id").toString());
+            Optional<String> categoryNameOptional = categoryList.stream()
+                    .filter(categoryMap -> Integer.parseInt(categoryMap.get("id").toString()) == Integer.parseInt(category))
+                    .map(categoryMap -> categoryMap.get("name").toString())
+                    .findFirst();
 
-                if (id == Integer.parseInt(category)) {
-                    categoryName = name;
-                    break;
-                }
+            if (categoryNameOptional.isPresent()) {
+                String categoryName = categoryNameOptional.get();
+                ItemStack categoryItem = createInfoItem(Material.CHEST, ChatColor.GOLD + "Category Name", ChatColor.WHITE + categoryName, false);
+                gui.setItem(22, categoryItem);
             }
-
-            categoryItem = createInfoItem(Material.CHEST, ChatColor.GOLD + "Category Name", ChatColor.WHITE + categoryName, false);
-            gui.setItem(22, categoryItem);
         }
 
         player.openInventory(gui);
@@ -491,7 +484,7 @@ public class BugReportManager {
                 currentLine.append(word).append(" ");
             }
 
-            if (currentLine.length() > 0) {
+            if (!currentLine.isEmpty()) {
                 lore.add(currentLine.toString());
             }
 

@@ -10,17 +10,17 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-public class BugListCommand implements CommandExecutor {
-    private final BugReportManager reportManager;
+import static com.leon.bugreport.BugReportManager.pluginColor;
+import static com.leon.bugreport.BugReportManager.pluginTitle;
 
-    public BugListCommand(BugReportManager reportManager) {
-        this.reportManager = reportManager;
-    }
+public class BugListCommand implements CommandExecutor {
+
+    public BugListCommand(BugReportManager reportManager) { }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("This command can only be run by a player.");
+            sender.sendMessage(pluginColor + pluginTitle + " " + "This command can only be run by a player.");
             return true;
         }
 
@@ -37,13 +37,13 @@ public class BugListCommand implements CommandExecutor {
             } else {
                 backButton = new ItemStack(Material.ARROW);
                 ItemMeta backMeta = backButton.getItemMeta();
-                backMeta.setDisplayName(ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage()[0]);
+                backMeta.setDisplayName(ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage("back"));
                 backButton.setItemMeta(backMeta);
             }
 
             forwardButton = new ItemStack(Material.ARROW);
             ItemMeta forwardMeta = forwardButton.getItemMeta();
-            forwardMeta.setDisplayName(ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage()[1]);
+            forwardMeta.setDisplayName(ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage("forward"));
             forwardButton.setItemMeta(forwardMeta);
 
             bugReportGUI.setItem(36, backButton);
@@ -51,7 +51,7 @@ public class BugListCommand implements CommandExecutor {
 
             player.openInventory(bugReportGUI);
         } else {
-            player.sendMessage(ChatColor.RED + "You don't have permission to use this command.");
+            player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + "You don't have permission to use this command.");
         }
 
         return true;

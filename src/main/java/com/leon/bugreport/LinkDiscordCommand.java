@@ -6,8 +6,11 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import static com.leon.bugreport.BugReportManager.pluginColor;
+import static com.leon.bugreport.BugReportManager.pluginTitle;
+
 public class LinkDiscordCommand implements CommandExecutor {
-    private BugReportManager reportManager;
+    private final BugReportManager reportManager;
 
     public LinkDiscordCommand(BugReportManager reportManager) {
         this.reportManager = reportManager;
@@ -16,7 +19,7 @@ public class LinkDiscordCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("Only players can use this command."); // TODO
+            sender.sendMessage("Only players can use this command."); // TODO: Language support
             return true;
         }
 
@@ -24,22 +27,22 @@ public class LinkDiscordCommand implements CommandExecutor {
 
         if (player.hasPermission("bugreport.admin")) {
             if (args.length < 1) {
-                player.sendMessage(ChatColor.RED + "Usage: /buglinkdiscord <webhook URL>"); // TODO
+                player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + "Usage: /buglinkdiscord <webhook URL>"); // TODO: Language support
                 return true;
             }
 
             String webhookURL = args[0];
 
             if (!isWebhookURLValid(webhookURL)) {
-                player.sendMessage(ChatColor.RED + "Invalid webhook URL."); // TODO
+                player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + "Invalid webhook URL."); // TODO: Language support
                 return true;
             }
 
             reportManager.setWebhookURL(webhookURL);
 
-            player.sendMessage(ChatColor.GREEN + "Webhook URL has been set successfully."); // TODO
+            player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + "Webhook URL has been set successfully."); // TODO: Language support
         } else {
-            player.sendMessage(ChatColor.RED + "You don't have permission to use this command."); // TODO
+            player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + "You don't have permission to use this command."); // TODO: Language support
         }
 
         return true;
