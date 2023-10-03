@@ -8,6 +8,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -16,10 +17,12 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.*;
 
+import static com.leon.bugreport.BugReportSettings.createCustomPlayerHead;
 import static com.leon.bugreport.BugReportSettings.getSettingsGUI;
 
 public class BugReportManager {
@@ -162,12 +165,15 @@ public class BugReportManager {
         String playerUUID = playerId.toString();
         String worldName = player.getWorld().getName();
 
+
         String header = "Username: " + playerName + "\n" +
                 "UUID: " + playerUUID + "\n" +
                 "World: " + worldName + "\n" +
                 "hasBeenRead: 0" + "\n" +
                 "Category ID: " + categoryId + "\n" +
-                "Full Message: " + message;
+                "Full Message: " + message + "\n" +
+                "Archived: 0" + "\n" +
+                "Report ID: " + (reports.size() + 1);
 
         reports.add(header);
         bugReports.put(playerId, reports);
@@ -195,7 +201,7 @@ public class BugReportManager {
                 try {
                     discord.sendBugReport(message, playerId, worldName, playerName);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    plugin.getLogger().warning("Error sending bug report to Discord: " + e.getMessage());
                 }
             } else {
                 String warningMessage = BugReportLanguage.getText (language, "missingDiscordWebhookURLMessage");
@@ -204,7 +210,6 @@ public class BugReportManager {
         }
     }
 
-
     public static Inventory getBugReportGUI(Player player) {
         int itemsPerPage = 27;
         int navigationRow = 36;
@@ -212,32 +217,45 @@ public class BugReportManager {
         UUID playerId = player.getUniqueId();
         List<String> reports = bugReports.getOrDefault(playerId, new ArrayList<>());
 
-        int totalPages = (int) Math.ceil((double) reports.size() / itemsPerPage);
+        List<String> filteredReports = new ArrayList<>();
+        for (String report : reports) {
+            if (!report.contains("Archived: 1")) {
+                filteredReports.add(report);
+            }
+        }
+
+        int totalPages = (int) Math.ceil((double) filteredReports.size() / itemsPerPage);
         int currentPage = Math.max(1, Math.min(getCurrentPage(player), totalPages));
 
         Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Report - " + BugReportLanguage.getTitleFromLanguage("pageInfo").replace("%currentPage%", String.valueOf(currentPage)).replace("%totalPages%", String.valueOf(totalPages)));
 
         int startIndex = (currentPage - 1) * itemsPerPage;
-        int endIndex = Math.min(startIndex + itemsPerPage, reports.size());
+        int endIndex = Math.min(startIndex + itemsPerPage, filteredReports.size());
+
+        int slotIndex = 0;
         for (int i = startIndex; i < endIndex; i++) {
-            String report = reports.get(i);
+            String report = filteredReports.get(i);
+            String reportID = report.substring(report.indexOf("Report ID: ") + 11);
             String firstLine = report.split("\n")[0];
 
             ItemStack reportItem;
-            if (report.contains("hasBeenRead: 0")) {
+
+            if (report.contains("Archived: 1")) {
+                continue;
+            } else if (report.contains("hasBeenRead: 0")) {
                 reportItem = new ItemStack(Material.ENCHANTED_BOOK);
-            } else if (report.contains("hasBeenRead: 1")) {
-                reportItem = new ItemStack(Material.BOOK);
             } else {
                 reportItem = new ItemStack(Material.BOOK);
             }
 
             ItemMeta itemMeta = reportItem.getItemMeta();
-            itemMeta.setDisplayName(ChatColor.YELLOW + "Bug Report #" + (i + 1));
+            itemMeta.setDisplayName(ChatColor.YELLOW + "Bug Report #" + reportID);
             itemMeta.setLore(Collections.singletonList(ChatColor.GRAY + firstLine));
+
             reportItem.setItemMeta(itemMeta);
 
-            gui.setItem(i - startIndex, reportItem);
+            gui.setItem(slotIndex, reportItem);
+            slotIndex++;
         }
 
         ItemStack backButton = createButton(Material.ARROW, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("back"));
@@ -295,7 +313,6 @@ public class BugReportManager {
 
             Player player = (Player) event.getWhoClicked();
             Inventory clickedInventory = event.getClickedInventory();
-
             if (clickedInventory == null) {
                 return;
             }
@@ -313,39 +330,44 @@ public class BugReportManager {
             String displayName = itemMeta.getDisplayName();
             String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(displayName);
 
-            if (customDisplayName.equals("Back")) {
-                int currentPage = getCurrentPage(player);
-                if (currentPage > 1) {
-                    setCurrentPage(player, currentPage - 1);
-                    player.openInventory(getBugReportGUI(player));
+            switch (customDisplayName) {
+                case "Back" -> {
+                    int currentPage = getCurrentPage(player);
+                    if (currentPage > 1) {
+                        setCurrentPage(player, currentPage - 1);
+                        player.openInventory(getBugReportGUI(player));
+                    }
                 }
-            }
-
-            if (customDisplayName.equals("Forward")) {
-                int currentPage = getCurrentPage(player);
-                if (currentPage < reportManager.getTotalPages(player)) {
-                    setCurrentPage(player, currentPage + 1);
-                    player.openInventory(getBugReportGUI(player));
+                case "Forward" -> {
+                    int currentPage = getCurrentPage(player);
+                    if (currentPage < reportManager.getTotalPages(player)) {
+                        setCurrentPage(player, currentPage + 1);
+                        player.openInventory(getBugReportGUI(player));
+                    }
+                }
+                case "Settings" -> player.openInventory(getSettingsGUI());
+                case "Close" -> {
+                    closingInventoryMap.put(player.getUniqueId(), true);
+                    player.closeInventory();
                 }
             }
 
             if (displayName.startsWith(ChatColor.YELLOW + "Bug Report #")) {
-                int itemSlot = event.getSlot();
-                int startIndex = (getCurrentPage(player) - 1) * 27;
-                int reportIndex = startIndex + itemSlot;
+                int reportID = Integer.parseInt(displayName.substring(14)) - 1;
                 UUID playerId = player.getUniqueId();
                 List<String> reports = bugReports.getOrDefault(playerId, new ArrayList<>());
 
-                String report = reports.get(reportIndex);
+                String report = reports.get(reportID);
+
                 if (report.contains("hasBeenRead: 0")) {
                     report = report.replace("hasBeenRead: 0", "hasBeenRead: 1");
-                    reports.set(reportIndex, report);
+                    reports.set(reportID, report);
                     bugReports.put(playerId, reports);
-                    database.updateBugReportHeader(playerId, reportIndex, 1);
+                    database.updateBugReportHeader(playerId, reportID);
                 }
-                if (reportIndex >= 0 && reportIndex < reports.size()) {
-                    reports.set(reportIndex, report);
-                    openBugReportDetailsGUI(player, report, reportIndex + 1);
+                if (reportID >= 0 && reportID < reports.size()) {
+                    reports.set(reportID, report);
+                    openBugReportDetailsGUI(player, report, reportID);
                 }
             }
 
@@ -360,7 +382,7 @@ public class BugReportManager {
         }
 
         @EventHandler(priority = EventPriority.NORMAL)
-        public void onInventoryClose(InventoryCloseEvent event) {
+        public void onInventoryClose(@NotNull InventoryCloseEvent event) {
             if (event.getView().getTitle().startsWith(ChatColor.YELLOW + "Bug Report")) {
                 Player player = (Player) event.getPlayer();
                 UUID playerId = player.getUniqueId();
@@ -375,23 +397,24 @@ public class BugReportManager {
         }
     }
 
-    public static int getCurrentPage(Player player) {
+    public static int getCurrentPage(@NotNull Player player) {
         return player.getMetadata("currentPage").get(0).asInt();
     }
 
-    public int getTotalPages(Player player) {
+    public int getTotalPages(@NotNull Player player) {
         UUID playerId = player.getUniqueId();
         List<String> reports = bugReports.getOrDefault(playerId, new ArrayList<>());
         int totalPages = (int) Math.ceil((double) reports.size() / 27);
         return totalPages;
     }
 
-    public static void setCurrentPage(Player player, int page) {
+    public static void setCurrentPage(@NotNull Player player, int page) {
         player.setMetadata("currentPage", new FixedMetadataValue(plugin, page));
     }
 
-    private static void openBugReportDetailsGUI(Player player, String report, Integer ID) {
-        Inventory gui = Bukkit.createInventory(player, 27, ChatColor.YELLOW + "Bug Report Details - #" + ID);
+    private static void openBugReportDetailsGUI(Player player, @NotNull String report, Integer reportId) {
+        int reportIDGUI = reportId + 1;
+        Inventory gui = Bukkit.createInventory(player, 36, ChatColor.YELLOW + "Bug Report Details - #" + reportIDGUI);
 
         String[] reportLines = report.split("\n");
 
@@ -417,15 +440,23 @@ public class BugReportManager {
         ItemStack uuidItem = createInfoItem(Material.NAME_TAG, ChatColor.GOLD + "UUID", ChatColor.WHITE + uuid);
         ItemStack worldItem = createInfoItem(Material.GRASS_BLOCK, ChatColor.GOLD + "World", ChatColor.WHITE + world);
         ItemStack messageItem = createInfoItem(Material.PAPER, ChatColor.GOLD + "Full Message", ChatColor.WHITE + fullMessage, fullMessage.length() > 32);
+        ItemStack backButton = createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("back"));
+
+        ItemStack archiveButton = createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmUwZmQxMDE5OWU4ZTRmY2RhYmNhZTRmODVjODU5MTgxMjdhN2M1NTUzYWQyMzVmMDFjNTZkMThiYjk0NzBkMyJ9fX0=", ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("archive"), 16);
+//        ItemStack deleteButton = createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvY2Y5YjY3YmI5Y2MxYzg4NDg2NzYwYjE3MjY1MDU0MzEyZDY1OWRmMmNjNjc1NTc1MDA0NWJkNzFjZmZiNGU2MCJ9fX0=", ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("delete"), 17);
 
         for (int i = 0; i < gui.getSize(); i++) {
             gui.setItem(i, emptyItem);
         }
 
-        gui.setItem(10, usernameItem);
-        gui.setItem(12, uuidItem);
-        gui.setItem(14, worldItem);
-        gui.setItem(16, messageItem);
+        gui.setItem(9, usernameItem);
+        gui.setItem(11, uuidItem);
+        gui.setItem(13, worldItem);
+        gui.setItem(15, messageItem);
+
+        gui.setItem(29, archiveButton);
+        gui.setItem(31, backButton);
+//        gui.setItem(33, deleteButton);
 
         if (!"null".equals(category) && !"".equals(category)) {
             List<Map<?, ?>> categoryList = config.getMapList("reportCategories");
@@ -438,22 +469,63 @@ public class BugReportManager {
             if (categoryNameOptional.isPresent()) {
                 String categoryName = categoryNameOptional.get();
                 ItemStack categoryItem = createInfoItem(Material.CHEST, ChatColor.GOLD + "Category Name", ChatColor.WHITE + categoryName, false);
-                gui.setItem(22, categoryItem);
+                gui.setItem(17, categoryItem);
             }
         }
 
         player.openInventory(gui);
 
-        Bukkit.getPluginManager().registerEvents(new BugReportDetailsListener(gui), plugin);
+        Bukkit.getPluginManager().registerEvents(new BugReportDetailsListener(gui, reportIDGUI), plugin);
     }
 
-    private record BugReportDetailsListener(Inventory gui) implements Listener {
+    private record BugReportDetailsListener(Inventory gui, Integer reportIDGUI) implements Listener {
         @EventHandler(priority = EventPriority.NORMAL)
         public void onInventoryClick(InventoryClickEvent event) {
-            Inventory clickedInventory = event.getClickedInventory();
-            if (clickedInventory != null && clickedInventory.equals(gui)) {
-                event.setCancelled(true);
+            if (!event.getView().getTitle().startsWith(ChatColor.YELLOW + "Bug Report Details - #")) {
+                return;
             }
+
+            event.setCancelled(true);
+
+            Player player = (Player) event.getWhoClicked();
+            UUID playerId = player.getUniqueId();
+
+            Inventory clickedInventory = event.getClickedInventory();
+            if (clickedInventory == null) {
+                return;
+            }
+
+            ItemStack clickedItem = event.getCurrentItem();
+            if (clickedItem == null || clickedItem.getType() == Material.AIR) {
+                return;
+            }
+
+            ItemMeta itemMeta = clickedItem.getItemMeta();
+            if (itemMeta == null || !itemMeta.hasDisplayName()) {
+                return;
+            }
+
+            String displayName = itemMeta.getDisplayName();
+
+            if (displayName.equals(" ")) {
+                return;
+            }
+
+            String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(displayName);
+
+            switch (customDisplayName) {
+                case "Back" -> player.openInventory(getBugReportGUI(player));
+                case "Archive" -> {
+                    BugReportDatabase.updateBugReportArchive(playerId, reportIDGUI, 1);
+                    player.openInventory(getBugReportGUI(player));
+                }
+                case "Delete" -> player.closeInventory();
+                default -> {
+                    return;
+                }
+            }
+
+            HandlerList.unregisterAll(this);
         }
     }
 

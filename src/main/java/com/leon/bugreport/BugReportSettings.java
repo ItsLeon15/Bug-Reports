@@ -70,7 +70,7 @@ public class BugReportSettings {
         return gui;
     }
 
-    private static ItemStack createButton(Material material, String displayName) {
+    static ItemStack createButton(Material material, String displayName) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(displayName);

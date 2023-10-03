@@ -164,7 +164,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
     private @NotNull ItemStack createCategoryItem(Category category) {
         ItemStack itemStack = new ItemStack(category.getItem());
         ItemMeta itemMeta = itemStack.getItemMeta();
-        itemMeta.setDisplayName(stringColorToColorCode(category.getColor()) + category.getName());
+		itemMeta.setDisplayName(stringColorToColorCode(category.getColor()) + category.getName());
         itemMeta.setLore(List.of(ChatColor.GRAY + category.getDescription()));
         itemStack.setItemMeta(itemMeta);
         return itemStack;

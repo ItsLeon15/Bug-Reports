@@ -21,7 +21,7 @@ pluginTitle: "[Bug Report]"
 # This can either be "mysql" or "local".
 # If you choose "mysql", you must fill out the database section below.
 # If you choose "local", no configuration is required.
-databaseType: mysql
+databaseType: local
 database:
   host: localhost
   port: 3306
