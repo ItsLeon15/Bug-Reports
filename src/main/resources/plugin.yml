@@ -1,17 +1,19 @@
 name: BugReport
-version: 0.6.0
+version: 0.6.2
 main: com.leon.bugreport.BugReportPlugin
 api-version: 1.13
 commands:
   bugreport:
     aliases:
       - br
+      - report
     description: Submit a bug report
     usage: /bugreport <message>
     executor: com.leon.bugreport.BugReportCommand
   buglist:
     aliases:
       - bl
+      - reports
     description: View bug reports
     usage: /buglist
     executor: com.leon.bugreport.BugListCommand
@@ -21,3 +23,10 @@ commands:
     description: Link a Discord webhook to the server
     usage: /buglinkdiscord <Webhook URL>
     executor: com.leon.bugreport.LinkDiscordCommand
+  buglistarchived:
+    aliases:
+      - bla
+      - archivedreports
+    description: Lists all archived bug reports
+    usage: /buglistarchived
+    executor: com.leon.bugreport.BugListArchivedCommand

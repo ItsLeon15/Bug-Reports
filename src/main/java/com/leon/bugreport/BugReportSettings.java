@@ -65,7 +65,7 @@ public class BugReportSettings {
         gui.setItem(thirdRow + 2, getBugReportNotificationsToggle() ? onIcon : offIcon);
         gui.setItem(thirdRow + 3, getCategorySelectionToggle() ? onIcon : offIcon);
 
-        gui.setItem(fifthRow + 4, createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("back")));
+        gui.setItem(fifthRow + 4, createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("close")));
 
         return gui;
     }
@@ -198,9 +198,8 @@ public class BugReportSettings {
                 String itemDisplayName = itemMeta.getDisplayName();
                 String customItemDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(itemDisplayName);
 
-                if (customItemDisplayName.equals("Back")) {
+                if (customItemDisplayName.equals("Close")) {
                     player.closeInventory();
-                    player.openInventory(BugReportManager.getBugReportGUI(player));
                     return null;
                 }
 

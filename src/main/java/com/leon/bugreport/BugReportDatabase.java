@@ -113,7 +113,7 @@ public class BugReportDatabase {
         }
     }
 
-    public Map<UUID, List<String>> loadBugReports() {
+    public static @NotNull Map<UUID, List<String>> loadBugReports() {
         Map<UUID, List<String>> bugReports = new HashMap<>();
 
         try {
@@ -156,11 +156,12 @@ public class BugReportDatabase {
         try {
             String databaseURL = "jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false";
             connection = DriverManager.getConnection(databaseURL, username, password);
-            System.out.println("Connected to remote database");
         } catch (SQLException e) {
             plugin.getLogger().severe("Failed to connect to remote database.");
             plugin.getLogger().severe(e.getMessage());
         }
+
+        System.out.println("Connected to remote database");
 
         createTables();
     }
@@ -170,11 +171,12 @@ public class BugReportDatabase {
             File databaseFile = new File("plugins/BugReport/bugreports.db");
             String databaseURL = "jdbc:sqlite:" + databaseFile.getAbsolutePath();
             connection = DriverManager.getConnection(databaseURL);
-            System.out.println("Connected to local database");
         } catch (SQLException e) {
             plugin.getLogger().severe("Failed to connect to local database.");
             plugin.getLogger().severe(e.getMessage());
         }
+
+        System.out.println("Connected to local database");
 
         createTables();
     }
@@ -191,7 +193,7 @@ public class BugReportDatabase {
     public void updateBugReportHeader(UUID playerId, int reportIndex) {
         try {
             PreparedStatement statement = connection.prepareStatement("UPDATE bug_reports SET header = ? WHERE player_id = ? AND rowid = ?");
-            String existingHeader = BugReportManager.bugReports.get(playerId).get(reportIndex);
+            String existingHeader = bugReports.get(playerId).get(reportIndex);
 
             String[] lines = existingHeader.split("\n");
             StringBuilder newHeader = new StringBuilder();
@@ -210,12 +212,15 @@ public class BugReportDatabase {
             statement.executeUpdate();
             statement.close();
         } catch (SQLException e) {
-            plugin.getLogger().severe("Failed to update bug report header.");
+            plugin.getLogger().severe("Failed to update bug report read status.");
             plugin.getLogger().severe(e.getMessage());
         }
     }
 
-    public static void updateBugReportArchive(UUID playerId, int reportIndex, int archived) {
+    public static void updateBugReportArchive(@NotNull UUID playerId, int reportIndex, int archived) {
+        int bugReportIndex = reportIndex - 1;
+        System.out.println("Updating bug report " + reportIndex + " for " + playerId + " to " + archived);
+
         try {
             PreparedStatement statement = connection.prepareStatement("UPDATE bug_reports SET archived = ? WHERE player_id = ? AND report_id = ?");
             statement.setInt(1, archived);
@@ -224,7 +229,8 @@ public class BugReportDatabase {
             statement.executeUpdate();
             statement.close();
 
-            String existingHeader = BugReportManager.bugReports.get(playerId).get(reportIndex - 1);
+            String existingHeader = bugReports.get(playerId).get(bugReportIndex);
+            System.out.println("Existing header: " + existingHeader);
 
             String[] lines = existingHeader.split("\n");
             StringBuilder newHeader = new StringBuilder();
@@ -236,12 +242,26 @@ public class BugReportDatabase {
                 }
                 newHeader.append("\n");
             }
-            List<String> reports = BugReportManager.bugReports.get(playerId);
-            reports.set(reportIndex - 1, newHeader.toString().trim());
-            BugReportManager.bugReports.put(playerId, reports);
+            List<String> reports = bugReports.get(playerId);
+            reports.set(bugReportIndex, newHeader.toString().trim());
+            bugReports.put(playerId, reports);
 
         } catch (SQLException e) {
             plugin.getLogger().severe("Failed to update bug report archive status.");
+            plugin.getLogger().severe(e.getMessage());
+        }
+    }
+
+    public static void deleteBugReport(@NotNull UUID playerId, int reportIndex) {
+        System.out.println("Deleting bug report " + reportIndex + " for " + playerId);
+        try {
+            PreparedStatement statement = connection.prepareStatement("DELETE FROM bug_reports WHERE player_id = ? AND report_id = ?");
+            statement.setString(1, playerId.toString());
+            statement.setInt(2, reportIndex);
+            statement.executeUpdate();
+            statement.close();
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Failed to delete bug report.");
             plugin.getLogger().severe(e.getMessage());
         }
     }

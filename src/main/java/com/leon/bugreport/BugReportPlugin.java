@@ -24,6 +24,7 @@ public class BugReportPlugin extends JavaPlugin {
         getCommand("bugreport").setExecutor(new BugReportCommand(reportManager));
         getCommand("buglist").setExecutor(new BugListCommand(reportManager));
         getCommand("buglinkdiscord").setExecutor(new LinkDiscordCommand(reportManager));
+        getCommand ("buglistarchived").setExecutor(new BugListArchivedCommand(reportManager));
     }
 
     private void registerListeners() {
