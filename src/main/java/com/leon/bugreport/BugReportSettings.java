@@ -216,11 +216,8 @@ public class BugReportSettings {
                     case "Enable Category Selection" -> setCategorySelectionToggle(player);
                     case "Set Max Reports Per Player" -> {
                         player.closeInventory();
-                        if (BugReportLanguage.getText (BugReportManager.config.getString("language"), "enterMaxReportsPerPlayer") != null) {
-                            player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.YELLOW + BugReportLanguage.getText (BugReportManager.config.getString("language"), "enterMaxReportsPerPlayer"));
-                        } else {
-                            player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.YELLOW + "Enter the max reports a player can submit. Or type 'cancel' to cancel.");
-                        }
+                        player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.YELLOW + DefaultLanguageSelector.getTextElseDefault(BugReportManager.language, "setMaxReportsPerPlayer"));
+
                         setMaxReportsClickMap.put(player.getUniqueId(), String.valueOf(true));
                         setMaxReportsClickMap.put(player.getUniqueId(), customItemDisplayName);
                     }
@@ -274,11 +271,7 @@ public class BugReportSettings {
 
         private static void setLanguage(String languageCode, String languageName, Player player) {
             player.closeInventory();
-            if (BugReportLanguage.getText(languageCode, "languageSetTo") != null) {
-                player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + BugReportLanguage.getText(languageCode, "languageSetTo").replace("%language%", languageName));
-            } else {
-                player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + "Language set to " + languageName + ".");
-            }
+            player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + DefaultLanguageSelector.getTextElseDefault(languageCode, "languageSetTo").replace("%language%", languageName));
             BugReportManager.config.set("language", languageCode);
             BugReportManager.saveConfig();
             BugReportManager.loadConfig();
@@ -297,21 +290,13 @@ public class BugReportSettings {
                                 try {
                                     maxReports = Integer.parseInt(value);
                                 } catch (NumberFormatException e) {
-                                    if (BugReportLanguage.getText (BugReportManager.config.getString("language"), "enterValidNumber") != null) {
-                                        player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + BugReportLanguage.getText (BugReportManager.config.getString("language"), "enterValidNumber"));
-                                    } else {
-                                        player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + "Please enter a valid number.");
-                                    }
+                                    player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + DefaultLanguageSelector.getTextElseDefault(BugReportManager.config.getString("language"), "enterValidNumber"));
                                     return;
                                 }
 
                                 BugReportManager.config.set("max-reports-per-player", maxReports);
                                 BugReportManager.saveConfig();
-                                if (BugReportLanguage.getText (BugReportManager.config.getString("language"), "maxReportsPerPlayerSuccessMessage") != null) {
-                                    player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + BugReportLanguage.getText (BugReportManager.config.getString("language"), "maxReportsPerPlayerSuccessMessage").replace("%amount%", String.valueOf(maxReports)));
-                                } else {
-                                    player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + "Max reports per player has been set to " + maxReports + ".");
-                                }
+                                player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + DefaultLanguageSelector.getTextElseDefault(BugReportManager.config.getString("language"), "maxReportsPerPlayerSuccessMessage").replace("%amount%", String.valueOf(maxReports)));
                             } else {
                                 value = value.substring(0, 1).toUpperCase() + value.substring(1).toLowerCase();
                                 String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(value);
@@ -319,11 +304,7 @@ public class BugReportSettings {
                                 if (customDisplayName.contains("Cancel")) {
                                     player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage("cancelled"));
                                 } else {
-                                    if (BugReportLanguage.getText (BugReportManager.config.getString("language"), "enterValidNumber") != null) {
-                                        player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + BugReportLanguage.getText (BugReportManager.config.getString("language"), "enterValidNumber"));
-                                    } else {
-                                        player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + "Please enter a valid number.");
-                                    }
+                                    player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + DefaultLanguageSelector.getTextElseDefault(BugReportManager.config.getString("language"), "enterValidNumber"));
                                 }
                             }
                         });
@@ -334,21 +315,14 @@ public class BugReportSettings {
                             try {
                                 reportCooldown = Integer.parseInt(value);
                             } catch (NumberFormatException e) {
-                                if (BugReportLanguage.getText (BugReportManager.config.getString("language"), "enterValidNumber") != null) {
-                                    player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + BugReportLanguage.getText (BugReportManager.config.getString("language"), "enterValidNumber"));
-                                } else {
-                                    player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + "Please enter a valid number.");
-                                }
+                                player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + DefaultLanguageSelector.getTextElseDefault(BugReportManager.config.getString("language"), "enterValidNumber"));
                                 return;
                             }
 
                             BugReportManager.config.set("report-cooldown", reportCooldown);
                             BugReportManager.saveConfig();
-                            if (BugReportLanguage.getText (BugReportManager.config.getString("language"), "reportCooldownSuccessMessage") != null) {
-                                player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + BugReportLanguage.getText (BugReportManager.config.getString("language"), "reportCooldownSuccessMessage").replace("%cooldown%", String.valueOf(reportCooldown)));
-                            } else {
-                                player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + "Report cooldown has been set to " + reportCooldown + " seconds.");
-                            }
+                            player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + DefaultLanguageSelector.getTextElseDefault(BugReportManager.config.getString("language"), "reportCooldownSuccessMessage")
+                                    .replace("%time%", String.valueOf(reportCooldown)));
                         });
             }
         }

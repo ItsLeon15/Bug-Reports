@@ -19,6 +19,7 @@ public class BugReportDatabase {
         connectLocalOrRemote();
         addMissingTables();
         fixReportID();
+        makeAllHeadersEqualReport_ID();
     }
 
     private void addMissingTables() {
@@ -38,6 +39,34 @@ public class BugReportDatabase {
             }
         } catch(SQLException e) {
             plugin.getLogger().severe("Failed to add missing columns.");
+            plugin.getLogger().severe(e.getMessage());
+        }
+    }
+
+    private void makeAllHeadersEqualReport_ID() {
+        try {
+            ResultSet resultSet = connection.createStatement().executeQuery("SELECT * FROM bug_reports");
+            while (resultSet.next()) {
+                int report_id = resultSet.getInt("report_id");
+                String header = resultSet.getString("header");
+                String[] lines = header.split("\n");
+                StringBuilder newHeader = new StringBuilder();
+                for (String line : lines) {
+                    if (line.startsWith("Report ID:")) {
+                        newHeader.append("Report ID: ").append(report_id);
+                    } else {
+                        newHeader.append(line);
+                    }
+                    newHeader.append("\n");
+                }
+                PreparedStatement statement = connection.prepareStatement("UPDATE bug_reports SET header = ? WHERE report_id = ?");
+                statement.setString(1, newHeader.toString().trim());
+                statement.setInt(2, report_id);
+                statement.executeUpdate();
+                statement.close();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Failed to make all headers equal report_id.");
             plugin.getLogger().severe(e.getMessage());
         }
     }
@@ -121,15 +150,15 @@ public class BugReportDatabase {
             ResultSet resultSet = statement.executeQuery();
 
             while (resultSet.next()) {
-                UUID playerId = UUID.fromString(resultSet.getString("player_id"));
-                String header = resultSet.getString("header");
-                String fullMessage = resultSet.getString("message");
-                String username = resultSet.getString("username");
-                String world = resultSet.getString("world");
-                String archived = resultSet.getString("archived");
-                String report_id = resultSet.getString("report_id");
+                UUID playerId = UUID.fromString (resultSet.getString ("player_id"));
+                String header = resultSet.getString ("header");
+                String fullMessage = resultSet.getString ("message");
+                String username = resultSet.getString ("username");
+                String world = resultSet.getString ("world");
+                String archived = resultSet.getString ("archived");
+                String report_id = resultSet.getString ("report_id");
 
-                List<String> reports = bugReports.getOrDefault(playerId, new ArrayList<>());
+                List<String> reports = bugReports.getOrDefault(playerId, new ArrayList<>(Collections.singletonList ("DUMMY")));
                 reports.add(
                         "Username: " + username + "\n" +
                         "UUID: " + playerId + "\n" +
@@ -192,14 +221,14 @@ public class BugReportDatabase {
 
     public void updateBugReportHeader(UUID playerId, int reportIndex) {
         try {
-            PreparedStatement statement = connection.prepareStatement("UPDATE bug_reports SET header = ? WHERE player_id = ? AND rowid = ?");
+            PreparedStatement statement = connection.prepareStatement("UPDATE bug_reports SET header = ? WHERE player_id = ? AND report_id = ?");
             String existingHeader = bugReports.get(playerId).get(reportIndex);
 
             String[] lines = existingHeader.split("\n");
             StringBuilder newHeader = new StringBuilder();
             for (String line : lines) {
                 if (line.startsWith("hasBeenRead:")) {
-                    newHeader.append("hasBeenRead: ").append(1);
+                    newHeader.append("hasBeenRead: 1");
                 } else {
                     newHeader.append(line);
                 }
@@ -208,9 +237,10 @@ public class BugReportDatabase {
 
             statement.setString(1, newHeader.toString().trim());
             statement.setString(2, playerId.toString());
-            statement.setInt(3, reportIndex + 1);
+            statement.setInt(3, reportIndex);
             statement.executeUpdate();
             statement.close();
+            loadBugReports();
         } catch (SQLException e) {
             plugin.getLogger().severe("Failed to update bug report read status.");
             plugin.getLogger().severe(e.getMessage());
@@ -218,7 +248,6 @@ public class BugReportDatabase {
     }
 
     public static void updateBugReportArchive(@NotNull UUID playerId, int reportIndex, int archived) {
-        int bugReportIndex = reportIndex - 1;
         System.out.println("Updating bug report " + reportIndex + " for " + playerId + " to " + archived);
 
         try {
@@ -228,9 +257,14 @@ public class BugReportDatabase {
             statement.setInt(3, reportIndex);
             statement.executeUpdate();
             statement.close();
+            loadBugReports();
 
-            String existingHeader = bugReports.get(playerId).get(bugReportIndex);
-            System.out.println("Existing header: " + existingHeader);
+            List<String> reports = bugReports.getOrDefault(playerId, new ArrayList<>(Collections.singletonList("DUMMY")));
+            String existingHeader = reports.stream()
+                    .filter(reportString -> reportString.contains("Report ID: " + reportIndex))
+                    .findFirst()
+                    .orElse(null);
+            int existingHeaderPosition = reports.indexOf(existingHeader);
 
             String[] lines = existingHeader.split("\n");
             StringBuilder newHeader = new StringBuilder();
@@ -242,11 +276,10 @@ public class BugReportDatabase {
                 }
                 newHeader.append("\n");
             }
-            List<String> reports = bugReports.get(playerId);
-            reports.set(bugReportIndex, newHeader.toString().trim());
+            reports.set(existingHeaderPosition, newHeader.toString().trim());
             bugReports.put(playerId, reports);
 
-        } catch (SQLException e) {
+		} catch (SQLException e) {
             plugin.getLogger().severe("Failed to update bug report archive status.");
             plugin.getLogger().severe(e.getMessage());
         }
@@ -260,6 +293,7 @@ public class BugReportDatabase {
             statement.setInt(2, reportIndex);
             statement.executeUpdate();
             statement.close();
+            loadBugReports();
         } catch (SQLException e) {
             plugin.getLogger().severe("Failed to delete bug report.");
             plugin.getLogger().severe(e.getMessage());

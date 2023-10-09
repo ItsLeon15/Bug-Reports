@@ -59,9 +59,9 @@ public class BugReportLanguage {
 		return ChatColor.stripColor(displayName);
 	}
 
-    public static String getText(String language, String textName) {
+    public static @Nullable String getText(String language, String textName) {
         ConfigurationSection texts = languageTexts.get(language);
-        return texts != null ? texts.getString(textName) : null;
+		return texts != null ? texts.getString(textName) : null;
     }
 
     public static @Nullable String getTitleFromLanguage(String key) {

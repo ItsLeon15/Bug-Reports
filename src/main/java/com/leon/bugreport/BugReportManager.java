@@ -1,6 +1,5 @@
 package com.leon.bugreport;
 
-import jdk.javadoc.doclet.Reporter;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -19,13 +18,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
-
 import java.io.File;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import static com.leon.bugreport.BugReportDatabase.deleteBugReport;
+import static com.leon.bugreport.BugReportCommand.stringColorToColorCode;
 import static com.leon.bugreport.BugReportSettings.createCustomPlayerHead;
 import static com.leon.bugreport.BugReportSettings.getSettingsGUI;
 
@@ -57,40 +52,32 @@ public class BugReportManager {
 
         String webhookURL = config.getString("webhookURL", "");
         pluginTitle = Objects.requireNonNull(config.getString("pluginTitle", "[Bug Report]"));
-        pluginColor = BugReportCommand.stringColorToColorCode(Objects.requireNonNull(Objects.requireNonNull(config.getString ("pluginColor", "Yellow")).toUpperCase()));
+        pluginColor = stringColorToColorCode(Objects.requireNonNull(config.getString ("pluginColor", "Yellow").toUpperCase()));
 
         discord = new LinkDiscord(webhookURL);
         reportCategories = loadReportCategories();
     }
 
-    public static boolean checkCategoryConfig() {
-        if (config.contains("reportCategories")) {
-            List<Map<?, ?>> categoryList = config.getMapList("reportCategories");
-            for (Map<?, ?> categoryMap : categoryList) {
-                Object[] keys = categoryMap.keySet().toArray();
-                Object[] values = categoryMap.values().toArray();
+	public static boolean checkCategoryConfig() {
+		if (!config.contains("reportCategories")) {
+			plugin.getLogger().warning(DefaultLanguageSelector.getTextElseDefault(language, "missingReportCategoryMessage"));
+			return false;
+		}
 
-                for (int i = 0; i < keys.length; i++) {
-                    if (values[i] == null) {
-                        if (BugReportLanguage.getText (language, "missingValueMessage") != null) {
-                            plugin.getLogger().warning(BugReportLanguage.getText (language, "missingValueMessage").replace("%key%", keys[i].toString()));
-                        } else {
-                            plugin.getLogger().warning("Error: Missing " + keys[i] + " in reportCategories in config.");
-                        }
-                        return false;
-                    }
-                }
-            }
-        } else {
-            if (BugReportLanguage.getText (language, "missingReportCategoryMessage") != null) {
-                plugin.getLogger().warning(BugReportLanguage.getText (language, "missingReportCategoryMessage"));
-            } else {
-                plugin.getLogger().warning("Error: Missing reportCategories in config.");
-            }
-            return false;
-        }
-        return true;
-    }
+		List<Map<?, ?>> categoryList = config.getMapList("reportCategories");
+		for (Map<?, ?> categoryMap : categoryList) {
+			Object[] keys = categoryMap.keySet().toArray();
+			Object[] values = categoryMap.values().toArray();
+
+			for (int i = 0; i < keys.length; i++) {
+				if (values[i] == null) {
+					plugin.getLogger().warning(DefaultLanguageSelector.getTextElseDefault(language, "missingValueMessage").replace("%key%", keys[i].toString()));
+					return false;
+				}
+			}
+		}
+		return true;
+	}
 
     public static void loadConfig() {
         configFile = new File(plugin.getDataFolder(), "config.yml");
@@ -134,11 +121,7 @@ public class BugReportManager {
 
             return categories;
         } else {
-            if (BugReportLanguage.getText (language, "wentWrongLoadingCategoriesMessage") != null) {
-                plugin.getLogger().warning(BugReportLanguage.getText (language, "wentWrongLoadingCategoriesMessage"));
-            } else {
-                plugin.getLogger().warning("Error: Something went wrong while loading the report categories.");
-            }
+            plugin.getLogger().warning(DefaultLanguageSelector.getTextElseDefault(language, "wentWrongLoadingCategoriesMessage"));
             return null;
         }
     }
@@ -151,7 +134,7 @@ public class BugReportManager {
         try {
             config.save(configFile);
         } catch (Exception e) {
-            e.printStackTrace();
+            plugin.getLogger().warning("Error saving config.yml: " + e.getMessage());
         }
     }
 
@@ -163,12 +146,23 @@ public class BugReportManager {
 
     public void submitBugReport(@NotNull Player player, String message, Integer categoryId) {
         UUID playerId = player.getUniqueId();
-        List<String> reports = bugReports.getOrDefault(playerId, new ArrayList<>());
+        List<String> reports = bugReports.getOrDefault(playerId, new ArrayList<>(Collections.singletonList("DUMMY")));
 
         String playerName = player.getName();
         String playerUUID = playerId.toString();
         String worldName = player.getWorld().getName();
 
+        String reportID = reports.stream()
+                .filter(report -> report.contains("Report ID: "))
+                .reduce((first, second) -> second)
+                .map(report -> Arrays.stream(report.split("\n"))
+                        .filter(line -> line.contains("Report ID:"))
+                        .findFirst()
+                        .orElse("Report ID: 0"))
+                .map(reportIDLine -> reportIDLine.split(": ")[1].trim())
+                .orElse("0");
+
+        String reportIDInt = String.valueOf(Integer.parseInt(reportID) + 1);
 
         String header = "Username: " + playerName + "\n" +
                 "UUID: " + playerUUID + "\n" +
@@ -177,7 +171,7 @@ public class BugReportManager {
                 "Category ID: " + categoryId + "\n" +
                 "Full Message: " + message + "\n" +
                 "Archived: 0" + "\n" +
-                "Report ID: " + (reports.size() + 1);
+                "Report ID: " + reportIDInt;
 
         reports.add(header);
         bugReports.put(playerId, reports);
@@ -185,45 +179,40 @@ public class BugReportManager {
         database.addBugReport(playerName, playerId, worldName, header, message);
 
         if (config.getBoolean("enableBugReportNotifications", true)) {
-            String defaultMessage = pluginColor + pluginTitle + " " + ChatColor.GRAY + "A new bug report has been submitted by " + ChatColor.YELLOW + playerName + ChatColor.GRAY + ".";
-            String languageMessage = BugReportLanguage.getText(language, "bugReportNotificationMessage");
-            String notificationMessage = (languageMessage != null)
-                    ? pluginColor + pluginTitle + " " + ChatColor.GRAY + languageMessage.replace("%player%", playerName) + ChatColor.GRAY + "."
-                    : defaultMessage;
+            String defaultMessage = pluginColor + pluginTitle + " " + ChatColor.GRAY + DefaultLanguageSelector.getTextElseDefault(language, "bugReportNotificationMessage")
+                    .replace("%player%", ChatColor.AQUA + playerName + ChatColor.GRAY);
 
             for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
                 if (onlinePlayer.hasPermission("bugreport.notify")) {
-                    onlinePlayer.sendMessage(notificationMessage);
+                    onlinePlayer.sendMessage(defaultMessage);
                 }
             }
         }
 
         if (config.getBoolean("enableDiscordWebhook", true)) {
             String webhookURL = config.getString("webhookURL", "");
+            if (webhookURL.isEmpty()) {
+                plugin.getLogger().warning(DefaultLanguageSelector.getTextElseDefault(language, "missingDiscordWebhookURLMessage"));
+            }
 
-            if (!webhookURL.isEmpty()) {
-                try {
-                    discord.sendBugReport(message, playerId, worldName, playerName);
-                } catch (Exception e) {
-                    plugin.getLogger().warning("Error sending bug report to Discord: " + e.getMessage());
-                }
-            } else {
-                String warningMessage = BugReportLanguage.getText (language, "missingDiscordWebhookURLMessage");
-                plugin.getLogger().warning(Objects.requireNonNullElse(warningMessage, "Missing webhookURL in config.yml"));
+            try {
+                discord.sendBugReport(message, playerId, worldName, playerName);
+            } catch (Exception e) {
+                plugin.getLogger().warning("Error sending bug report to Discord: " + e.getMessage());
             }
         }
     }
 
-    public static @NotNull Inventory getArchivedBugReportsGUI(@NotNull Player player) {
+    public static @NotNull Inventory generateBugReportGUI(@NotNull Player player, boolean showArchived) {
         int itemsPerPage = 27;
         int navigationRow = 36;
 
         UUID playerId = player.getUniqueId();
-        List<String> reports = bugReports.getOrDefault(playerId, new ArrayList<>());
+        List<String> reports = bugReports.getOrDefault(playerId, new ArrayList<>(Collections.singletonList("DUMMY")));
 
         List<String> filteredReports = new ArrayList<>();
         for (String report : reports) {
-            if (report.contains("Archived: 1")) {
+            if ((showArchived && report.contains("Archived: 1")) || (!showArchived && !report.contains("DUMMY") && !report.contains("Archived: 1"))) {
                 filteredReports.add(report);
             }
         }
@@ -231,7 +220,13 @@ public class BugReportManager {
         int totalPages = (int) Math.ceil((double) filteredReports.size() / itemsPerPage);
         int currentPage = Math.max(1, Math.min(getCurrentPage(player), totalPages));
 
-        Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Archived Bugs - " + BugReportLanguage.getTitleFromLanguage("pageInfo").replace("%currentPage%", String.valueOf(currentPage)).replace("%totalPages%", String.valueOf(totalPages)));
+        Inventory gui = Bukkit.createInventory(
+                null,
+                45,
+                ChatColor.YELLOW + (showArchived ? "Archived Bugs" : "Bug Report") + " - " + Objects.requireNonNull(BugReportLanguage.getTitleFromLanguage("pageInfo"))
+                        .replace("%currentPage%", String.valueOf(currentPage))
+                        .replace("%totalPages%", String.valueOf(totalPages))
+        );
 
         int startIndex = (currentPage - 1) * itemsPerPage;
         int endIndex = Math.min(startIndex + itemsPerPage, filteredReports.size());
@@ -251,19 +246,19 @@ public class BugReportManager {
                 }
             }
 
-            String reportID = reportData.get("Report ID");  // Extract the Report ID directly from the report data
-
+            String reportID = reportData.get("Report ID");
             String firstLine = report.split("\n")[0];
+
             ItemStack reportItem;
 
-            if (report.contains("Archived: 1")) {
-                reportItem = new ItemStack(Material.ENCHANTED_BOOK);
-            } else {
-                reportItem = new ItemStack(Material.BOOK);
-            }
+			if (report.contains("hasBeenRead: 0")) {
+				reportItem = new ItemStack(Material.ENCHANTED_BOOK);
+			} else {
+				reportItem = new ItemStack(Material.BOOK);
+			}
 
-            ItemMeta itemMeta = reportItem.getItemMeta();
-            itemMeta.setDisplayName(ChatColor.YELLOW + "Bug Report #" + reportID);  // Use the extracted Report ID here
+			ItemMeta itemMeta = reportItem.getItemMeta();
+            itemMeta.setDisplayName(ChatColor.YELLOW + "Bug Report #" + reportID);
             itemMeta.setLore(Collections.singletonList(ChatColor.GRAY + firstLine));
 
             reportItem.setItemMeta(itemMeta);
@@ -274,9 +269,12 @@ public class BugReportManager {
 
         ItemStack backButton = createButton(Material.ARROW, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("back"));
         ItemStack forwardButton = createButton(Material.ARROW, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("forward"));
-        ItemStack pageIndicator = createButton(Material.PAPER, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("pageInfo").replace("%currentPage%", String.valueOf(currentPage)).replace("%totalPages%", String.valueOf(totalPages)));
         ItemStack settingsButton = createButton(Material.CHEST, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("settings"));
         ItemStack closeButton = createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("close"));
+        ItemStack pageIndicator = createButton(Material.PAPER, ChatColor.YELLOW + Objects.requireNonNull(BugReportLanguage.getTitleFromLanguage("pageInfo"))
+                .replace("%currentPage%", String.valueOf(currentPage))
+                .replace("%totalPages%", String.valueOf(totalPages))
+        );
 
         if (currentPage > 1) {
             gui.setItem(navigationRow, backButton);
@@ -292,85 +290,12 @@ public class BugReportManager {
         return gui;
     }
 
-    public static Inventory getBugReportGUI(Player player) {
-        int itemsPerPage = 27;
-        int navigationRow = 36;
+    public static @NotNull Inventory getArchivedBugReportsGUI(Player player) {
+        return generateBugReportGUI(player, true);
+    }
 
-        UUID playerId = player.getUniqueId();
-        List<String> reports = bugReports.getOrDefault(playerId, new ArrayList<>());
-
-        List<String> filteredReports = new ArrayList<>();
-        for (String report : reports) {
-            if (!report.contains("Archived: 1")) {
-                filteredReports.add(report);
-            }
-        }
-
-        int totalPages = (int) Math.ceil((double) filteredReports.size() / itemsPerPage);
-        int currentPage = Math.max(1, Math.min(getCurrentPage(player), totalPages));
-
-        Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Report - " + BugReportLanguage.getTitleFromLanguage("pageInfo").replace("%currentPage%", String.valueOf(currentPage)).replace("%totalPages%", String.valueOf(totalPages)));
-
-        int startIndex = (currentPage - 1) * itemsPerPage;
-        int endIndex = Math.min(startIndex + itemsPerPage, filteredReports.size());
-
-        int slotIndex = 0;
-        for (int i = startIndex; i < endIndex; i++) {
-            String report = filteredReports.get(i);
-            String[] reportLines = report.split("\n");
-
-            Map<String, String> reportData = new HashMap<>();
-            for (String line : reportLines) {
-                int colonIndex = line.indexOf(":");
-                if (colonIndex >= 0) {
-                    String key = line.substring(0, colonIndex).trim();
-                    String value = line.substring(colonIndex + 1).trim();
-                    reportData.put(key, value);
-                }
-            }
-
-            String reportID = reportData.get("Report ID");  // Extract the Report ID directly from the report data
-
-            String firstLine = report.split("\n")[0];
-            ItemStack reportItem;
-
-            if (report.contains("Archived: 1")) {
-                continue;
-            } else if (report.contains("hasBeenRead: 0")) {
-                reportItem = new ItemStack(Material.ENCHANTED_BOOK);
-            } else {
-                reportItem = new ItemStack(Material.BOOK);
-            }
-
-            ItemMeta itemMeta = reportItem.getItemMeta();
-            itemMeta.setDisplayName(ChatColor.YELLOW + "Bug Report #" + reportID);  // Use the extracted Report ID here
-            itemMeta.setLore(Collections.singletonList(ChatColor.GRAY + firstLine));
-
-            reportItem.setItemMeta(itemMeta);
-
-            gui.setItem(slotIndex, reportItem);
-            slotIndex++;
-        }
-
-
-        ItemStack backButton = createButton(Material.ARROW, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("back"));
-        ItemStack forwardButton = createButton(Material.ARROW, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("forward"));
-        ItemStack pageIndicator = createButton(Material.PAPER, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("pageInfo").replace("%currentPage%", String.valueOf(currentPage)).replace("%totalPages%", String.valueOf(totalPages)));
-        ItemStack settingsButton = createButton(Material.CHEST, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("settings"));
-        ItemStack closeButton = createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("close"));
-
-        if (currentPage > 1) {
-            gui.setItem(navigationRow, backButton);
-        }
-        if (currentPage < totalPages) {
-            gui.setItem(navigationRow + 8, forwardButton);
-        }
-
-        gui.setItem(navigationRow + 2, settingsButton);
-        gui.setItem(navigationRow + 4, pageIndicator);
-        gui.setItem(navigationRow + 6, closeButton);
-
-        return gui;
+    public static @NotNull Inventory getBugReportGUI(Player player) {
+        return generateBugReportGUI(player, false);
     }
 
     private static @NotNull ItemStack createButton(Material material, String displayName) {
@@ -452,18 +377,22 @@ public class BugReportManager {
             if (displayName.startsWith(ChatColor.YELLOW + "Bug Report #")) {
                 int reportID = Integer.parseInt(displayName.substring(14));
                 UUID playerId = player.getUniqueId();
-                List<String> reports = bugReports.getOrDefault(playerId, new ArrayList<>());
-                String report = reports.stream().filter(r -> r.contains("Report ID: " + reportID)).findFirst().orElse(null);
+                List<String> reports = bugReports.getOrDefault(playerId, new ArrayList<>(Collections.singletonList("DUMMY")));
+
+                String report = reports.stream()
+                        .filter(reportString -> reportString.contains("Report ID: " + reportID))
+                        .findFirst()
+                        .orElse(null);
+
                 if (report.contains("hasBeenRead: 0")) {
                     report = report.replace("hasBeenRead: 0", "hasBeenRead: 1");
                     reports.set(reportID, report);
                     bugReports.put(playerId, reports);
                     database.updateBugReportHeader(playerId, reportID);
                 }
-                if (report != null) {
-                    openBugReportDetailsGUI(player, report, reportID, isArchivedGUI);
-                }
-            }
+
+                openBugReportDetailsGUI(player, report, reportID, isArchivedGUI);
+			}
 
             if (customDisplayName.equals("Settings")) {
                 player.openInventory(getSettingsGUI());
@@ -497,18 +426,15 @@ public class BugReportManager {
 
     public int getTotalPages(@NotNull Player player) {
         UUID playerId = player.getUniqueId();
-        List<String> reports = bugReports.getOrDefault(playerId, new ArrayList<>());
-        int totalPages = (int) Math.ceil((double) reports.size() / 27);
-        return totalPages;
+        List<String> reports = bugReports.getOrDefault(playerId, new ArrayList<>(Collections.singletonList("DUMMY")));
+		return (int) Math.ceil((double) reports.size() / 27);
     }
 
     public static void setCurrentPage(@NotNull Player player, int page) {
         player.setMetadata("currentPage", new FixedMetadataValue(plugin, page));
     }
 
-    private static void openBugReportDetailsGUI(Player player, @NotNull String report, Integer reportId, Boolean isArchivedGUI) {
-        int reportIDGUI = reportId;
-
+    private static void openBugReportDetailsGUI(Player player, @NotNull String report, Integer reportIDGUI, Boolean isArchivedGUI) {
         String bugReportTitle = isArchivedGUI ? "Archived Bug Details - #" : "Bug Report Details - #";
         Inventory gui = Bukkit.createInventory(player, 36, ChatColor.YELLOW + bugReportTitle + reportIDGUI);
 
@@ -558,11 +484,11 @@ public class BugReportManager {
         gui.setItem(33, deleteButton);
 
         if (!"null".equals(category) && !"".equals(category)) {
-            List<Map<?, ?>> categoryList = config.getMapList ("reportCategories");
+            List<Map<?, ?>> categoryList = config.getMapList("reportCategories");
 
             Optional<String> categoryNameOptional = categoryList.stream()
-                    .filter(categoryMap -> Integer.parseInt (categoryMap.get ("id").toString()) == Integer.parseInt(category))
-                    .map(categoryMap -> categoryMap.get ("name").toString())
+                    .filter(categoryMap -> Integer.parseInt(categoryMap.get("id").toString()) == Integer.parseInt(category))
+                    .map(categoryMap -> categoryMap.get("name").toString())
                     .findFirst();
 
             if (categoryNameOptional.isPresent ()) {
@@ -582,8 +508,7 @@ public class BugReportManager {
         public void onInventoryClick(@NotNull InventoryClickEvent event) {
             String title = event.getView().getTitle();
             boolean isArchivedDetails = title.startsWith(ChatColor.YELLOW + "Archived Bug Details");
-
-            if (!title.startsWith(ChatColor.YELLOW + "Bug Report Details - #") && !isArchivedDetails) {
+            if (!title.startsWith(ChatColor.YELLOW + "Bug Report Details - #") && !title.startsWith(ChatColor.YELLOW + "Archived Bug Details")) {
                 return;
             }
 
@@ -593,54 +518,36 @@ public class BugReportManager {
             UUID playerId = player.getUniqueId();
 
             Inventory clickedInventory = event.getClickedInventory();
-            if (clickedInventory == null) {
-                return;
-            }
-
             ItemStack clickedItem = event.getCurrentItem();
-            if (clickedItem == null || clickedItem.getType() == Material.AIR) {
+
+            if (clickedInventory == null || clickedItem == null || clickedItem.getType() == Material.AIR) {
                 return;
             }
 
             ItemMeta itemMeta = clickedItem.getItemMeta();
-            if (itemMeta == null || !itemMeta.hasDisplayName()) {
+
+            if (itemMeta == null || !itemMeta.hasDisplayName() || itemMeta.getDisplayName().equals(" ")) {
                 return;
             }
 
-            String displayName = itemMeta.getDisplayName();
-
-            if (displayName.equals(" ")) {
-                return;
-            }
-
-            String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(displayName);
+            String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(itemMeta.getDisplayName());
 
             switch (customDisplayName) {
-                case "Back" -> {
-                    player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI (player) : getBugReportGUI (player));
-                }
+                case "Back" -> player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI (player) : getBugReportGUI (player));
                 case "Archive" -> {
                     BugReportDatabase.updateBugReportArchive(playerId, reportIDGUI, 1);
-                    player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI (player) : getBugReportGUI (player));
+
+                    player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
                     player.sendMessage(ChatColor.YELLOW + "Bug Report #" + reportIDGUI + " has been archived.");
+
+                    HandlerList.unregisterAll(this);
                 }
                 case "Delete" -> {
-                    List<String> playerReports = bugReports.get(playerId);
-                    int reportIndex = -1;
+                    BugReportDatabase.deleteBugReport(playerId, reportIDGUI);
 
-                    for (int i = 0; i < playerReports.size(); i++) {
-                        if (playerReports.get(i).contains("Report ID: " + reportIDGUI)) {
-                            reportIndex = i;
-                            break;
-                        }
-                    }
-
-                    if (reportIndex != -1) {
-                        playerReports.remove(reportIndex);
-                        bugReports.put(playerId, playerReports);
-                    }
-
-                    deleteBugReport(playerId, reportIDGUI);
+                    List<String> reports = bugReports.getOrDefault(playerId, new ArrayList<>(Collections.singletonList("DUMMY")));
+                    reports.removeIf(report -> report.contains("Report ID: " + reportIDGUI));
+                    bugReports.put(playerId, reports);
 
                     player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI (player) : getBugReportGUI (player));
                     player.sendMessage(ChatColor.RED + "Bug Report #" + reportIDGUI + " has been deleted.");
