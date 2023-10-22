@@ -16,10 +16,13 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.scheduler.BukkitScheduler;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
+
 import static com.leon.bugreport.BugReportManager.pluginColor;
 import static com.leon.bugreport.BugReportManager.pluginTitle;
 
@@ -168,7 +171,7 @@ public class BugReportSettings {
         private final Map<UUID, String> setReportCooldownClickMap = new HashMap<>();
 
         @EventHandler(priority = EventPriority.NORMAL)
-        public Object onInventoryClick(InventoryClickEvent event) {
+        public void onInventoryClick(@NotNull InventoryClickEvent event) {
             String displayName = ChatColor.stripColor(event.getView().getTitle());
             if (displayName.contains("Bug Report - ")) {
                 displayName = displayName.substring(13);
@@ -182,17 +185,17 @@ public class BugReportSettings {
                 Player player = (Player) event.getWhoClicked();
                 Inventory clickedInventory = event.getClickedInventory();
                 if (clickedInventory == null) {
-                    return null;
+                    return;
                 }
 
                 ItemStack clickedItem = event.getCurrentItem();
                 if (clickedItem == null || clickedItem.getType() == Material.AIR) {
-                    return null;
+                    return;
                 }
 
                 ItemMeta itemMeta = clickedItem.getItemMeta();
                 if (itemMeta == null || !itemMeta.hasDisplayName()) {
-                    return null;
+                    return;
                 }
 
                 String itemDisplayName = itemMeta.getDisplayName();
@@ -200,7 +203,7 @@ public class BugReportSettings {
 
                 if (customItemDisplayName.equals("Close")) {
                     player.closeInventory();
-                    return null;
+                    return;
                 }
 
                 if (clickedItem.getItemMeta().hasCustomModelData()) {
@@ -216,7 +219,7 @@ public class BugReportSettings {
                     case "Enable Category Selection" -> setCategorySelectionToggle(player);
                     case "Set Max Reports Per Player" -> {
                         player.closeInventory();
-                        player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.YELLOW + DefaultLanguageSelector.getTextElseDefault(BugReportManager.language, "setMaxReportsPerPlayer"));
+                        player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.YELLOW + DefaultLanguageSelector.getTextElseDefault(BugReportManager.language, "enterMaxReportsPerPlayer"));
 
                         setMaxReportsClickMap.put(player.getUniqueId(), String.valueOf(true));
                         setMaxReportsClickMap.put(player.getUniqueId(), customItemDisplayName);
@@ -224,6 +227,7 @@ public class BugReportSettings {
                     case "Set Report Cooldown" -> {
                         player.closeInventory();
                         player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.YELLOW + "Enter the cooldown between reports in seconds. Or type 'cancel' to cancel."); // TODO: Language support
+
                         setReportCooldownClickMap.put(player.getUniqueId(), String.valueOf(true));
                         setReportCooldownClickMap.put(player.getUniqueId(), customItemDisplayName);
                     }
@@ -231,43 +235,42 @@ public class BugReportSettings {
             }
 
             if (customDisplayName.contains("Language")) {
-                event.setCancelled(true);
+                event.setCancelled (true);
 
-                Player player = (Player) event.getWhoClicked();
-                Inventory clickedInventory = event.getClickedInventory();
-                ItemStack clickedItem = event.getCurrentItem();
+                Player player = (Player) event.getWhoClicked ();
+                Inventory clickedInventory = event.getClickedInventory ();
+                ItemStack clickedItem = event.getCurrentItem ();
 
-                if (clickedInventory == null || clickedItem == null || clickedItem.getType() == Material.AIR) {
-                    return null;
+                if (clickedInventory == null || clickedItem == null || clickedItem.getType () == Material.AIR) {
+                    return;
                 }
 
-                ItemMeta itemMeta = clickedItem.getItemMeta();
+                ItemMeta itemMeta = clickedItem.getItemMeta ();
 
-                if (itemMeta == null || !itemMeta.hasDisplayName()) {
-                    return null;
+                if (itemMeta == null || !itemMeta.hasDisplayName ()) {
+                    return;
                 }
 
-                String itemDisplayName = itemMeta.getDisplayName();
-                String customItemDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(itemDisplayName);
+                String itemDisplayName = itemMeta.getDisplayName ();
+                String customItemDisplayName = BugReportLanguage.getEnglishVersionFromLanguage (itemDisplayName);
 
-                if (customItemDisplayName.equals("Back")) {
-                    player.openInventory(getSettingsGUI());
-                    return null;
+                if (customItemDisplayName.equals ("Back")) {
+                    player.openInventory (getSettingsGUI ());
+                    return;
                 }
 
-                if (clickedItem.getItemMeta().hasCustomModelData()) {
-                    int customModelData = clickedItem.getItemMeta().getCustomModelData();
+                if (clickedItem.getItemMeta ().hasCustomModelData ()) {
+                    int customModelData = clickedItem.getItemMeta ().getCustomModelData ();
                     switch (customModelData) {
-                        case 11 -> setLanguage("en", "English", player);
-                        case 12 -> setLanguage("fr", "French", player);
-                        case 13 -> setLanguage("de", "German", player);
-                        case 14 -> setLanguage("es", "Spanish", player);
-                        case 15 -> setLanguage("it", "Italian", player);
+                        case 11 -> setLanguage ("en", "English", player);
+                        case 12 -> setLanguage ("fr", "French", player);
+                        case 13 -> setLanguage ("de", "German", player);
+                        case 14 -> setLanguage ("es", "Spanish", player);
+                        case 15 -> setLanguage ("it", "Italian", player);
                     }
                 }
             }
-            return null;
-        }
+		}
 
         private static void setLanguage(String languageCode, String languageName, Player player) {
             player.closeInventory();

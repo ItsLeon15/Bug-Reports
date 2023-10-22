@@ -64,7 +64,12 @@ public class BugReportCommand implements CommandExecutor, Listener {
             }
         }
 
-        reportManager.submitBugReport(player, String.join(" ", args), null);
+        try {
+            reportManager.submitBugReport(player, String.join(" ", args), null);
+        } catch (Exception e) {
+            plugin.getLogger().warning("Failed to submit bug report");
+            throw new RuntimeException(e);
+        }
         player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN
                 + DefaultLanguageSelector.getTextElseDefault(language, "bugReportConfirmationMessage"));
 
@@ -138,7 +143,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
     }
 
     @EventHandler(priority = EventPriority.NORMAL)
-    public void onPlayerChat(@NotNull AsyncPlayerChatEvent event) {
+    public void onPlayerChat(@NotNull AsyncPlayerChatEvent event) throws Exception {
         Player player = event.getPlayer();
         Integer categoryId = categorySelectionMap.get(player.getUniqueId());
 
@@ -172,7 +177,10 @@ public class BugReportCommand implements CommandExecutor, Listener {
 
     @Contract(pure = true)
     public static ChatColor stringColorToColorCode(String color) {
-        return switch (color) {
+        if (color == null) {
+            return ChatColor.WHITE;
+        }
+        return switch (color.toUpperCase()) {
             case "AQUA" -> ChatColor.AQUA;
             case "BLACK" -> ChatColor.BLACK;
             case "BLUE" -> ChatColor.BLUE;
@@ -190,6 +198,32 @@ public class BugReportCommand implements CommandExecutor, Listener {
             case "WHITE" -> ChatColor.WHITE;
             case "YELLOW" -> ChatColor.YELLOW;
             default -> ChatColor.WHITE;
+        };
+    }
+
+    @Contract(pure = true)
+    public static java.awt.Color chatColorToColor(ChatColor color) {
+        if (color == null) {
+            return java.awt.Color.WHITE;
+        }
+        return switch (color) {
+			case AQUA -> java.awt.Color.CYAN;
+            case BLACK -> java.awt.Color.BLACK;
+            case BLUE -> java.awt.Color.BLUE;
+            case DARK_AQUA -> java.awt.Color.CYAN.darker();
+            case DARK_BLUE -> java.awt.Color.BLUE.darker();
+            case DARK_GRAY -> java.awt.Color.GRAY.darker();
+            case DARK_GREEN -> java.awt.Color.GREEN.darker();
+            case DARK_PURPLE -> java.awt.Color.MAGENTA.darker();
+            case DARK_RED -> java.awt.Color.RED.darker();
+            case GOLD -> java.awt.Color.ORANGE;
+            case GRAY -> java.awt.Color.GRAY;
+            case GREEN -> java.awt.Color.GREEN;
+            case LIGHT_PURPLE -> java.awt.Color.MAGENTA;
+            case RED -> java.awt.Color.RED;
+            case WHITE -> java.awt.Color.WHITE;
+            case YELLOW -> java.awt.Color.YELLOW;
+            default -> java.awt.Color.WHITE;
         };
     }
 }
@@ -224,7 +258,7 @@ class Category {
         if (itemMeta == null || !itemMeta.hasLore()) {
             return "";
         }
-        return itemMeta.getLore().get(0);
+        return Objects.requireNonNull(itemMeta.getLore()).get(0);
     }
 
     public Material getItem() {

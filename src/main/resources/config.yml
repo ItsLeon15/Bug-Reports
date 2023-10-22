@@ -4,6 +4,19 @@ enableDiscordWebhook: true
 enablePluginReportCategories: false
 enableBugReportNotifications: false
 
+## Available placeholders:
+#
+# Aqua, Black, Blue, Dark_Aqua, Dark_Blue
+# Dark_Gray, Dark_Green, Dark_Purple, Dark_Red
+# Gold, Gray, Green, Light_Purple, Red, White, Yellow
+discordEmbedColor: Green
+discordEmbedTitle: New Bug Report
+discordEmbedFooter: Bug Report v0.6.4
+discordEmbedThumbnail: https://www.spigotmc.org/data/resource_icons/110/110732.jpg
+discordEnableThumbnail: true
+discordEnableUserAuthor: true
+discordIncludeDate: true
+
 language: en
 max-reports-per-player: 50
 report-confirmation-message: Thanks for submitting a report!
@@ -13,8 +26,6 @@ report-confirmation-message: Thanks for submitting a report!
 # Aqua, Black, Blue, Dark_Aqua, Dark_Blue
 # Dark_Gray, Dark_Green, Dark_Purple, Dark_Red
 # Gold, Gray, Green, Light_Purple, Red, White, Yellow
-#
-## The default color is Yellow
 pluginColor: Yellow
 pluginTitle: "[Bug Report]"
 

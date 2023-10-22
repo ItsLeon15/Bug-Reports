@@ -1,7 +1,10 @@
 package com.leon.bugreport;
 
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bstats.bukkit.Metrics;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.Objects;
+
 import static com.leon.bugreport.BugReportManager.plugin;
 
 public class BugReportPlugin extends JavaPlugin {
@@ -10,9 +13,17 @@ public class BugReportPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         if (!getDataFolder().exists()) {
-            getDataFolder().mkdirs();
+            if (!getDataFolder().mkdirs()) {
+                plugin.getLogger().warning("Failed to create data folder.");
+            }
         }
-        reportManager = new BugReportManager(this);
+
+        try {
+            reportManager = new BugReportManager(this);
+        } catch (Exception e) {
+            throw new RuntimeException (e);
+        }
+
         registerCommands();
         registerListeners();
         Metrics metrics = new Metrics(this, 18974);
@@ -21,10 +32,10 @@ public class BugReportPlugin extends JavaPlugin {
     }
 
     private void registerCommands() {
-        getCommand("bugreport").setExecutor(new BugReportCommand(reportManager));
-        getCommand("buglist").setExecutor(new BugListCommand(reportManager));
-        getCommand("buglinkdiscord").setExecutor(new LinkDiscordCommand(reportManager));
-        getCommand ("buglistarchived").setExecutor(new BugListArchivedCommand(reportManager));
+        Objects.requireNonNull(getCommand("bugreport")).setExecutor(new BugReportCommand(reportManager));
+        Objects.requireNonNull(getCommand("buglist")).setExecutor(new BugListCommand(reportManager));
+        Objects.requireNonNull(getCommand("buglinkdiscord")).setExecutor(new LinkDiscordCommand(reportManager));
+        Objects.requireNonNull(getCommand("buglistarchived")).setExecutor(new BugListArchivedCommand(reportManager));
     }
 
     private void registerListeners() {

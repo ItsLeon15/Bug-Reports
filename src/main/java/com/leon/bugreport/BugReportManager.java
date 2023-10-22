@@ -18,6 +18,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.io.File;
 import java.util.*;
 import static com.leon.bugreport.BugReportCommand.stringColorToColorCode;
@@ -42,13 +44,14 @@ public class BugReportManager {
     static String pluginTitle;
     static ChatColor pluginColor;
 
-    public BugReportManager(Plugin plugin) {
+    public BugReportManager(Plugin plugin) throws Exception {
         BugReportManager.plugin = plugin;
         bugReports = new HashMap<>();
         database = new BugReportDatabase();
 
         loadBugReports();
         loadConfig();
+        checkConfig();
 
         String webhookURL = config.getString("webhookURL", "");
         pluginTitle = Objects.requireNonNull(config.getString("pluginTitle", "[Bug Report]"));
@@ -92,7 +95,38 @@ public class BugReportManager {
         lang = new BugReportLanguage(plugin, "languages.yml");
     }
 
-    private List<Category> loadReportCategories() {
+    public static void checkConfig() {
+        Map<String, ?> newValues = new HashMap<> () {{
+			put("webhookURL",                       "https://discord.com/api/webhooks/");
+			put("enableDiscordWebhook",             true);
+			put("enablePluginReportCategories",     false);
+			put("enableBugReportNotifications",     false);
+			put("discordEmbedTitle",                "New Bug Report");
+			put("discordEmbedColor",                "Yellow");
+			put("discordEmbedFooter",               "Bug Report V0.6.3");
+			put("discordEmbedThumbnail",            "https://www.spigotmc.org/data/resource_icons/110/110732.jpg");
+            put("discordEnableThumbnail",           true);
+            put("discordEnableUserAuthor",          true);
+            put("discordIncludeDate",               true);
+			put("language",                         "en");
+			put("max-reports-per-player",           50);
+			put("report-confirmation-message",      "Thanks for submitting a report!");
+			put("pluginColor",                      "Yellow");
+			put("pluginTitle",                      "[Bug Report]");
+		}};
+
+        for (Map.Entry<String, ?> entry : newValues.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            if (!config.contains(key)) {
+                config.set(key, value);
+            }
+        }
+
+        saveConfig();
+    }
+
+    private @Nullable List<Category> loadReportCategories() {
         if (checkCategoryConfig()) {
             List<Category> categories = new ArrayList<>();
 
@@ -307,11 +341,8 @@ public class BugReportManager {
     }
 
     private static void loadBugReports() {
-        Map<UUID, List<String>> loadedReports = BugReportDatabase.loadBugReports();
-        if (loadedReports != null) {
-            bugReports = loadedReports;
-        }
-    }
+		bugReports = BugReportDatabase.loadBugReports();
+	}
 
     public static class BugReportListener implements Listener {
         private final BugReportManager reportManager;
@@ -384,12 +415,12 @@ public class BugReportManager {
                         .findFirst()
                         .orElse(null);
 
-                if (report.contains("hasBeenRead: 0")) {
-                    report = report.replace("hasBeenRead: 0", "hasBeenRead: 1");
-                    reports.set(reportID, report);
-                    bugReports.put(playerId, reports);
-                    database.updateBugReportHeader(playerId, reportID);
-                }
+//                if (report.contains("hasBeenRead: 0")) {
+//                    report = report.replace("hasBeenRead: 0", "hasBeenRead: 1");
+//                    reports.set(reportID, report);
+//                    bugReports.put(playerId, reports);
+//                    database.updateBugReportHeader(playerId, reportID);
+//                }
 
                 openBugReportDetailsGUI(player, report, reportID, isArchivedGUI);
 			}

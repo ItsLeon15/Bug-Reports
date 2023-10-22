@@ -3,10 +3,9 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>com.leon.bugreport</groupId>
     <artifactId>BugReports</artifactId>
-    <version>0.6.2</version>
+    <version>0.6.4</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -44,7 +43,14 @@
             <version>24.0.1</version>
             <scope>compile</scope>
         </dependency>
-    </dependencies>
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>5.0.1</version>
+            <scope>compile</scope>
+        </dependency>
+	</dependencies>
+
     <repositories>
         <repository>
             <id>spigot-repo</id>
@@ -55,6 +61,7 @@
             <url>https://libraries.minecraft.net/</url>
         </repository>
     </repositories>
+
     <build>
         <plugins>
             <plugin>
@@ -69,6 +76,9 @@
                             <shadedPattern>com.leon.bugreport</shadedPattern>
                         </relocation>
                     </relocations>
+                    <minimizeJar>true</minimizeJar>
+                    <shadedArtifactAttached>true</shadedArtifactAttached>
+                    <shadedClassifierName>latest</shadedClassifierName>
                 </configuration>
                 <executions>
                     <execution>
@@ -76,9 +86,6 @@
                         <goals>
                             <goal>shade</goal>
                         </goals>
-                        <configuration>
-                            <minimizeJar>true</minimizeJar>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>

@@ -1,25 +1,27 @@
 package com.leon.bugreport;
 
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+
 import javax.net.ssl.HttpsURLConnection;
-import java.awt.Color;
+import java.awt.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class DiscordWebhook {
-
-    private final String url;
     private String content;
     private String username;
     private String avatarUrl;
-    private List<EmbedObject> embeds = new ArrayList<>();
-
+    private final String url;
+    private final List<EmbedObject> embeds = new ArrayList<>();
 
     public DiscordWebhook(String url) {
         this.url = url;
@@ -72,6 +74,12 @@ public class DiscordWebhook {
                     jsonEmbed.put("color", rgb);
                 }
 
+                if (embed.getTimestamp() != null) {
+                    Timestamp timestamp = embed.getTimestamp();
+                    String time = timestamp.toString();
+                    jsonEmbed.put("timestamp", time);
+                }
+
                 EmbedObject.Footer footer = embed.getFooter();
                 EmbedObject.Image image = embed.getImage();
                 EmbedObject.Thumbnail thumbnail = embed.getThumbnail();
@@ -79,7 +87,7 @@ public class DiscordWebhook {
                 List<EmbedObject.Field> fields = embed.getFields();
 
                 if (footer != null) {
-                    JSONObject jsonFooter = new JSONObject();
+                    JSONObject jsonFooter = new JSONObject ();
 
                     jsonFooter.put("text", footer.getText());
                     jsonFooter.put("icon_url", footer.getIconUrl());
@@ -87,21 +95,21 @@ public class DiscordWebhook {
                 }
 
                 if (image != null) {
-                    JSONObject jsonImage = new JSONObject();
+                    JSONObject jsonImage = new JSONObject ();
 
                     jsonImage.put("url", image.getUrl());
                     jsonEmbed.put("image", jsonImage);
                 }
 
                 if (thumbnail != null) {
-                    JSONObject jsonThumbnail = new JSONObject();
+                    JSONObject jsonThumbnail = new JSONObject ();
 
                     jsonThumbnail.put("url", thumbnail.getUrl());
                     jsonEmbed.put("thumbnail", jsonThumbnail);
                 }
 
                 if (author != null) {
-                    JSONObject jsonAuthor = new JSONObject();
+                    JSONObject jsonAuthor = new JSONObject ();
 
                     jsonAuthor.put("name", author.getName());
                     jsonAuthor.put("url", author.getUrl());
@@ -111,7 +119,7 @@ public class DiscordWebhook {
 
                 List<JSONObject> jsonFields = new ArrayList<>();
                 for (EmbedObject.Field field : fields) {
-                    JSONObject jsonField = new JSONObject();
+                    JSONObject jsonField = new JSONObject ();
 
                     jsonField.put("name", field.getName());
                     jsonField.put("value", field.getValue());
@@ -148,12 +156,13 @@ public class DiscordWebhook {
         private String description;
         private String url;
         private Color color;
+        private Timestamp timestamp;
 
         private Footer footer;
         private Thumbnail thumbnail;
         private Image image;
         private Author author;
-        private List<Field> fields = new ArrayList<>();
+        private final List<Field> fields = new ArrayList<>();
 
         public String getTitle() {
             return title;
@@ -169,6 +178,10 @@ public class DiscordWebhook {
 
         public Color getColor() {
             return color;
+        }
+
+        public Timestamp getTimestamp() {
+            return timestamp;
         }
 
         public Footer getFooter() {
@@ -211,13 +224,19 @@ public class DiscordWebhook {
             return this;
         }
 
+        public EmbedObject setTimestamp() {
+            ZonedDateTime zonedDateTime = Instant.now().atZone(ZoneId.of("UTC"));
+            this.timestamp = Timestamp.valueOf(zonedDateTime.toLocalDateTime());
+            return this;
+        }
+
         public EmbedObject setFooter(String text, String icon) {
-            this.footer = new Footer(text, icon);
+            this.footer = new Footer (text, icon);
             return this;
         }
 
         public EmbedObject setThumbnail(String url) {
-            this.thumbnail = new Thumbnail(url);
+            this.thumbnail = new Thumbnail (url);
             return this;
         }
 
@@ -227,18 +246,18 @@ public class DiscordWebhook {
         }
 
         public EmbedObject setAuthor(String name, String url, String icon) {
-            this.author = new Author(name, url, icon);
+            this.author = new Author (name, url, icon);
             return this;
         }
 
         public EmbedObject addField(String name, String value, boolean inline) {
-            this.fields.add(new Field(name, value, inline));
+            this.fields.add (new Field (name, value, inline));
             return this;
         }
 
-        private class Footer {
-            private String text;
-            private String iconUrl;
+        private static class Footer {
+            private final String text;
+            private final String iconUrl;
 
             private Footer(String text, String iconUrl) {
                 this.text = text;
@@ -254,8 +273,8 @@ public class DiscordWebhook {
             }
         }
 
-        private class Thumbnail {
-            private String url;
+        private static class Thumbnail {
+            private final String url;
 
             private Thumbnail(String url) {
                 this.url = url;
@@ -266,8 +285,8 @@ public class DiscordWebhook {
             }
         }
 
-        private class Image {
-            private String url;
+        private static class Image {
+            private final String url;
 
             private Image(String url) {
                 this.url = url;
@@ -278,10 +297,10 @@ public class DiscordWebhook {
             }
         }
 
-        private class Author {
-            private String name;
-            private String url;
-            private String iconUrl;
+        private static class Author {
+            private final String name;
+            private final String url;
+            private final String iconUrl;
 
             private Author(String name, String url, String iconUrl) {
                 this.name = name;
@@ -302,10 +321,10 @@ public class DiscordWebhook {
             }
         }
 
-        private class Field {
-            private String name;
-            private String value;
-            private boolean inline;
+        private static class Field {
+            private final String name;
+            private final String value;
+            private final boolean inline;
 
             private Field(String name, String value, boolean inline) {
                 this.name = name;
@@ -327,8 +346,7 @@ public class DiscordWebhook {
         }
     }
 
-    private class JSONObject {
-
+    private static class JSONObject {
         private final HashMap<String, Object> map = new HashMap<>();
 
         void put(String key, Object value) {
@@ -371,7 +389,8 @@ public class DiscordWebhook {
             return builder.toString();
         }
 
-        private String quote(String string) {
+        @Contract(pure = true)
+        private @NotNull String quote(String string) {
             return "\"" + string + "\"";
         }
     }

@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.leon.bugreport</groupId>
   <artifactId>BugReports</artifactId>
-  <version>0.6.2</version>
+  <version>0.6.4</version>
   <build>
     <plugins>
       <plugin>
@@ -15,9 +15,6 @@
             <goals>
               <goal>shade</goal>
             </goals>
-            <configuration>
-              <minimizeJar>true</minimizeJar>
-            </configuration>
           </execution>
         </executions>
         <configuration>
@@ -28,6 +25,9 @@
               <shadedPattern>com.leon.bugreport</shadedPattern>
             </relocation>
           </relocations>
+          <minimizeJar>true</minimizeJar>
+          <shadedArtifactAttached>true</shadedArtifactAttached>
+          <shadedClassifierName>latest</shadedClassifierName>
         </configuration>
       </plugin>
     </plugins>
