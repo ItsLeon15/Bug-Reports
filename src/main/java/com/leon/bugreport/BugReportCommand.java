@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
+import static com.leon.bugreport.BugReportDatabase.getStaticUUID;
 import static com.leon.bugreport.BugReportManager.*;
 
 public class BugReportCommand implements CommandExecutor, Listener {
@@ -32,8 +33,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
     }
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
-            String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage("This command can only be run by a player.");
             return true;
@@ -41,8 +41,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 
         if (config.getBoolean("enablePluginReportCategories", true)) {
             if (!BugReportManager.checkCategoryConfig()) {
-                player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + DefaultLanguageSelector
-                        .getTextElseDefault(language, "bugReportCategoriesNotConfiguredMessage"));
+                player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + DefaultLanguageSelector.getTextElseDefault(language, "bugReportCategoriesNotConfiguredMessage"));
                 return true;
             }
             openCategorySelectionGUI(player);
@@ -58,8 +57,11 @@ public class BugReportCommand implements CommandExecutor, Listener {
         if (maxReports != 0) {
             int reportsLeft = maxReports - getReportCount(player.getUniqueId());
             if (reportsLeft <= 0) {
-                player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED
-                        + DefaultLanguageSelector.getTextElseDefault(language, "maxReportsPerPlayerMessage"));
+                if (checkForKey("useTitleInsteadOfMessage", true)) {
+                    player.sendTitle(ChatColor.RED + DefaultLanguageSelector.getTextElseDefault(language, "maxReportsPerPlayerMessage"), "", 10, 70, 25);
+                } else {
+                    player.sendMessage (pluginColor + pluginTitle + " " + ChatColor.RED + DefaultLanguageSelector.getTextElseDefault (language, "maxReportsPerPlayerMessage"));
+                }
                 return true;
             }
         }
@@ -70,15 +72,17 @@ public class BugReportCommand implements CommandExecutor, Listener {
             plugin.getLogger().warning("Failed to submit bug report");
             throw new RuntimeException(e);
         }
-        player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN
-                + DefaultLanguageSelector.getTextElseDefault(language, "bugReportConfirmationMessage"));
-
+        if (checkForKey("useTitleInsteadOfMessage", true)) {
+            player.sendTitle(ChatColor.GREEN + DefaultLanguageSelector.getTextElseDefault(language, "bugReportConfirmationMessage"), "", 10, 70, 25);
+        } else {
+            player.sendMessage (pluginColor + pluginTitle + " " + ChatColor.GREEN + DefaultLanguageSelector.getTextElseDefault (language, "bugReportConfirmationMessage"));
+        }
         return true;
     }
 
     private int getReportCount(UUID playerId) {
         int count = 0;
-        List<String> reports = bugReports.getOrDefault(playerId, new ArrayList<>(Collections.singletonList("DUMMY")));
+        List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
         for (String report : reports) {
             if (report.contains(playerId.toString())) {
                 count++;
@@ -134,16 +138,18 @@ public class BugReportCommand implements CommandExecutor, Listener {
         if (selectedCategory != null) {
             categorySelectionMap.put(player.getUniqueId(), selectedCategory.getId());
             player.closeInventory();
-            player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.YELLOW
-                    + DefaultLanguageSelector.getTextElseDefault(language, "enterBugReportMessageCategory"));
+            if (checkForKey("useTitleInsteadOfMessage", true)) {
+                player.sendTitle(ChatColor.YELLOW + DefaultLanguageSelector.getTextElseDefault(language, "enterBugReportMessageCategory"), "", 10, 70, 120); // TODO: Finish this in all places
+            } else {
+                player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.YELLOW + DefaultLanguageSelector.getTextElseDefault(language, "enterBugReportMessageCategory"));
+            }
         } else {
-            player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED
-                    + "Something went wrong while selecting the category");
+            player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + "Something went wrong while selecting the category");
         }
     }
 
     @EventHandler(priority = EventPriority.NORMAL)
-    public void onPlayerChat(@NotNull AsyncPlayerChatEvent event) throws Exception {
+    public void onPlayerChat(@NotNull AsyncPlayerChatEvent event) {
         Player player = event.getPlayer();
         Integer categoryId = categorySelectionMap.get(player.getUniqueId());
 
@@ -156,14 +162,20 @@ public class BugReportCommand implements CommandExecutor, Listener {
         String message = event.getMessage();
 
         if (message.equalsIgnoreCase("cancel")) {
-            player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED
-                    + DefaultLanguageSelector.getTextElseDefault(language, "cancelledBugReportMessage"));
+            if (checkForKey("useTitleInsteadOfMessage", true)) {
+                player.sendTitle(ChatColor.RED + DefaultLanguageSelector.getTextElseDefault(language, "cancelledBugReportMessage"), "", 10, 70, 25);
+            } else {
+                player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + DefaultLanguageSelector.getTextElseDefault(language, "cancelledBugReportMessage"));
+            }
             return;
         }
 
         reportManager.submitBugReport(player, message, categoryId);
-        player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN
-                + DefaultLanguageSelector.getTextElseDefault(language, "bugReportConfirmationMessage"));
+        if (checkForKey("useTitleInsteadOfMessage", true)) {
+            player.sendTitle(ChatColor.GREEN + DefaultLanguageSelector.getTextElseDefault(language, "bugReportConfirmationMessage"), "", 10, 70, 25);
+        } else {
+            player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + DefaultLanguageSelector.getTextElseDefault(language, "bugReportConfirmationMessage"));
+        }
     }
 
     private @NotNull ItemStack createCategoryItem(Category category) {

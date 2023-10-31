@@ -66,12 +66,10 @@ public class BugReportLanguage {
 
     public static @Nullable String getTitleFromLanguage(String key) {
         ConfigurationSection languageSection = languageTexts.get(BugReportManager.language);
-
         if (languageSection != null) {
             ConfigurationSection buttonNamesSection = languageSection.getConfigurationSection("buttonNames");
             return buttonNamesSection != null ? buttonNamesSection.getString(key) : null;
         }
-
         return null;
     }
 }

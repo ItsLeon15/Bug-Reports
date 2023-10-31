@@ -26,6 +26,9 @@ public class DefaultLanguageSelector {
 			put("cancel"									,"Cancel");
 			put("archive"									,"Archive");
 			put("delete"									,"Delete");
+			put("otherSettings"								,"Other Settings");
+			put("enableTitleMessage"						,"Enable Title Message");
+			put("enablePlayerHeads"							,"Enable Player Heads");
 			put("missingValueMessage"						,"Missing '%key%' in reportCategories in config.yml");
 			put("missingReportCategoryMessage"				,"Missing reportCategories in config.yml");
 			put("wentWrongLoadingCategoriesMessage"			,"Something went wrong while loading the report categories");
@@ -41,6 +44,8 @@ public class DefaultLanguageSelector {
 			put("maxReportsPerPlayerSuccessMessage"			,"Max reports per player has been set to %amount%");
 			put("languageSetTo"								,"Language set to %language%");
 			put("enterMaxReportsPerPlayer"					,"Enter the max reports a player can submit. Or type 'cancel' to cancel");
+			put("newReportsMessage"							,"You have %numReports% new reports");
+			put("noNewReportsMessage"						,"You have no new reports");
 	}};
 
 	public static @NotNull String getTextElseDefault(String language, String key) {

@@ -1,33 +1,37 @@
 webhookURL: https://discord.com/api/webhooks/
 
-enableDiscordWebhook: true
+enableDiscordWebhook: false
 enablePluginReportCategories: false
-enableBugReportNotifications: false
+enableBugReportNotifications: true
 
-## Available placeholders:
+# # Available placeholders:
 #
 # Aqua, Black, Blue, Dark_Aqua, Dark_Blue
 # Dark_Gray, Dark_Green, Dark_Purple, Dark_Red
 # Gold, Gray, Green, Light_Purple, Red, White, Yellow
 discordEmbedColor: Green
 discordEmbedTitle: New Bug Report
-discordEmbedFooter: Bug Report v0.6.4
+discordEmbedFooter: Bug Report v0.7.0
 discordEmbedThumbnail: https://www.spigotmc.org/data/resource_icons/110/110732.jpg
 discordEnableThumbnail: true
 discordEnableUserAuthor: true
 discordIncludeDate: true
 
+useTitleInsteadOfMessage: false
+enablePlayerHeads: true
+refreshPlayerHeadCache: 1d # Default, 1m, 1h, 1d, 1w, 1mo, 1y
+
 language: en
-max-reports-per-player: 50
+max-reports-per-player: 50 # 0 = unlimited
 report-confirmation-message: Thanks for submitting a report!
 
-## Available placeholders:
+# # Available placeholders:
 #
 # Aqua, Black, Blue, Dark_Aqua, Dark_Blue
 # Dark_Gray, Dark_Green, Dark_Purple, Dark_Red
 # Gold, Gray, Green, Light_Purple, Red, White, Yellow
 pluginColor: Yellow
-pluginTitle: "[Bug Report]"
+pluginTitle: '[Bug Report]'
 
 # This can either be "mysql" or "local".
 # If you choose "mysql", you must fill out the database section below.

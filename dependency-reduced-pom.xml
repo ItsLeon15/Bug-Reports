@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.leon.bugreport</groupId>
   <artifactId>BugReports</artifactId>
-  <version>0.6.4</version>
+  <version>0.7.0</version>
   <build>
     <plugins>
       <plugin>
@@ -46,7 +46,7 @@
     <dependency>
       <groupId>org.spigotmc</groupId>
       <artifactId>spigot-api</artifactId>
-      <version>1.17.1-R0.1-SNAPSHOT</version>
+      <version>1.18.1-R0.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
