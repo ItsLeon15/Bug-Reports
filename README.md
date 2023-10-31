@@ -12,6 +12,12 @@ BugReport is a tool that helps server owners manage any bug reports found by pla
 - **bugreport.admin** - Allows a user to access the buglist command.
 - **bugreport.notify** - Allows a player be notified every time a bug report is sent.
 
+## Bug List GUI
+![Bug Report List GUI](https://github.com/ItsLeon15/Bug-Reports/assets/64979109/8b528644-1164-474c-93bc-407deeed044c)
+
+## Bug Details GUI
+![Bug Report Details (1)](https://github.com/ItsLeon15/Bug-Reports/assets/64979109/8ba7bde1-c4c2-4536-ab07-24ec3c484915)
+
 ## Fixes for future releases
 - [x] Allow more than 9 bug reports with multiple pages.
 - [x] Add a command to link a Discord Webhook to send all Bug Reports to.
