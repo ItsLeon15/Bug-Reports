@@ -41,7 +41,8 @@ public class BugReportLanguage {
 				"Enable Discord Webhook", "Enable Bug Report Notifications", "Enable Category Selection",
 				"Set Max Reports Per Player", "Set Language",
 				"On", "Off", "Language",
-				"Cancelled", "Cancel"
+				"Cancelled", "Cancel", "Archive", "Delete", "Other Settings",
+				"Enable Title Message", "Enable Player Heads"
 		};
 
 		for (String lang : languageTexts.keySet()) {

@@ -1,25 +1,23 @@
 package com.leon.bugreport;
 
 import org.jetbrains.annotations.NotNull;
-
 import java.awt.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-
 import static com.leon.bugreport.BugReportCommand.chatColorToColor;
 import static com.leon.bugreport.BugReportCommand.stringColorToColorCode;
 import static com.leon.bugreport.BugReportManager.config;
 
 public class LinkDiscord {
     private static final String EMBED_TITLE = "New Bug Report";
-    private static final String EMBED_FOOTER_TEXT = "Bug Report V0.7.0";
-    private static final Color EMBED_COLOR = Color.RED;
+    private static final String EMBED_FOOTER_TEXT = "Bug Report V0.7.1";
     private static final String EMBED_THUMBNAIL = "https://www.spigotmc.org/data/resource_icons/110/110732.jpg";
     private static final String EMBED_AUTHOR = "true";
     private static final String EMBED_DATE = "true";
     private static final String EMBED_THUMBNAIL_ENABLED = "true";
+    private static final Color EMBED_COLOR = Color.RED;
     private String webhookURL;
 
     public LinkDiscord(String webhookURL) {
@@ -51,20 +49,25 @@ public class LinkDiscord {
         discordEnableUserAuthor = (discordEnableUserAuthor == null) ? EMBED_AUTHOR : discordEnableUserAuthor;
         discordIncludeDate = (discordIncludeDate == null) ? EMBED_DATE : discordIncludeDate;
         discordEnableThumbnail = (discordEnableThumbnail == null) ? EMBED_THUMBNAIL_ENABLED : discordEnableThumbnail;
+        String newUUID;
 
-        String newUUID = getUserIDFromAPI(username);
+        if (discordEnableUserAuthor.equals("true")) {
+            newUUID = getUserIDFromAPI(username);
+        } else {
+            newUUID = "Not Available";
+        }
         String userAuthorURL = "https://crafatar.com/avatars/" + newUUID;
         String userAuthorIconURL = "https://crafatar.com/avatars/" + newUUID;
 
         DiscordWebhook webhook = new DiscordWebhook(webhookURL);
         DiscordWebhook.EmbedObject embedObject = new DiscordWebhook.EmbedObject()
-                .setTitle(discordEmbedTitle)
-                .addField("Username", username, true)
-                .addField("UUID", newUUID, true)
-                .addField("World", world, true)
-                .addField("Full Message", message, false)
-                .setFooter(discordEmbedFooter, null)
-                .setColor(discordEmbedColor);
+            .setTitle(discordEmbedTitle)
+            .addField("Username", username, true)
+            .addField("UUID", newUUID, true)
+            .addField("World", world, true)
+            .addField("Full Message", message, false)
+            .setFooter(discordEmbedFooter, null)
+            .setColor(discordEmbedColor);
 
         if (discordEnableUserAuthor.equals("true")) {
             embedObject.setAuthor(username, userAuthorURL, userAuthorIconURL);
@@ -94,7 +97,7 @@ public class LinkDiscord {
 
             connection.setRequestMethod("GET");
             connection.setRequestProperty("Content-Type", "application/json");
-            connection.setRequestProperty("User-Agent", "BugReport/0.7.0");
+            connection.setRequestProperty("User-Agent", "BugReport/0.7.1");
             connection.setConnectTimeout(5000);
             connection.setReadTimeout(5000);
             connection.setDoOutput(true);
