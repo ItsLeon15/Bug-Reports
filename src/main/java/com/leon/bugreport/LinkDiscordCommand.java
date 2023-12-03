@@ -5,6 +5,8 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 import static com.leon.bugreport.BugReportManager.pluginColor;
 import static com.leon.bugreport.BugReportManager.pluginTitle;
@@ -17,7 +19,7 @@ public class LinkDiscordCommand implements CommandExecutor {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage("Only players can use this command."); // TODO: Language support
             return true;
@@ -46,7 +48,8 @@ public class LinkDiscordCommand implements CommandExecutor {
         return true;
     }
 
-    private boolean isWebhookURLValid(String webhookURL) {
-        return webhookURL.startsWith("https://discord.com/api/webhooks/");
+    @Contract(pure = true)
+    private boolean isWebhookURLValid(@NotNull String webhookURL) {
+        return webhookURL.matches("^https://(canary\\.)?discord\\.com/api/webhooks/[0-9]+/[a-zA-Z0-9-_]+$");
     }
 }

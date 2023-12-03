@@ -1,6 +1,7 @@
 package com.leon.bugreport;
 
 import com.leon.bugreport.API.CacheCleanupListener;
+import com.leon.bugreport.listeners.ReportListener;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -11,9 +12,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.*;
-
 import static com.leon.bugreport.BugReportDatabase.getStaticUUID;
 import static com.leon.bugreport.BugReportManager.*;
 
@@ -102,9 +101,10 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
     }
 
     private void registerListeners() {
-        getServer().getPluginManager().registerEvents(new BugReportManager.BugReportListener(reportManager), this);
+        getServer().getPluginManager().registerEvents(new BugReportManager.BugReportListener(), this);
         getServer().getPluginManager().registerEvents(new BugReportCommand(reportManager), this);
         getServer().getPluginManager().registerEvents(new BugReportSettings.BugReportSettingsListener(), this);
+        getServer().getPluginManager().registerEvents(new ReportListener(), this);
         getServer().getPluginManager().registerEvents(this, this);
         new CacheCleanupListener();
     }

@@ -154,11 +154,12 @@ public class DataSource {
 		JsonObject jsonResponse = JsonParser.parseString(response).getAsJsonObject();
 		String uuidString = jsonResponse.get("id").getAsString();
 		return UUID.fromString(
-				uuidString.substring(0, 8) + "-" +
-					uuidString.substring(8, 12) + "-" +
-					uuidString.substring(12, 16) + "-" +
-					uuidString.substring(16, 20) + "-" +
-					uuidString.substring(20, 32));
+			uuidString.substring(0, 8) + "-" +
+			uuidString.substring(8, 12) + "-" +
+			uuidString.substring(12, 16) + "-" +
+			uuidString.substring(16, 20) + "-" +
+			uuidString.substring(20, 32)
+		);
 	}
 
 	public static @NotNull ItemStack getPlayerHead(String playerName) {
@@ -200,7 +201,6 @@ public class DataSource {
 
 	private static @NotNull ItemStack getCachedPlayerHead(String playerName, @NotNull Map<String, CacheEntry> cache) {
 		CacheEntry mainEntry = cache.get(playerName);
-		String uuidString = mainEntry.data;
 		String base64 = null;
 		if ("00000000-0000-0000-0000-000000000000".equals(mainEntry.data)) {
 			return new ItemStack(Material.PLAYER_HEAD);

@@ -12,7 +12,7 @@ import static com.leon.bugreport.BugReportManager.config;
 
 public class LinkDiscord {
     private static final String EMBED_TITLE = "New Bug Report";
-    private static final String EMBED_FOOTER_TEXT = "Bug Report V0.7.1";
+    private static final String EMBED_FOOTER_TEXT = "Bug Report V0.7.2";
     private static final String EMBED_THUMBNAIL = "https://www.spigotmc.org/data/resource_icons/110/110732.jpg";
     private static final String EMBED_AUTHOR = "true";
     private static final String EMBED_DATE = "true";
@@ -49,13 +49,8 @@ public class LinkDiscord {
         discordEnableUserAuthor = (discordEnableUserAuthor == null) ? EMBED_AUTHOR : discordEnableUserAuthor;
         discordIncludeDate = (discordIncludeDate == null) ? EMBED_DATE : discordIncludeDate;
         discordEnableThumbnail = (discordEnableThumbnail == null) ? EMBED_THUMBNAIL_ENABLED : discordEnableThumbnail;
-        String newUUID;
+        String newUUID = discordEnableUserAuthor.equals ("true") ? getUserIDFromAPI (username) : "Not Available";
 
-        if (discordEnableUserAuthor.equals("true")) {
-            newUUID = getUserIDFromAPI(username);
-        } else {
-            newUUID = "Not Available";
-        }
         String userAuthorURL = "https://crafatar.com/avatars/" + newUUID;
         String userAuthorIconURL = "https://crafatar.com/avatars/" + newUUID;
 
@@ -69,15 +64,9 @@ public class LinkDiscord {
             .setFooter(discordEmbedFooter, null)
             .setColor(discordEmbedColor);
 
-        if (discordEnableUserAuthor.equals("true")) {
-            embedObject.setAuthor(username, userAuthorURL, userAuthorIconURL);
-        }
-        if (discordIncludeDate.equals("true")) {
-            embedObject.setTimestamp();
-        }
-        if (discordEnableThumbnail.equals("true")) {
-            embedObject.setThumbnail(discordEmbedThumbnail);
-        }
+        if (discordEnableUserAuthor.equals("true")) embedObject.setAuthor(username, userAuthorURL, userAuthorIconURL);
+        if (discordIncludeDate.equals("true")) embedObject.setTimestamp();
+        if (discordEnableThumbnail.equals("true")) embedObject.setThumbnail (discordEmbedThumbnail);
 
         webhook.addEmbed(embedObject);
 
@@ -97,7 +86,7 @@ public class LinkDiscord {
 
             connection.setRequestMethod("GET");
             connection.setRequestProperty("Content-Type", "application/json");
-            connection.setRequestProperty("User-Agent", "BugReport/0.7.1");
+            connection.setRequestProperty("User-Agent", "BugReport/0.7.2");
             connection.setConnectTimeout(5000);
             connection.setReadTimeout(5000);
             connection.setDoOutput(true);

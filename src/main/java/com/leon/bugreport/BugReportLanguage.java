@@ -4,6 +4,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.Arrays;
@@ -17,7 +18,7 @@ public class BugReportLanguage {
         loadLanguageTexts(plugin, languageFilePath);
     }
 
-    static void loadLanguageTexts(Plugin plugin, String languageFilePath) {
+    static void loadLanguageTexts(@NotNull Plugin plugin, String languageFilePath) {
         File languageFile = new File(plugin.getDataFolder(), languageFilePath);
         if (!languageFile.exists()) {
             plugin.saveResource(languageFilePath, false);
@@ -41,7 +42,7 @@ public class BugReportLanguage {
 				"Enable Discord Webhook", "Enable Bug Report Notifications", "Enable Category Selection",
 				"Set Max Reports Per Player", "Set Language",
 				"On", "Off", "Language",
-				"Cancelled", "Cancel", "Archive", "Delete", "Other Settings",
+				"Cancelled", "Cancel", "Archive", "Unarchive", "Delete", "Other Settings",
 				"Enable Title Message", "Enable Player Heads"
 		};
 

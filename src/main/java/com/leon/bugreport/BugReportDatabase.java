@@ -27,18 +27,14 @@ public class BugReportDatabase {
 
     private static void addTimestampColumn() {
         try (Connection connection = dataSource.getConnection()) {
-            try (ResultSet archivedResultSet = connection.getMetaData().getColumns(null, null, "player_data",
-                    "last_login_timestamp")) {
+            try (ResultSet archivedResultSet = connection.getMetaData().getColumns(null, null, "player_data", "last_login_timestamp")) {
                 if (!archivedResultSet.next()) {
-                    connection.createStatement()
-                            .execute("ALTER TABLE player_data ADD COLUMN last_login_timestamp BIGINT DEFAULT 0");
+                    connection.createStatement().execute("ALTER TABLE player_data ADD COLUMN last_login_timestamp BIGINT DEFAULT 0");
                 }
             }
-            try (ResultSet archivedResultSet = connection.getMetaData().getColumns(null, null, "bug_reports",
-                    "timestamp")) {
+            try (ResultSet archivedResultSet = connection.getMetaData().getColumns(null, null, "bug_reports", "timestamp")) {
                 if (!archivedResultSet.next()) {
-                    connection.createStatement()
-                            .execute("ALTER TABLE bug_reports ADD COLUMN timestamp BIGINT");
+                    connection.createStatement().execute("ALTER TABLE bug_reports ADD COLUMN timestamp BIGINT");
                 }
             }
         } catch (Exception e) {
@@ -86,25 +82,19 @@ public class BugReportDatabase {
 
     private void addMissingTables() {
         try (Connection connection = dataSource.getConnection()) {
-            try (ResultSet archivedResultSet = connection.getMetaData().getColumns(null, null, "player_data",
-                    "player_id")) {
+            try (ResultSet archivedResultSet = connection.getMetaData().getColumns(null, null, "player_data", "player_id")) {
                 if (!archivedResultSet.next()) {
-                    connection.createStatement()
-                            .execute("CREATE TABLE IF NOT EXISTS player_data(player_id TEXT, last_login_timestamp BIGINT DEFAULT 0)");
+                    connection.createStatement().execute("CREATE TABLE IF NOT EXISTS player_data(player_id TEXT, last_login_timestamp BIGINT DEFAULT 0)");
                 }
             }
-            try (ResultSet archivedResultSet = connection.getMetaData().getColumns(null, null, "bug_reports",
-                    "archived")) {
+            try (ResultSet archivedResultSet = connection.getMetaData().getColumns(null, null, "bug_reports", "archived")) {
                 if (!archivedResultSet.next()) {
-                    connection.createStatement()
-                            .execute("ALTER TABLE bug_reports ADD COLUMN archived INTEGER DEFAULT 0");
+                    connection.createStatement().execute("ALTER TABLE bug_reports ADD COLUMN archived INTEGER DEFAULT 0");
                 }
             }
-            try (ResultSet reportIdResultSet = connection.getMetaData().getColumns(null, null, "bug_reports",
-                    "report_id")) {
+            try (ResultSet reportIdResultSet = connection.getMetaData().getColumns(null, null, "bug_reports", "report_id")) {
                 if (!reportIdResultSet.next()) {
-                    connection.createStatement()
-                            .execute("ALTER TABLE bug_reports ADD COLUMN report_id INT AUTO_INCREMENT PRIMARY KEY");
+                    connection.createStatement().execute("ALTER TABLE bug_reports ADD COLUMN report_id INT AUTO_INCREMENT PRIMARY KEY");
                 }
             }
         } catch (Exception e) {
@@ -129,8 +119,7 @@ public class BugReportDatabase {
                     }
                     newHeader.append("\n");
                 }
-                PreparedStatement statement = connection
-                        .prepareStatement("UPDATE bug_reports SET header = ? WHERE report_id = ?");
+                PreparedStatement statement = connection.prepareStatement("UPDATE bug_reports SET header = ? WHERE report_id = ?");
                 statement.setString(1, newHeader.toString().trim());
                 statement.setInt(2, report_id);
                 statement.executeUpdate();
@@ -144,14 +133,12 @@ public class BugReportDatabase {
 
     private void fixReportID() {
         try (Connection connection = dataSource.getConnection()) {
-            ResultSet resultSet = connection.createStatement()
-                    .executeQuery("SELECT * FROM bug_reports WHERE report_id IS NULL OR report_id = 0");
+            ResultSet resultSet = connection.createStatement().executeQuery("SELECT * FROM bug_reports WHERE report_id IS NULL OR report_id = 0");
             while (resultSet.next()) {
                 int report_id = resultSet.getInt("report_id");
                 int rowNumber = resultSet.getRow();
                 if (report_id != rowNumber) {
-                    PreparedStatement statement = connection
-                            .prepareStatement("UPDATE bug_reports SET report_id = ? WHERE report_id = ?");
+                    PreparedStatement statement = connection.prepareStatement("UPDATE bug_reports SET report_id = ? WHERE report_id = ?");
                     statement.setInt(1, rowNumber);
                     statement.setInt(2, report_id);
                     statement.executeUpdate();
@@ -165,7 +152,7 @@ public class BugReportDatabase {
 
     }
 
-    private static void createConnection() {
+    public static void createConnection() {
         loadConfig();
         String databaseType = Objects.requireNonNull(config.getString("databaseType"));
         ConfigurationSection databaseSection = Objects.requireNonNull(config.getConfigurationSection("database"));
@@ -190,11 +177,9 @@ public class BugReportDatabase {
 
     public void addBugReport(String username, @NotNull UUID playerId, String world, String header, String fullMessage) {
         try (Connection connection = dataSource.getConnection()) {
-            PreparedStatement statement = connection.prepareStatement(
-                    "INSERT INTO bug_reports(player_id, header, message, username, world, archived, report_id, timestamp) VALUES(?, ?, ?, ?, ?, ?, ?, ?)");
+            PreparedStatement statement = connection.prepareStatement("INSERT INTO bug_reports(player_id, header, message, username, world, archived, report_id, timestamp) VALUES(?, ?, ?, ?, ?, ?, ?, ?)");
             int report_id = 1;
-            ResultSet resultSet = connection.createStatement()
-                    .executeQuery("SELECT report_id FROM bug_reports ORDER BY report_id DESC LIMIT 1");
+            ResultSet resultSet = connection.createStatement().executeQuery("SELECT report_id FROM bug_reports ORDER BY report_id DESC LIMIT 1");
             if (resultSet.next()) {
                 report_id = resultSet.getInt("report_id") + 1;
             }
@@ -218,8 +203,7 @@ public class BugReportDatabase {
         Map<UUID, List<String>> bugReports = new HashMap<>();
 
         try (Connection connection = dataSource.getConnection()) {
-            PreparedStatement statement = connection
-                    .prepareStatement("SELECT * FROM bug_reports ORDER BY report_id ASC");
+            PreparedStatement statement = connection.prepareStatement("SELECT * FROM bug_reports ORDER BY report_id ASC");
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 UUID playerId = UUID.fromString(resultSet.getString("player_id"));
@@ -232,14 +216,14 @@ public class BugReportDatabase {
                 long timestamp = resultSet.getLong("timestamp");
                 List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
                 reports.add(
-                        "Username: " + username + "\n" +
-                                "UUID: " + playerId + "\n" +
-                                "World: " + world + "\n" +
-                                "Full Message: " + fullMessage + "\n" +
-                                "Header: " + header + "\n" +
-                                "Archived: " + archived + "\n" +
-                                "Report ID: " + report_id + "\n" +
-                                "Timestamp: " + timestamp
+                    "Username: " + username + "\n" +
+                    "UUID: " + playerId + "\n" +
+                    "World: " + world + "\n" +
+                    "Full Message: " + fullMessage + "\n" +
+                    "Header: " + header + "\n" +
+                    "Archived: " + archived + "\n" +
+                    "Report ID: " + report_id + "\n" +
+                    "Timestamp: " + timestamp
                 );
                 bugReports.put(getStaticUUID(), reports);
             }
@@ -253,7 +237,7 @@ public class BugReportDatabase {
         return bugReports;
     }
 
-    static @NotNull UUID getStaticUUID() {
+    public static @NotNull UUID getStaticUUID() {
         return UUID.fromString("00000000-0000-0000-0000-000000000000");
     }
 
@@ -290,8 +274,7 @@ public class BugReportDatabase {
 
     private static void createTables() {
         try (Connection connection = dataSource.getConnection()) {
-            connection.createStatement().execute(
-                    "CREATE TABLE IF NOT EXISTS bug_reports(rowid INTEGER, player_id TEXT, header TEXT, message TEXT, username TEXT, world TEXT, archived INTEGER DEFAULT 0, report_id INTEGER, timestamp BIGINT)");
+            connection.createStatement().execute("CREATE TABLE IF NOT EXISTS bug_reports(rowid INTEGER, player_id TEXT, header TEXT, message TEXT, username TEXT, world TEXT, archived INTEGER DEFAULT 0, report_id INTEGER, timestamp BIGINT)");
         } catch (Exception e) {
             plugin.getLogger().severe("Failed to create tables.");
             plugin.getLogger().severe(e.getMessage());
@@ -300,21 +283,14 @@ public class BugReportDatabase {
 
     public void updateBugReportHeader(UUID playerId, int reportIndex) {
         try (Connection connection = dataSource.getConnection()) {
-            PreparedStatement statement = connection
-                    .prepareStatement("UPDATE bug_reports SET header = ? WHERE report_id = ?");
+            PreparedStatement statement = connection.prepareStatement("UPDATE bug_reports SET header = ? WHERE report_id = ?");
             String existingHeader = bugReports.get(playerId).get(reportIndex);
 
             String[] lines = existingHeader.split("\n");
             StringBuilder newHeader = new StringBuilder();
             for (String line : lines) {
-                if (line.startsWith("hasBeenRead:")) {
-                    newHeader.append("hasBeenRead: 1");
-                } else {
-                    newHeader.append(line);
-                }
-                newHeader.append("\n");
-            }
-
+				newHeader.append(line.startsWith("hasBeenRead:") ? "hasBeenRead: 1" : line).append("\n");
+			}
             statement.setString(1, newHeader.toString().trim());
             statement.setInt(2, reportIndex);
             statement.executeUpdate();
