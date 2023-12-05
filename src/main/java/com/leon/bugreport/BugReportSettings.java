@@ -19,6 +19,7 @@ import org.bukkit.scheduler.BukkitScheduler;
 import org.jetbrains.annotations.NotNull;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -131,17 +132,20 @@ public class BugReportSettings {
             gui.setItem(i, createButton(Material.GRAY_STAINED_GLASS_PANE, " "));
         }
 
-        for (int i = 9; i < 36; i++) {
-            if (i % 9 == 0 || i % 9 == 8) {
-                gui.setItem(i, createButton(Material.GRAY_STAINED_GLASS_PANE, " "));
-            }
-        }
+//        for (int i = 9; i < 36; i++) {
+//            if (i % 9 == 0 || i % 9 == 8) {
+//                gui.setItem(i, createButton(Material.GRAY_STAINED_GLASS_PANE, " "));
+//            }
+//        }
 
-        gui.setItem(20, createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODgzMWM3M2Y1NDY4ZTg4OGMzMDE5ZTI4NDdlNDQyZGZhYTg4ODk4ZDUwY2NmMDFmZDJmOTE0YWY1NDRkNTM2OCJ9fX0=", "English", 11));
-        gui.setItem(21, createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNTEyNjlhMDY3ZWUzN2U2MzYzNWNhMWU3MjNiNjc2ZjEzOWRjMmRiZGRmZjk2YmJmZWY5OWQ4YjM1Yzk5NmJjIn19fQ==", "French", 12));
-        gui.setItem(22, createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNWU3ODk5YjQ4MDY4NTg2OTdlMjgzZjA4NGQ5MTczZmU0ODc4ODY0NTM3NzQ2MjZiMjRiZDhjZmVjYzc3YjNmIn19fQ==", "German", 13));
-        gui.setItem(23, createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzJkNzMwYjZkZGExNmI1ODQ3ODNiNjNkMDgyYTgwMDQ5YjVmYTcwMjI4YWJhNGFlODg0YzJjMWZjMGMzYThiYyJ9fX0=", "Spanish", 14));
-        gui.setItem(24, createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODVjZTg5MjIzZmE0MmZlMDZhZDY1ZDhkNDRjYTQxMmFlODk5YzgzMTMwOWQ2ODkyNGRmZTBkMTQyZmRiZWVhNCJ9fX0=", "Italian", 15));
+        gui.setItem(19,  createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODgzMWM3M2Y1NDY4ZTg4OGMzMDE5ZTI4NDdlNDQyZGZhYTg4ODk4ZDUwY2NmMDFmZDJmOTE0YWY1NDRkNTM2OCJ9fX0=", "English",              11));
+        gui.setItem(20,  createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNTEyNjlhMDY3ZWUzN2U2MzYzNWNhMWU3MjNiNjc2ZjEzOWRjMmRiZGRmZjk2YmJmZWY5OWQ4YjM1Yzk5NmJjIn19fQ==", "French",               12));
+        gui.setItem(21,  createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNWU3ODk5YjQ4MDY4NTg2OTdlMjgzZjA4NGQ5MTczZmU0ODc4ODY0NTM3NzQ2MjZiMjRiZDhjZmVjYzc3YjNmIn19fQ==", "German",               13));
+        gui.setItem(22,  createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzJkNzMwYjZkZGExNmI1ODQ3ODNiNjNkMDgyYTgwMDQ5YjVmYTcwMjI4YWJhNGFlODg0YzJjMWZjMGMzYThiYyJ9fX0=", "Spanish",              14));
+        gui.setItem(23,  createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODVjZTg5MjIzZmE0MmZlMDZhZDY1ZDhkNDRjYTQxMmFlODk5YzgzMTMwOWQ2ODkyNGRmZTBkMTQyZmRiZWVhNCJ9fX0=", "Italian",              15));
+        gui.setItem(24,  createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvN2Y5YmMwMzVjZGM4MGYxYWI1ZTExOThmMjlmM2FkM2ZkZDJiNDJkOWE2OWFlYjY0ZGU5OTA2ODE4MDBiOThkYyJ9fX0=", "Simplified Chinese",   16));
+        gui.setItem(25,  createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTZlYWZlZjk4MGQ2MTE3ZGFiZTg5ODJhYzRiNDUwOTg4N2UyYzQ2MjFmNmE4ZmU1YzliNzM1YTgzZDc3NWFkIn19fQ==", "Russian",              17));
+
         gui.setItem(40, createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("back")));
 
         return gui;
@@ -155,14 +159,14 @@ public class BugReportSettings {
         profile.getProperties().put("textures", new Property("textures", textureValue));
 
         try {
-            java.lang.reflect.Field profileField = skullMeta.getClass().getDeclaredField("profile");
+            java.lang.reflect.Field profileField = Objects.requireNonNull(skullMeta).getClass().getDeclaredField("profile");
             profileField.setAccessible(true);
             profileField.set(skullMeta, profile);
         } catch (NoSuchFieldException | IllegalAccessException | IllegalArgumentException e) {
-            e.printStackTrace();
+            plugin.getLogger().warning("Failed to set custom player head texture.");
         }
 
-        skullMeta.setDisplayName(displayName);
+        Objects.requireNonNull(skullMeta).setDisplayName(displayName);
         skullMeta.setCustomModelData(ID);
         playerHead.setItemMeta(skullMeta);
         return playerHead;
@@ -240,7 +244,7 @@ public class BugReportSettings {
                 }
             }
 
-            if (customDisplayName.contains ("Language")) {
+            if (customDisplayName.contains("Language")) {
                 event.setCancelled (true);
 
                 Player player = (Player) event.getWhoClicked ();
@@ -268,11 +272,13 @@ public class BugReportSettings {
                 if (clickedItem.getItemMeta ().hasCustomModelData ()) {
                     int customModelData = clickedItem.getItemMeta ().getCustomModelData ();
                     switch (customModelData) {
-                        case 11 -> setLanguage ("en", "English", player);
-                        case 12 -> setLanguage ("fr", "French", player);
-                        case 13 -> setLanguage ("de", "German", player);
-                        case 14 -> setLanguage ("es", "Spanish", player);
-                        case 15 -> setLanguage ("it", "Italian", player);
+                        case 11 -> setLanguage("en", "English", player);
+                        case 12 -> setLanguage("fr", "French", player);
+                        case 13 -> setLanguage("de", "German", player);
+                        case 14 -> setLanguage("es", "Spanish", player);
+                        case 15 -> setLanguage("it", "Italian", player);
+                        case 16 -> setLanguage("zh", "Simplified Chinese", player);
+                        case 17 -> setLanguage("ru", "Russian", player);
                     }
                 }
             }

@@ -1,5 +1,5 @@
 # Bug-Reports
-A Spigot 1.17.1 Bug Report plugin
+A Spigot 1.18.1 Bug Report plugin
 
 ## What is BugReport?
 BugReport is a tool that helps server owners manage any bug reports found by players which can be accessed by a GUI. This is especially helpful as information about where the player is located and their UUID is automatically stored and shown to admins.

@@ -1,10 +1,12 @@
 package com.leon.bugreport;
 
-import java.util.HashMap;
-import java.util.Map;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static com.leon.bugreport.BugReportLanguage.getText;
+import static com.leon.bugreport.BugReportManager.plugin;
 
 public class DefaultLanguageSelector {
 	public static final Map<String, String> defaultLanguagesLocal = new HashMap<String, String> () {{
@@ -50,6 +52,7 @@ public class DefaultLanguageSelector {
 
 	public static @NotNull String getTextElseDefault(String language, String key) {
 		String text = getText(language, key);
+		plugin.getLogger().info("getTextElseDefault: " + language + " " + key + " " + text);
 		if (text != null) {
 			return text;
 		}

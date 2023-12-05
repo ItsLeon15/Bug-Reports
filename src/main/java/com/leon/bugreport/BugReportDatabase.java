@@ -2,6 +2,8 @@ package com.leon.bugreport;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.NotNull;
 
@@ -80,6 +82,31 @@ public class BugReportDatabase {
         return 0;
     }
 
+    public static Location getBugReportLocation(Integer reportIDGUI) {
+        try (Connection connection = dataSource.getConnection()) {
+            PreparedStatement statement = connection.prepareStatement("SELECT location FROM bug_reports WHERE report_id = ?");
+            statement.setInt(1, reportIDGUI);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                String locationString = resultSet.getString("Location");
+                if (locationString != null) {
+                    String[] locationSplit = locationString.split(",");
+                    return new Location(
+                            Bukkit.getWorld(locationSplit[0]),
+                            Double.parseDouble(locationSplit[1]),
+                            Double.parseDouble(locationSplit[2]),
+                            Double.parseDouble(locationSplit[3])
+                    );
+                }
+            }
+            statement.close();
+        } catch (Exception e) {
+            plugin.getLogger().severe("Failed to get bug report location.");
+            plugin.getLogger().severe(e.getMessage());
+        }
+        return null;
+    }
+
     private void addMissingTables() {
         try (Connection connection = dataSource.getConnection()) {
             try (ResultSet archivedResultSet = connection.getMetaData().getColumns(null, null, "player_data", "player_id")) {
@@ -95,6 +122,11 @@ public class BugReportDatabase {
             try (ResultSet reportIdResultSet = connection.getMetaData().getColumns(null, null, "bug_reports", "report_id")) {
                 if (!reportIdResultSet.next()) {
                     connection.createStatement().execute("ALTER TABLE bug_reports ADD COLUMN report_id INT AUTO_INCREMENT PRIMARY KEY");
+                }
+            }
+            try (ResultSet locationResultSet = connection.getMetaData().getColumns(null, null, "bug_reports", "location")) {
+                if (!locationResultSet.next()) {
+                    connection.createStatement().execute("ALTER TABLE bug_reports ADD COLUMN location TEXT");
                 }
             }
         } catch (Exception e) {
@@ -175,9 +207,9 @@ public class BugReportDatabase {
         }
     }
 
-    public void addBugReport(String username, @NotNull UUID playerId, String world, String header, String fullMessage) {
+    public void addBugReport(String username, @NotNull UUID playerId, String world, String header, String fullMessage, String location) {
         try (Connection connection = dataSource.getConnection()) {
-            PreparedStatement statement = connection.prepareStatement("INSERT INTO bug_reports(player_id, header, message, username, world, archived, report_id, timestamp) VALUES(?, ?, ?, ?, ?, ?, ?, ?)");
+            PreparedStatement statement = connection.prepareStatement("INSERT INTO bug_reports(player_id, header, message, username, world, archived, report_id, timestamp, location) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)");
             int report_id = 1;
             ResultSet resultSet = connection.createStatement().executeQuery("SELECT report_id FROM bug_reports ORDER BY report_id DESC LIMIT 1");
             if (resultSet.next()) {
@@ -191,6 +223,8 @@ public class BugReportDatabase {
             statement.setInt(6, 0);
             statement.setInt(7, report_id);
             statement.setLong(8, System.currentTimeMillis());
+            statement.setString(9, location);
+
             statement.executeUpdate();
             statement.close();
         } catch (Exception e) {
@@ -214,6 +248,8 @@ public class BugReportDatabase {
                 String archived = resultSet.getString("archived");
                 String report_id = resultSet.getString("report_id");
                 long timestamp = resultSet.getLong("timestamp");
+                String location = resultSet.getString("location");
+
                 List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
                 reports.add(
                     "Username: " + username + "\n" +
@@ -223,7 +259,8 @@ public class BugReportDatabase {
                     "Header: " + header + "\n" +
                     "Archived: " + archived + "\n" +
                     "Report ID: " + report_id + "\n" +
-                    "Timestamp: " + timestamp
+                    "Timestamp: " + timestamp + "\n" +
+                    "Location: " + location
                 );
                 bugReports.put(getStaticUUID(), reports);
             }
