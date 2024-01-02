@@ -7,20 +7,19 @@ import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.profile.PlayerProfile;
+import org.bukkit.profile.PlayerTextures;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
-import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 import static com.leon.bugreport.BugReportManager.config;
 import static com.leon.bugreport.BugReportManager.plugin;
@@ -28,28 +27,17 @@ import static com.leon.bugreport.BugReportManager.plugin;
 public class DataSource {
 	private static final File CACHE_DIR = new File("plugins/BugReport/cache");
 	private static final File CACHE_FILE = new File(CACHE_DIR, "playerData.json");
+	private static long CACHE_EXPIRY_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 	private static final Gson GSON = new Gson();
-	private static long CACHE_EXPIRY_DURATION = 24 * 60 * 60 * 1000; // Default = 24 hours
 
-	public static long convertTimeToString(@NotNull String date) {
-		String[] splitDate = date.split("(?<=\\D)(?=\\d)|(?<=\\d)(?=\\D)");
-		String number = splitDate[0];
-		String letter = splitDate[1];
-		int numberInt = Integer.parseInt(number);
-		int letterInt = switch(letter.toLowerCase()) {
-			case "m" -> 60;
-			case "h" -> 3600;
-			case "d", "default" -> 86400;
-			case "w" -> 604800;
-			case "mo" -> 2592000;
-			case "y" -> 31536000;
-			default -> {
-				plugin.getLogger().warning("Invalid time format. Defaulting to 24 hours.");
-				yield 86400;
-			}
-		};
-		int totalSeconds = numberInt * letterInt;
-		CACHE_EXPIRY_DURATION = totalSeconds * 1000L;
+	public static long convertTimeToMillis(@NotNull String timeString) {
+		Map<String, Integer> timeUnits = Map.of("m", 60, "h", 3600, "d", 86400, "w", 604800, "mo", 2592000, "y", 31536000);
+		String[] parts = timeString.split("(?<=\\D)(?=\\d)|(?<=\\d)(?=\\D)");
+		int number = Integer.parseInt(parts[0]);
+		String unit = parts[1].toLowerCase();
+
+		int seconds = timeUnits.getOrDefault(unit, 86400);
+		CACHE_EXPIRY_DURATION = (long) number * seconds * 1000;
 		return CACHE_EXPIRY_DURATION;
 	}
 
@@ -96,7 +84,7 @@ public class DataSource {
 
 	private static boolean isCacheValid(long timestamp) {
 		boolean configKeyExists = config.contains("refreshPlayerHeadCache");
-		long configDate = configKeyExists ? convertTimeToString(Objects.requireNonNull(config.getString("refreshPlayerHeadCache"))) : CACHE_EXPIRY_DURATION;
+		long configDate = configKeyExists ? convertTimeToMillis(Objects.requireNonNull(config.getString("refreshPlayerHeadCache"))) : CACHE_EXPIRY_DURATION;
 		return System.currentTimeMillis() - timestamp < configDate;
 	}
 
@@ -106,12 +94,13 @@ public class DataSource {
 		}
 	}
 
-	public static void cleanOutdatedCache() {
+	public static void cleanOutdatedCache(Boolean listAllNewReports) {
 		Map<String, CacheEntry> cache = loadCache();
 		if (cache == null || cache.isEmpty()) {
 			saveCache(new HashMap<>());
 			return;
 		}
+		if (listAllNewReports) return;
 		cache.entrySet().removeIf(entry -> {
 			boolean mainInvalid = !isCacheValid(entry.getValue().timestamp);
 			boolean nestedInvalid = entry.getValue().nestedData == null || !isCacheValid(entry.getValue().nestedData.timestamp);
@@ -163,36 +152,77 @@ public class DataSource {
 	}
 
 	public static @NotNull ItemStack getPlayerHead(String playerName) {
+		cleanOutdatedCache(true);
+		if (playerName == null || playerName.trim().isEmpty()) {
+			return getDefaultPlayerHead();
+		}
+
 		try {
 			Map<String, CacheEntry> cache = loadCache();
+			String base64;
+
 			if (checkIfPlayerHeadIsCached(playerName, cache)) {
-				return getCachedPlayerHead(playerName, cache);
+				base64 = cache.get(playerName).nestedData.data;
+			} else {
+				UUID uuid = getUUIDFromUsername(playerName, cache);
+				base64 = getBase64FromUUID(uuid, cache);
+				updatePlayerHeadCache(playerName, uuid.toString(), base64, cache);
 			}
-			UUID uuid = getUUIDFromUsername(playerName, cache);
-			String base64 = getBase64FromUUID(uuid, cache);
-			ItemStack head = new ItemStack(Material.PLAYER_HEAD);
-			SkullMeta skullMeta = (SkullMeta) head.getItemMeta();
-			Objects.requireNonNull(skullMeta).setDisplayName(playerName);
-			setSkullWithBase64(skullMeta, base64);
-			head.setItemMeta(skullMeta);
-			return head;
+
+			return base64 != null && !base64.isEmpty() ? createSkullItem(base64, playerName) : getDefaultPlayerHead();
 		} catch (Exception e) {
-			if (playerName != null && !"00000000-0000-0000-0000-000000000000".equals(playerName)) {
-				plugin.getLogger().warning("Failed to get player head for " + playerName);
-				Map<String, CacheEntry> cache = loadCache();
-				long currentTime = System.currentTimeMillis();
-				cache.put(playerName, new CacheEntry("00000000-0000-0000-0000-000000000000", currentTime));
-				if (cache.get("00000000-0000-0000-0000-000000000000") == null) {
-					cache.put("00000000-0000-0000-0000-000000000000", new CacheEntry("00000000-0000-0000-0000-000000000000", currentTime));
-				}
-				saveCache(cache);
-			}
-			ItemStack head = new ItemStack(Material.PLAYER_HEAD);
-			SkullMeta skullMeta = (SkullMeta) head.getItemMeta();
-			Objects.requireNonNull(skullMeta).setDisplayName(playerName);
-			head.setItemMeta(skullMeta);
-			return head;
+			plugin.getLogger().warning("Failed to get player head for " + playerName + ": " + e.getMessage());
+			return getDefaultPlayerHead();
 		}
+	}
+
+	private static @NotNull ItemStack getDefaultPlayerHead() {
+		ItemStack defaultHead = new ItemStack (Material.PLAYER_HEAD);
+		SkullMeta meta = (SkullMeta) defaultHead.getItemMeta ();
+		if (meta != null) {
+			meta.setDisplayName ("Default Player");
+			defaultHead.setItemMeta (meta);
+		}
+		return defaultHead;
+	}
+
+	private static void updatePlayerHeadCache(String playerName, String uuid, String base64, @NotNull Map<String, CacheEntry> cache) {
+		long currentTime = System.currentTimeMillis();
+		CacheEntry playerCacheEntry = new CacheEntry(uuid, currentTime);
+		playerCacheEntry.nestedData = new CacheEntry(base64, currentTime);
+
+		cache.put(playerName, playerCacheEntry);
+		saveCache(cache);
+	}
+
+	private static @NotNull ItemStack createSkullItem(String textureValue, String displayName) {
+		ItemStack playerHead = new ItemStack(Material.PLAYER_HEAD);
+		SkullMeta skullMeta = (SkullMeta) playerHead.getItemMeta();
+
+		if (skullMeta != null && textureValue != null && !textureValue.isEmpty()) {
+			try {
+				String decodedValue = new String(Base64.getDecoder().decode(textureValue));
+				JsonObject textureJson = JsonParser.parseString(decodedValue).getAsJsonObject();
+				String textureUrl = textureJson.getAsJsonObject("textures")
+						.getAsJsonObject("SKIN")
+						.get("url").getAsString();
+
+				PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
+				PlayerTextures textures = profile.getTextures();
+
+				textures.setSkin (new URL (textureUrl));
+				profile.setTextures(textures);
+				skullMeta.setOwnerProfile(profile);
+
+				skullMeta.setDisplayName(displayName);
+				playerHead.setItemMeta(skullMeta);
+			} catch (Exception e) {
+				plugin.getLogger().warning("Failed to set custom player head texture: " + e.getMessage());
+				return new ItemStack(Material.PLAYER_HEAD); // Fallback to default head on failure
+			}
+		}
+
+		return playerHead;
 	}
 
 	private static boolean checkIfPlayerHeadIsCached(String playerName, @NotNull Map<String, CacheEntry> cache) {
@@ -251,14 +281,23 @@ public class DataSource {
 	}
 
 	private static void setSkullWithBase64(@NotNull SkullMeta skullMeta, String base64) {
-		GameProfile profile = new GameProfile(UUID.randomUUID(), null);
-		profile.getProperties().put("textures", new Property("textures", base64));
-		try {
-			Field profileField = skullMeta.getClass().getDeclaredField("profile");
-			profileField.setAccessible(true);
-			profileField.set(skullMeta, profile);
-		} catch (NoSuchFieldException | IllegalAccessException e) {
-			throw new RuntimeException(e);
+		if (base64 == null || base64.isEmpty()) {
+			plugin.getLogger().warning("Base64 string is empty. Cannot set custom player head texture.");
+			return;
 		}
+
+		try {
+			java.lang.reflect.Field profileField = skullMeta.getClass().getDeclaredField("profile");
+			profileField.setAccessible(true);
+			profileField.set(skullMeta, createGameProfile(base64));
+		} catch (NoSuchFieldException | IllegalAccessException e) {
+			plugin.getLogger().warning("Failed to set custom player head texture: " + e.getMessage());
+		}
+	}
+
+	private static @NotNull GameProfile createGameProfile(String textureValue) {
+		GameProfile profile = new GameProfile(UUID.randomUUID(), "GameProfile");
+		profile.getProperties().put("textures", new Property("textures", textureValue));
+		return profile;
 	}
 }

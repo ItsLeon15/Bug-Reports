@@ -1,4 +1,4 @@
-package com.leon.bugreport;
+package com.leon.bugreport.discord;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -373,7 +373,7 @@ public class DiscordWebhook {
                 } else if (val instanceof Boolean) {
                     builder.append(val);
                 } else if (val instanceof JSONObject) {
-                    builder.append(val.toString());
+                    builder.append(val);
                 } else if (val.getClass().isArray()) {
                     builder.append("[");
                     int len = Array.getLength(val);

@@ -1,18 +1,20 @@
-package com.leon.bugreport;
+package com.leon.bugreport.discord;
 
 import org.jetbrains.annotations.NotNull;
+
 import java.awt.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import static com.leon.bugreport.BugReportCommand.chatColorToColor;
-import static com.leon.bugreport.BugReportCommand.stringColorToColorCode;
+
 import static com.leon.bugreport.BugReportManager.config;
+import static com.leon.bugreport.commands.BugReportCommand.chatColorToColor;
+import static com.leon.bugreport.commands.BugReportCommand.stringColorToColorCode;
 
 public class LinkDiscord {
     private static final String EMBED_TITLE = "New Bug Report";
-    private static final String EMBED_FOOTER_TEXT = "Bug Report V0.7.3";
+    private static final String EMBED_FOOTER_TEXT = "Bug Report V0.8.0";
     private static final String EMBED_THUMBNAIL = "https://www.spigotmc.org/data/resource_icons/110/110732.jpg";
     private static final String EMBED_AUTHOR = "true";
     private static final String EMBED_DATE = "true";
@@ -28,7 +30,7 @@ public class LinkDiscord {
         this.webhookURL = webhookURL;
     }
 
-    public void sendBugReport(String message, String world, String username, String location) {
+    public void sendBugReport(String message, String world, String username, String location, String gamemode) {
         if (webhookURL.isEmpty()) {
             System.out.println("Webhook URL is not configured. Bug report not sent to Discord.");
             return;
@@ -61,6 +63,7 @@ public class LinkDiscord {
             .addField("UUID", newUUID, true)
             .addField("World", world, true)
             .addField("Location (X, Y, Z)", location, true)
+            .addField("Gamemode", gamemode, true)
             .addField("Full Message", message, false)
             .setFooter(discordEmbedFooter, null)
             .setColor(discordEmbedColor);
@@ -87,7 +90,7 @@ public class LinkDiscord {
 
             connection.setRequestMethod("GET");
             connection.setRequestProperty("Content-Type", "application/json");
-            connection.setRequestProperty("User-Agent", "BugReport/0.7.3");
+            connection.setRequestProperty("User-Agent", "BugReport/0.8.0");
             connection.setConnectTimeout(5000);
             connection.setReadTimeout(5000);
             connection.setDoOutput(true);

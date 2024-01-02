@@ -6,6 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.sql.Connection;
@@ -21,7 +22,13 @@ public class BugReportDatabase {
 
     public BugReportDatabase() {
         createConnection();
-        addMissingTables();
+
+        addColumnIfNotExists("player_data", "player_id", "TEXT, last_login_timestamp BIGINT DEFAULT 0");
+        addColumnIfNotExists("bug_reports", "archived",  "INTEGER DEFAULT 0");
+        addColumnIfNotExists("bug_reports", "report_id", "INT AUTO_INCREMENT PRIMARY KEY");
+        addColumnIfNotExists("bug_reports", "location",  "TEXT");
+        addColumnIfNotExists("bug_reports", "gamemode",  "TEXT");
+
         fixReportID();
         makeAllHeadersEqualReport_ID();
         addTimestampColumn();
@@ -82,7 +89,7 @@ public class BugReportDatabase {
         return 0;
     }
 
-    public static Location getBugReportLocation(Integer reportIDGUI) {
+    public static @Nullable Location getBugReportLocation(Integer reportIDGUI) {
         try (Connection connection = dataSource.getConnection()) {
             PreparedStatement statement = connection.prepareStatement("SELECT location FROM bug_reports WHERE report_id = ?");
             statement.setInt(1, reportIDGUI);
@@ -107,26 +114,12 @@ public class BugReportDatabase {
         return null;
     }
 
-    private void addMissingTables() {
+    private void addColumnIfNotExists(String tableName, String columnName, String columnDefinition) {
         try (Connection connection = dataSource.getConnection()) {
-            try (ResultSet archivedResultSet = connection.getMetaData().getColumns(null, null, "player_data", "player_id")) {
-                if (!archivedResultSet.next()) {
-                    connection.createStatement().execute("CREATE TABLE IF NOT EXISTS player_data(player_id TEXT, last_login_timestamp BIGINT DEFAULT 0)");
-                }
-            }
-            try (ResultSet archivedResultSet = connection.getMetaData().getColumns(null, null, "bug_reports", "archived")) {
-                if (!archivedResultSet.next()) {
-                    connection.createStatement().execute("ALTER TABLE bug_reports ADD COLUMN archived INTEGER DEFAULT 0");
-                }
-            }
-            try (ResultSet reportIdResultSet = connection.getMetaData().getColumns(null, null, "bug_reports", "report_id")) {
-                if (!reportIdResultSet.next()) {
-                    connection.createStatement().execute("ALTER TABLE bug_reports ADD COLUMN report_id INT AUTO_INCREMENT PRIMARY KEY");
-                }
-            }
-            try (ResultSet locationResultSet = connection.getMetaData().getColumns(null, null, "bug_reports", "location")) {
-                if (!locationResultSet.next()) {
-                    connection.createStatement().execute("ALTER TABLE bug_reports ADD COLUMN location TEXT");
+            try (ResultSet resultSet = connection.getMetaData().getColumns(null, null, tableName, columnName)) {
+                if (!resultSet.next()) {
+                    String query = String.format("ALTER TABLE %s ADD COLUMN %s %s", tableName, columnName, columnDefinition);
+                    connection.createStatement().execute(query);
                 }
             }
         } catch (Exception e) {
@@ -207,9 +200,9 @@ public class BugReportDatabase {
         }
     }
 
-    public void addBugReport(String username, @NotNull UUID playerId, String world, String header, String fullMessage, String location) {
+    public void addBugReport(String username, @NotNull UUID playerId, String world, String header, String fullMessage, String location, String gamemode) {
         try (Connection connection = dataSource.getConnection()) {
-            PreparedStatement statement = connection.prepareStatement("INSERT INTO bug_reports(player_id, header, message, username, world, archived, report_id, timestamp, location) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            PreparedStatement statement = connection.prepareStatement("INSERT INTO bug_reports(player_id, header, message, username, world, archived, report_id, timestamp, location, gamemode) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             int report_id = 1;
             ResultSet resultSet = connection.createStatement().executeQuery("SELECT report_id FROM bug_reports ORDER BY report_id DESC LIMIT 1");
             if (resultSet.next()) {
@@ -224,6 +217,7 @@ public class BugReportDatabase {
             statement.setInt(7, report_id);
             statement.setLong(8, System.currentTimeMillis());
             statement.setString(9, location);
+            statement.setString(10, gamemode);
 
             statement.executeUpdate();
             statement.close();
@@ -249,6 +243,7 @@ public class BugReportDatabase {
                 String report_id = resultSet.getString("report_id");
                 long timestamp = resultSet.getLong("timestamp");
                 String location = resultSet.getString("location");
+                String gamemode = resultSet.getString("gamemode");
 
                 List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
                 reports.add(
@@ -260,7 +255,8 @@ public class BugReportDatabase {
                     "Archived: " + archived + "\n" +
                     "Report ID: " + report_id + "\n" +
                     "Timestamp: " + timestamp + "\n" +
-                    "Location: " + location
+                    "Location: " + location + "\n" +
+                    "Gamemode: " + gamemode
                 );
                 bugReports.put(getStaticUUID(), reports);
             }
@@ -268,7 +264,13 @@ public class BugReportDatabase {
             statement.close();
         } catch (SQLException e) {
             plugin.getLogger().severe("Failed to load bug reports.");
-            plugin.getLogger().severe(e.getMessage());
+            if (e.getMessage().startsWith("[SQLITE_CORRUPT]")) {
+                plugin.getLogger().severe("Your database is corrupted. Please delete the database file and restart the server.");
+                plugin.getLogger().severe("File path: plugins/BugReport/bugreports.db");
+                plugin.getLogger().severe("If you need help, please join the discord server: https://discord.gg/ZvdNYqmsbx");
+            } else {
+                plugin.getLogger().severe(e.getMessage());
+            }
         }
 
         return bugReports;
@@ -318,27 +320,6 @@ public class BugReportDatabase {
         }
     }
 
-    public void updateBugReportHeader(UUID playerId, int reportIndex) {
-        try (Connection connection = dataSource.getConnection()) {
-            PreparedStatement statement = connection.prepareStatement("UPDATE bug_reports SET header = ? WHERE report_id = ?");
-            String existingHeader = bugReports.get(playerId).get(reportIndex);
-
-            String[] lines = existingHeader.split("\n");
-            StringBuilder newHeader = new StringBuilder();
-            for (String line : lines) {
-				newHeader.append(line.startsWith("hasBeenRead:") ? "hasBeenRead: 1" : line).append("\n");
-			}
-            statement.setString(1, newHeader.toString().trim());
-            statement.setInt(2, reportIndex);
-            statement.executeUpdate();
-            statement.close();
-            loadBugReports();
-        } catch (Exception e) {
-            plugin.getLogger().severe("Failed to update bug report read status.");
-            plugin.getLogger().severe(e.getMessage());
-        }
-    }
-
     public static void updateBugReportArchive(int reportIndex, int archived) {
         try (Connection connection = dataSource.getConnection()) {
             PreparedStatement statement = connection.prepareStatement("UPDATE bug_reports SET archived = ? WHERE report_id = ?");
@@ -350,9 +331,9 @@ public class BugReportDatabase {
 
             List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
             String existingHeader = reports.stream()
-                    .filter(reportString -> reportString.contains("Report ID: " + reportIndex))
-                    .findFirst()
-                    .orElse(null);
+                .filter(reportString -> reportString.contains("Report ID: " + reportIndex))
+                .findFirst()
+                .orElse(null);
             int existingHeaderPosition = reports.indexOf(existingHeader);
 
             String[] lines = existingHeader != null ? existingHeader.split("\n") : new String[0];

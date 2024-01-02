@@ -14,7 +14,7 @@ public class CacheCleanupListener {
 		new BukkitRunnable() {
 			@Override
 			public void run() {
-				DataSource.cleanOutdatedCache();
+				DataSource.cleanOutdatedCache(false);
 			}
 		}.runTaskTimerAsynchronously(plugin, 0L, TWO_HOUR_TICKS); // Every 2 hours
 	}

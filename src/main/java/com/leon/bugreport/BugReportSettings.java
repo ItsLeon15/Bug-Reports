@@ -1,7 +1,7 @@
 package com.leon.bugreport;
 
-import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.properties.Property;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -15,12 +15,13 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.profile.PlayerProfile;
+import org.bukkit.profile.PlayerTextures;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.jetbrains.annotations.NotNull;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+
+import java.net.URL;
+import java.util.*;
 import java.util.function.Consumer;
 
 import static com.leon.bugreport.BugReportManager.*;
@@ -124,51 +125,67 @@ public class BugReportSettings {
     private static @NotNull Inventory openLanguageGUI() {
         Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Report - " + BugReportLanguage.getTitleFromLanguage("language"));
 
-        for (int i = 0; i < 9; i++) {
-            gui.setItem(i, createButton(Material.GRAY_STAINED_GLASS_PANE, " "));
-        }
-
         for (int i = 36; i < 45; i++) {
             gui.setItem(i, createButton(Material.GRAY_STAINED_GLASS_PANE, " "));
         }
 
-//        for (int i = 9; i < 36; i++) {
-//            if (i % 9 == 0 || i % 9 == 8) {
-//                gui.setItem(i, createButton(Material.GRAY_STAINED_GLASS_PANE, " "));
-//            }
-//        }
+		gui.setItem(19-9, createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODgzMWM3M2Y1NDY4ZTg4OGMzMDE5ZTI4NDdlNDQyZGZhYTg4ODk4ZDUwY2NmMDFmZDJmOTE0YWY1NDRkNTM2OCJ9fX0=", "English",              11));
+        gui.setItem(20-9, createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNTEyNjlhMDY3ZWUzN2U2MzYzNWNhMWU3MjNiNjc2ZjEzOWRjMmRiZGRmZjk2YmJmZWY5OWQ4YjM1Yzk5NmJjIn19fQ==", "French",               12));
+        gui.setItem(21-9, createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNWU3ODk5YjQ4MDY4NTg2OTdlMjgzZjA4NGQ5MTczZmU0ODc4ODY0NTM3NzQ2MjZiMjRiZDhjZmVjYzc3YjNmIn19fQ==", "German",               13));
+        gui.setItem(22-9, createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzJkNzMwYjZkZGExNmI1ODQ3ODNiNjNkMDgyYTgwMDQ5YjVmYTcwMjI4YWJhNGFlODg0YzJjMWZjMGMzYThiYyJ9fX0=", "Spanish",              14));
+        gui.setItem(23-9, createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODVjZTg5MjIzZmE0MmZlMDZhZDY1ZDhkNDRjYTQxMmFlODk5YzgzMTMwOWQ2ODkyNGRmZTBkMTQyZmRiZWVhNCJ9fX0=", "Italian",              15));
+        gui.setItem(24-9, createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvN2Y5YmMwMzVjZGM4MGYxYWI1ZTExOThmMjlmM2FkM2ZkZDJiNDJkOWE2OWFlYjY0ZGU5OTA2ODE4MDBiOThkYyJ9fX0=", "Simplified Chinese",   16));
+        gui.setItem(25-9, createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTZlYWZlZjk4MGQ2MTE3ZGFiZTg5ODJhYzRiNDUwOTg4N2UyYzQ2MjFmNmE4ZmU1YzliNzM1YTgzZDc3NWFkIn19fQ==", "Russian",              17));
 
-        gui.setItem(19,  createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODgzMWM3M2Y1NDY4ZTg4OGMzMDE5ZTI4NDdlNDQyZGZhYTg4ODk4ZDUwY2NmMDFmZDJmOTE0YWY1NDRkNTM2OCJ9fX0=", "English",              11));
-        gui.setItem(20,  createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNTEyNjlhMDY3ZWUzN2U2MzYzNWNhMWU3MjNiNjc2ZjEzOWRjMmRiZGRmZjk2YmJmZWY5OWQ4YjM1Yzk5NmJjIn19fQ==", "French",               12));
-        gui.setItem(21,  createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNWU3ODk5YjQ4MDY4NTg2OTdlMjgzZjA4NGQ5MTczZmU0ODc4ODY0NTM3NzQ2MjZiMjRiZDhjZmVjYzc3YjNmIn19fQ==", "German",               13));
-        gui.setItem(22,  createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzJkNzMwYjZkZGExNmI1ODQ3ODNiNjNkMDgyYTgwMDQ5YjVmYTcwMjI4YWJhNGFlODg0YzJjMWZjMGMzYThiYyJ9fX0=", "Spanish",              14));
-        gui.setItem(23,  createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODVjZTg5MjIzZmE0MmZlMDZhZDY1ZDhkNDRjYTQxMmFlODk5YzgzMTMwOWQ2ODkyNGRmZTBkMTQyZmRiZWVhNCJ9fX0=", "Italian",              15));
-        gui.setItem(24,  createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvN2Y5YmMwMzVjZGM4MGYxYWI1ZTExOThmMjlmM2FkM2ZkZDJiNDJkOWE2OWFlYjY0ZGU5OTA2ODE4MDBiOThkYyJ9fX0=", "Simplified Chinese",   16));
-        gui.setItem(25,  createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTZlYWZlZjk4MGQ2MTE3ZGFiZTg5ODJhYzRiNDUwOTg4N2UyYzQ2MjFmNmE4ZmU1YzliNzM1YTgzZDc3NWFkIn19fQ==", "Russian",              17));
+        String language = BugReportManager.config.getString("language");
+
+        for (int i = 28-9; i < 35-9; i++) {
+            gui.setItem(i, createButton(Material.GRAY_DYE, BugReportLanguage.getTitleFromLanguage("off")));
+        }
+
+        switch (Objects.requireNonNull(language)) {
+            case "en" -> gui.setItem(28-9, createButton(Material.LIME_DYE, BugReportLanguage.getTitleFromLanguage("on")));
+            case "fr" -> gui.setItem(29-9, createButton(Material.LIME_DYE, BugReportLanguage.getTitleFromLanguage("on")));
+            case "de" -> gui.setItem(30-9, createButton(Material.LIME_DYE, BugReportLanguage.getTitleFromLanguage("on")));
+            case "es" -> gui.setItem(31-9, createButton(Material.LIME_DYE, BugReportLanguage.getTitleFromLanguage("on")));
+            case "it" -> gui.setItem(32-9, createButton(Material.LIME_DYE, BugReportLanguage.getTitleFromLanguage("on")));
+            case "zh" -> gui.setItem(33-9, createButton(Material.LIME_DYE, BugReportLanguage.getTitleFromLanguage("on")));
+            case "ru" -> gui.setItem(34-9, createButton(Material.LIME_DYE, BugReportLanguage.getTitleFromLanguage("on")));
+        }
 
         gui.setItem(40, createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("back")));
 
         return gui;
     }
 
-    public static @NotNull ItemStack createCustomPlayerHead(String textureValue, String displayName, int ID) {
+    public static @NotNull ItemStack createCustomPlayerHead(String texture, String name, int modelData) {
         ItemStack playerHead = new ItemStack(Material.PLAYER_HEAD);
         SkullMeta skullMeta = (SkullMeta) playerHead.getItemMeta();
 
-        GameProfile profile = new GameProfile(java.util.UUID.randomUUID(), null);
-        profile.getProperties().put("textures", new Property("textures", textureValue));
+        if (skullMeta != null) {
+            try {
+                String decodedValue = new String(Base64.getDecoder().decode(texture));
+                JsonObject textureJson = JsonParser.parseString(decodedValue).getAsJsonObject();
+                String textureUrl = textureJson.getAsJsonObject("textures")
+                   .getAsJsonObject("SKIN")
+                   .get("url").getAsString();
 
-        try {
-            java.lang.reflect.Field profileField = Objects.requireNonNull(skullMeta).getClass().getDeclaredField("profile");
-            profileField.setAccessible(true);
-            profileField.set(skullMeta, profile);
-        } catch (NoSuchFieldException | IllegalAccessException | IllegalArgumentException e) {
-            plugin.getLogger().warning("Failed to set custom player head texture.");
+                PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
+                PlayerTextures textures = profile.getTextures();
+
+				textures.setSkin(new URL(textureUrl));
+				profile.setTextures(textures);
+				skullMeta.setOwnerProfile(profile);
+
+				skullMeta.setDisplayName(name);
+                skullMeta.setCustomModelData(modelData);
+                playerHead.setItemMeta(skullMeta);
+            } catch (Exception e) {
+                plugin.getLogger().warning("Failed to create custom player head: " + e.getMessage());
+                return new ItemStack(Material.PLAYER_HEAD);
+            }
         }
 
-        Objects.requireNonNull(skullMeta).setDisplayName(displayName);
-        skullMeta.setCustomModelData(ID);
-        playerHead.setItemMeta(skullMeta);
         return playerHead;
     }
 
@@ -178,99 +195,99 @@ public class BugReportSettings {
 
         @EventHandler(priority = EventPriority.NORMAL)
         public void onInventoryClick(@NotNull InventoryClickEvent event) {
-            String displayName = ChatColor.stripColor (event.getView ().getTitle ());
-            if (displayName.contains ("Bug Report - ")) {
-                displayName = displayName.substring (13);
+            String displayName = ChatColor.stripColor(event.getView().getTitle());
+            if (displayName.contains("Bug Report - ")) {
+                displayName = displayName.substring(13);
             }
 
-            String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage (displayName);
+            String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(displayName);
 
-            if (customDisplayName.contains ("Settings")) {
-                event.setCancelled (true);
+            if (customDisplayName.contains("Settings")) {
+                event.setCancelled(true);
 
-                Player player = (Player) event.getWhoClicked ();
-                Inventory clickedInventory = event.getClickedInventory ();
+                Player player = (Player) event.getWhoClicked();
+                Inventory clickedInventory = event.getClickedInventory();
                 if (clickedInventory == null) {
                     return;
                 }
 
-                ItemStack clickedItem = event.getCurrentItem ();
-                if (clickedItem == null || clickedItem.getType () == Material.AIR) {
+                ItemStack clickedItem = event.getCurrentItem();
+                if (clickedItem == null || clickedItem.getType() == Material.AIR) {
                     return;
                 }
 
-                ItemMeta itemMeta = clickedItem.getItemMeta ();
-                if (itemMeta == null || !itemMeta.hasDisplayName ()) {
+                ItemMeta itemMeta = clickedItem.getItemMeta();
+                if (itemMeta == null || !itemMeta.hasDisplayName()) {
                     return;
                 }
 
-                String itemDisplayName = itemMeta.getDisplayName ();
-                String customItemDisplayName = BugReportLanguage.getEnglishVersionFromLanguage (itemDisplayName);
+                String itemDisplayName = itemMeta.getDisplayName();
+                String customItemDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(itemDisplayName);
 
-                if (customItemDisplayName.equals ("Close")) {
-                    player.closeInventory ();
+                if (customItemDisplayName.equals("Close")) {
+                    player.closeInventory();
                     return;
                 }
 
-                if (clickedItem.getItemMeta ().hasCustomModelData ()) {
-                    if (clickedItem.getItemMeta ().getCustomModelData () == 1) {
-                        setDiscordWebhookToggle (player);
-                    } else if (clickedItem.getItemMeta ().getCustomModelData () == 2) {
-                        setLanguageToggle (player);
+                if (clickedItem.getItemMeta ().hasCustomModelData()) {
+                    if (clickedItem.getItemMeta ().getCustomModelData() == 1) {
+                        setDiscordWebhookToggle(player);
+                    } else if (clickedItem.getItemMeta().getCustomModelData() == 2) {
+                        setLanguageToggle(player);
                     }
                 }
 
                 switch (customItemDisplayName) {
-                    case "Enable Bug Report Notifications" -> setBugReportNotificationsToggle (player);
-                    case "Enable Category Selection" -> setCategorySelectionToggle (player);
+                    case "Enable Bug Report Notifications" -> setBugReportNotificationsToggle(player);
+                    case "Enable Category Selection" -> setCategorySelectionToggle(player);
                     case "Set Max Reports Per Player" -> {
-                        player.closeInventory ();
-                        if (BugReportManager.config.getBoolean ("useTitleInsteadOfMessage")) {
-                            player.sendTitle (pluginColor + pluginTitle, getTextElseDefault (BugReportManager.language, "enterMaxReportsPerPlayer"), 10, 70, 20);
+                        player.closeInventory();
+                        if (BugReportManager.config.getBoolean("useTitleInsteadOfMessage")) {
+                            player.sendTitle(pluginColor + pluginTitle, getTextElseDefault(BugReportManager.language, "enterMaxReportsPerPlayer"), 10, 70, 20);
                         } else {
-                            player.sendMessage (pluginColor + pluginTitle + " " + ChatColor.YELLOW + getTextElseDefault (BugReportManager.language, "enterMaxReportsPerPlayer"));
+                            player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.YELLOW + getTextElseDefault(BugReportManager.language, "enterMaxReportsPerPlayer"));
                         }
-                        setMaxReportsClickMap.put (player.getUniqueId (), String.valueOf (true));
-                        setMaxReportsClickMap.put (player.getUniqueId (), customItemDisplayName);
+                        setMaxReportsClickMap.put(player.getUniqueId(), String.valueOf(true));
+                        setMaxReportsClickMap.put(player.getUniqueId(), customItemDisplayName);
                     }
                     case "Set Report Cooldown" -> {
-                        player.closeInventory ();
-                        player.sendMessage (pluginColor + pluginTitle + " " + ChatColor.YELLOW + "Enter the cooldown between reports in seconds. Or type 'cancel' to cancel."); // TODO: Language support
+                        player.closeInventory();
+                        player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.YELLOW + "Enter the cooldown between reports in seconds. Or type 'cancel' to cancel."); // TODO: Language support
 
-                        setReportCooldownClickMap.put (player.getUniqueId (), String.valueOf (true));
-                        setReportCooldownClickMap.put (player.getUniqueId (), customItemDisplayName);
+                        setReportCooldownClickMap.put(player.getUniqueId(), String.valueOf(true));
+                        setReportCooldownClickMap.put(player.getUniqueId(), customItemDisplayName);
                     }
                     case "Other Settings" -> player.openInventory(getOtherSettingsGUI());
                 }
             }
 
             if (customDisplayName.contains("Language")) {
-                event.setCancelled (true);
+                event.setCancelled(true);
 
-                Player player = (Player) event.getWhoClicked ();
-                Inventory clickedInventory = event.getClickedInventory ();
-                ItemStack clickedItem = event.getCurrentItem ();
+                Player player = (Player) event.getWhoClicked();
+                Inventory clickedInventory = event.getClickedInventory();
+                ItemStack clickedItem = event.getCurrentItem();
 
-                if (clickedInventory == null || clickedItem == null || clickedItem.getType () == Material.AIR) {
+                if (clickedInventory == null || clickedItem == null || clickedItem.getType() == Material.AIR) {
                     return;
                 }
 
-                ItemMeta itemMeta = clickedItem.getItemMeta ();
+                ItemMeta itemMeta = clickedItem.getItemMeta();
 
-                if (itemMeta == null || !itemMeta.hasDisplayName ()) {
+                if (itemMeta == null || !itemMeta.hasDisplayName()) {
                     return;
                 }
 
-                String itemDisplayName = itemMeta.getDisplayName ();
-                String customItemDisplayName = BugReportLanguage.getEnglishVersionFromLanguage (itemDisplayName);
+                String itemDisplayName = itemMeta.getDisplayName();
+                String customItemDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(itemDisplayName);
 
-                if (customItemDisplayName.equals ("Back")) {
-                    player.openInventory (getSettingsGUI ());
+                if (customItemDisplayName.equals("Back")) {
+                    player.openInventory(getSettingsGUI());
                     return;
                 }
 
-                if (clickedItem.getItemMeta ().hasCustomModelData ()) {
-                    int customModelData = clickedItem.getItemMeta ().getCustomModelData ();
+                if (clickedItem.getItemMeta().hasCustomModelData()) {
+                    int customModelData = clickedItem.getItemMeta().getCustomModelData();
                     switch (customModelData) {
                         case 11 -> setLanguage("en", "English", player);
                         case 12 -> setLanguage("fr", "French", player);
@@ -283,28 +300,28 @@ public class BugReportSettings {
                 }
             }
 
-            if (customDisplayName.contains ("Other Settings")) {
-                event.setCancelled (true);
+            if (customDisplayName.contains("Other Settings")) {
+                event.setCancelled(true);
 
-                Player player = (Player) event.getWhoClicked ();
-                Inventory clickedInventory = event.getClickedInventory ();
-                ItemStack clickedItem = event.getCurrentItem ();
+                Player player = (Player) event.getWhoClicked();
+                Inventory clickedInventory = event.getClickedInventory();
+                ItemStack clickedItem = event.getCurrentItem();
 
-                if (clickedInventory == null || clickedItem == null || clickedItem.getType () == Material.AIR) {
+                if (clickedInventory == null || clickedItem == null || clickedItem.getType() == Material.AIR) {
                     return;
                 }
 
-                ItemMeta itemMeta = clickedItem.getItemMeta ();
+                ItemMeta itemMeta = clickedItem.getItemMeta();
 
-                if (itemMeta == null || !itemMeta.hasDisplayName ()) {
+                if (itemMeta == null || !itemMeta.hasDisplayName()) {
                     return;
                 }
 
-                String itemDisplayName = itemMeta.getDisplayName ();
-                String customItemDisplayName = BugReportLanguage.getEnglishVersionFromLanguage (itemDisplayName);
+                String itemDisplayName = itemMeta.getDisplayName();
+                String customItemDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(itemDisplayName);
 
-                if (customItemDisplayName.equals ("Back")) {
-                    player.openInventory (getSettingsGUI ());
+                if (customItemDisplayName.equals("Back")) {
+                    player.openInventory(getSettingsGUI());
                     return;
                 }
 
@@ -377,11 +394,12 @@ public class BugReportSettings {
             if (checkForKey("useTitleInsteadOfMessage", true)) {
                 player.sendTitle(pluginColor + pluginTitle, getTextElseDefault(languageCode, "languageSetTo").replace("%language%", languageName), 10, 70, 20);
             } else {
-                player.sendMessage (pluginColor + pluginTitle + " " + ChatColor.GREEN + getTextElseDefault (languageCode, "languageSetTo").replace ("%language%", languageName));
+                player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + getTextElseDefault(languageCode, "languageSetTo").replace("%language%", languageName));
             }
             BugReportManager.config.set("language", languageCode);
             BugReportManager.saveConfig();
             BugReportManager.loadConfig();
+            player.openInventory(openLanguageGUI());
         }
 
         @EventHandler(priority = EventPriority.NORMAL)
@@ -389,67 +407,66 @@ public class BugReportSettings {
             Player player = event.getPlayer();
 
             if (setMaxReportsClickMap.containsKey(player.getUniqueId())) {
-                handleSettingUpdate(event, player, setMaxReportsClickMap, BugReportLanguage.getTitleFromLanguage("setMaxReportsPerPlayer"),
-                        "max-reports-per-player", (value) -> {
-                            int maxReports;
-
-                            if (value.matches("[0-9]+")) {
-                                try {
-                                    maxReports = Integer.parseInt(value);
-                                } catch (NumberFormatException e) {
-                                    if (checkForKey("useTitleInsteadOfMessage", true)) {
-                                        player.sendTitle(pluginColor + pluginTitle, getTextElseDefault(BugReportManager.config.getString("language"), "enterValidNumber"), 10, 70, 20);
-									} else {
-                                        player.sendMessage (pluginColor + pluginTitle + " " + ChatColor.RED + getTextElseDefault (BugReportManager.config.getString ("language"), "enterValidNumber"));
-									}
-									return;
-								}
-
-                                BugReportManager.config.set("max-reports-per-player", maxReports);
-                                BugReportManager.saveConfig();
-                                if (checkForKey("useTitleInsteadOfMessage", true)) {
-                                    player.sendTitle(pluginColor + pluginTitle, getTextElseDefault(BugReportManager.config.getString("language"), "maxReportsPerPlayerSuccessMessage").replace("%amount%", String.valueOf(maxReports)), 10, 70, 20);
-                                } else {
-                                    player.sendMessage (pluginColor + pluginTitle + " " + ChatColor.GREEN + getTextElseDefault (BugReportManager.config.getString ("language"), "maxReportsPerPlayerSuccessMessage").replace ("%amount%", String.valueOf (maxReports)));
-                                }
-                            } else {
-                                value = value.substring(0, 1).toUpperCase() + value.substring(1).toLowerCase();
-                                String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(value);
-
-                                if (customDisplayName.contains("Cancel")) {
-                                    player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage("cancelled"));
-                                } else {
-                                    if (checkForKey("useTitleInsteadOfMessage", true)) {
-                                        player.sendTitle(pluginColor + pluginTitle, getTextElseDefault(BugReportManager.config.getString("language"), "enterValidNumber"), 10, 70, 20);
-                                    } else {
-                                        player.sendMessage (pluginColor + pluginTitle + " " + ChatColor.RED + getTextElseDefault (BugReportManager.config.getString ("language"), "enterValidNumber"));
-                                    }
-                                }
-                            }
-                        });
-            } else if (setReportCooldownClickMap.containsKey(player.getUniqueId())) {
-                handleSettingUpdate(event, player, setReportCooldownClickMap, "Set Report Cooldown",
-                        "report-cooldown", (value) -> {
-                            int reportCooldown;
-                            try {
-                                reportCooldown = Integer.parseInt(value);
-                            } catch (NumberFormatException e) {
-                                if (checkForKey("useTitleInsteadOfMessage", true)) {
-                                    player.sendTitle(pluginColor + pluginTitle, getTextElseDefault(BugReportManager.config.getString("language"), "enterValidNumber"), 10, 70, 20);
-                                } else {
-                                    player.sendMessage (pluginColor + pluginTitle + " " + ChatColor.RED + getTextElseDefault (BugReportManager.config.getString ("language"), "enterValidNumber"));
-                                }
-                                return;
-                            }
-
-                            BugReportManager.config.set("report-cooldown", reportCooldown);
-                            BugReportManager.saveConfig();
+                handleSettingUpdate(event, player, setMaxReportsClickMap, BugReportLanguage.getTitleFromLanguage("setMaxReportsPerPlayer"), "max-reports-per-player", (value) -> {
+                    int maxReports;
+                    if (value.matches("[0-9]+")) {
+                        try {
+                            maxReports = Integer.parseInt(value);
+                        } catch (NumberFormatException e) {
                             if (checkForKey("useTitleInsteadOfMessage", true)) {
-                                player.sendTitle(pluginColor + pluginTitle, getTextElseDefault(BugReportManager.config.getString("language"), "reportCooldownSuccessMessage").replace("%time%", String.valueOf(reportCooldown)), 10, 70, 20);
+                                player.sendTitle(pluginColor + pluginTitle, getTextElseDefault(BugReportManager.config.getString("language"), "enterValidNumber"), 10, 70, 20);
                             } else {
-                                player.sendMessage (pluginColor + pluginTitle + " " + ChatColor.GREEN + getTextElseDefault (BugReportManager.config.getString ("language"), "reportCooldownSuccessMessage").replace ("%time%", String.valueOf (reportCooldown)));
+                                player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + getTextElseDefault(BugReportManager.config.getString("language"), "enterValidNumber"));
                             }
-                        });
+                            return;
+                        }
+                        BugReportManager.config.set("max-reports-per-player", maxReports);
+                        BugReportManager.saveConfig();
+                        if (checkForKey("useTitleInsteadOfMessage", true)) {
+                            player.sendTitle(pluginColor + pluginTitle, getTextElseDefault(BugReportManager.config.getString("language"), "maxReportsPerPlayerSuccessMessage")
+                                    .replace("%amount%", String.valueOf(maxReports)), 10, 70, 20);
+                        } else {
+                            player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + getTextElseDefault(BugReportManager.config.getString("language"), "maxReportsPerPlayerSuccessMessage")
+                                    .replace("%amount%", String.valueOf(maxReports)));
+                        }
+                    } else {
+                        value = value.substring(0, 1).toUpperCase() + value.substring(1).toLowerCase();
+                        String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(value);
+                        if (customDisplayName.contains("Cancel")) {
+                            player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage("cancelled"));
+                        } else {
+                            if (checkForKey("useTitleInsteadOfMessage", true)) {
+                                player.sendTitle(pluginColor + pluginTitle, getTextElseDefault(BugReportManager.config.getString("language"), "enterValidNumber"), 10, 70, 20);
+                            } else {
+                                player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + getTextElseDefault(BugReportManager.config.getString("language"), "enterValidNumber"));
+                            }
+                        }
+                    }
+                });
+            } else if (setReportCooldownClickMap.containsKey(player.getUniqueId())) {
+                handleSettingUpdate(event, player, setReportCooldownClickMap, "Set Report Cooldown", "report-cooldown", (value) -> {
+                    int reportCooldown;
+                    try {
+                        reportCooldown = Integer.parseInt(value);
+                    } catch (NumberFormatException e) {
+                        if (checkForKey("useTitleInsteadOfMessage", true)) {
+                            player.sendTitle(pluginColor + pluginTitle, getTextElseDefault(BugReportManager.config.getString("language"), "enterValidNumber"), 10, 70, 20);
+                        } else {
+                            player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + getTextElseDefault(BugReportManager.config.getString("language"), "enterValidNumber"));
+                        }
+                        return;
+                    }
+
+                    BugReportManager.config.set("report-cooldown", reportCooldown);
+                    BugReportManager.saveConfig();
+                    if (checkForKey("useTitleInsteadOfMessage", true)) {
+                        player.sendTitle(pluginColor + pluginTitle, getTextElseDefault(BugReportManager.config.getString("language"), "reportCooldownSuccessMessage")
+                            .replace("%time%", String.valueOf(reportCooldown)), 10, 70, 20);
+                    } else {
+                        player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + getTextElseDefault(BugReportManager.config.getString("language"), "reportCooldownSuccessMessage")
+                            replace("%time%", String.valueOf(reportCooldown)));
+                    }
+                });
             }
         }
 
@@ -468,6 +485,5 @@ public class BugReportSettings {
                 });
             }
         }
-
     }
 }

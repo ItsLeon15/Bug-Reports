@@ -1,5 +1,8 @@
-package com.leon.bugreport;
+package com.leon.bugreport.commands;
 
+import com.leon.bugreport.BugReportManager;
+import com.leon.bugreport.Category;
+import com.leon.bugreport.DefaultLanguageSelector;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -22,6 +25,7 @@ import java.util.*;
 
 import static com.leon.bugreport.BugReportDatabase.getStaticUUID;
 import static com.leon.bugreport.BugReportManager.*;
+import static org.bukkit.ChatColor.*;
 
 public class BugReportCommand implements CommandExecutor, Listener {
     private final BugReportManager reportManager;
@@ -41,7 +45,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 
         if (config.getBoolean("enablePluginReportCategories", true)) {
             if (!BugReportManager.checkCategoryConfig()) {
-                player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + DefaultLanguageSelector.getTextElseDefault(language, "bugReportCategoriesNotConfiguredMessage"));
+                player.sendMessage(pluginColor + pluginTitle + " " + RED + DefaultLanguageSelector.getTextElseDefault(language, "bugReportCategoriesNotConfiguredMessage"));
                 return true;
             }
             openCategorySelectionGUI(player);
@@ -49,7 +53,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
         }
 
         if (args.length < 1) {
-            player.sendMessage(ChatColor.RED + "Usage: /bugreport <message>");
+            player.sendMessage(RED + "Usage: /bugreport <message>");
             return true;
         }
 
@@ -58,9 +62,9 @@ public class BugReportCommand implements CommandExecutor, Listener {
             int reportsLeft = maxReports - getReportCount(player.getUniqueId());
             if (reportsLeft <= 0) {
                 if (checkForKey("useTitleInsteadOfMessage", true)) {
-                    player.sendTitle(ChatColor.RED + DefaultLanguageSelector.getTextElseDefault(language, "maxReportsPerPlayerMessage"), "", 10, 70, 25);
+                    player.sendTitle(RED + DefaultLanguageSelector.getTextElseDefault(language, "maxReportsPerPlayerMessage"), "", 10, 70, 25);
                 } else {
-                    player.sendMessage (pluginColor + pluginTitle + " " + ChatColor.RED + DefaultLanguageSelector.getTextElseDefault (language, "maxReportsPerPlayerMessage"));
+                    player.sendMessage (pluginColor + pluginTitle + " " + RED + DefaultLanguageSelector.getTextElseDefault(language, "maxReportsPerPlayerMessage"));
                 }
                 return true;
             }
@@ -73,9 +77,9 @@ public class BugReportCommand implements CommandExecutor, Listener {
             throw new RuntimeException(e);
         }
         if (checkForKey("useTitleInsteadOfMessage", true)) {
-            player.sendTitle(ChatColor.GREEN + DefaultLanguageSelector.getTextElseDefault(language, "bugReportConfirmationMessage"), "", 10, 70, 25);
+            player.sendTitle(GREEN + DefaultLanguageSelector.getTextElseDefault(language, "bugReportConfirmationMessage"), "", 10, 70, 25);
         } else {
-            player.sendMessage (pluginColor + pluginTitle + " " + ChatColor.GREEN + DefaultLanguageSelector.getTextElseDefault (language, "bugReportConfirmationMessage"));
+            player.sendMessage(pluginColor + pluginTitle + " " + GREEN + DefaultLanguageSelector.getTextElseDefault(language, "bugReportConfirmationMessage"));
         }
         return true;
     }
@@ -92,7 +96,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
     }
 
     private void openCategorySelectionGUI(Player player) {
-        Inventory gui = Bukkit.createInventory(null, 9, ChatColor.YELLOW + "Bug Report Categories");
+        Inventory gui = Bukkit.createInventory(null, 9, YELLOW + "Bug Report Categories");
 
         List<Category> categories = reportManager.getReportCategories();
 
@@ -105,8 +109,8 @@ public class BugReportCommand implements CommandExecutor, Listener {
     }
 
     @EventHandler(priority = EventPriority.NORMAL)
-    public void onInventoryClick(InventoryClickEvent event) {
-        if (!event.getView().getTitle().equals(ChatColor.YELLOW + "Bug Report Categories")) {
+    public void onInventoryClick(@NotNull InventoryClickEvent event) {
+        if (!event.getView().getTitle().equals(YELLOW + "Bug Report Categories")) {
             return;
         }
 
@@ -124,7 +128,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
             return;
         }
 
-        String categoryName = ChatColor.stripColor(itemMeta.getDisplayName());
+        String categoryName = stripColor(itemMeta.getDisplayName());
         List<Category> categories = reportManager.getReportCategories();
         Category selectedCategory = null;
 
@@ -139,12 +143,12 @@ public class BugReportCommand implements CommandExecutor, Listener {
             categorySelectionMap.put(player.getUniqueId(), selectedCategory.getId());
             player.closeInventory();
             if (checkForKey("useTitleInsteadOfMessage", true)) {
-                player.sendTitle(ChatColor.YELLOW + DefaultLanguageSelector.getTextElseDefault(language, "enterBugReportMessageCategory"), "", 10, 70, 120); // TODO: Finish this in all places
+                player.sendTitle(YELLOW + DefaultLanguageSelector.getTextElseDefault(language, "enterBugReportMessageCategory"), "", 10, 70, 120); // TODO: Finish this in all places
             } else {
-                player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.YELLOW + DefaultLanguageSelector.getTextElseDefault(language, "enterBugReportMessageCategory"));
+                player.sendMessage(pluginColor + pluginTitle + " " + YELLOW + DefaultLanguageSelector.getTextElseDefault(language, "enterBugReportMessageCategory"));
             }
         } else {
-            player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + "Something went wrong while selecting the category");
+            player.sendMessage(pluginColor + pluginTitle + " " + RED + "Something went wrong while selecting the category");
         }
     }
 
@@ -163,26 +167,26 @@ public class BugReportCommand implements CommandExecutor, Listener {
 
         if (message.equalsIgnoreCase("cancel")) {
             if (checkForKey("useTitleInsteadOfMessage", true)) {
-                player.sendTitle(ChatColor.RED + DefaultLanguageSelector.getTextElseDefault(language, "cancelledBugReportMessage"), "", 10, 70, 25);
+                player.sendTitle(RED + DefaultLanguageSelector.getTextElseDefault(language, "cancelledBugReportMessage"), "", 10, 70, 25);
             } else {
-                player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + DefaultLanguageSelector.getTextElseDefault(language, "cancelledBugReportMessage"));
+                player.sendMessage(pluginColor + pluginTitle + " " + RED + DefaultLanguageSelector.getTextElseDefault(language, "cancelledBugReportMessage"));
             }
             return;
         }
 
         reportManager.submitBugReport(player, message, categoryId);
         if (checkForKey("useTitleInsteadOfMessage", true)) {
-            player.sendTitle(ChatColor.GREEN + DefaultLanguageSelector.getTextElseDefault(language, "bugReportConfirmationMessage"), "", 10, 70, 25);
+            player.sendTitle(GREEN + DefaultLanguageSelector.getTextElseDefault(language, "bugReportConfirmationMessage"), "", 10, 70, 25);
         } else {
-            player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + DefaultLanguageSelector.getTextElseDefault(language, "bugReportConfirmationMessage"));
+            player.sendMessage(pluginColor + pluginTitle + " " + GREEN + DefaultLanguageSelector.getTextElseDefault(language, "bugReportConfirmationMessage"));
         }
     }
 
-    private @NotNull ItemStack createCategoryItem(Category category) {
+    private @NotNull ItemStack createCategoryItem(@NotNull Category category) {
         ItemStack itemStack = new ItemStack(category.getItem());
         ItemMeta itemMeta = itemStack.getItemMeta();
-        itemMeta.setDisplayName(stringColorToColorCode(category.getColor()) + category.getName());
-        itemMeta.setLore(List.of(ChatColor.GRAY + category.getDescription()));
+        Objects.requireNonNull(itemMeta).setDisplayName(stringColorToColorCode(category.getColor()) + category.getName());
+        itemMeta.setLore(List.of(GRAY + category.getDescription()));
         itemStack.setItemMeta(itemMeta);
         return itemStack;
     }
@@ -190,26 +194,26 @@ public class BugReportCommand implements CommandExecutor, Listener {
     @Contract(pure = true)
     public static ChatColor stringColorToColorCode(String color) {
         if (color == null) {
-            return ChatColor.WHITE;
+            return WHITE;
         }
         return switch (color.toUpperCase()) {
-            case "AQUA" -> ChatColor.AQUA;
-            case "BLACK" -> ChatColor.BLACK;
-            case "BLUE" -> ChatColor.BLUE;
-            case "DARK_AQUA" -> ChatColor.DARK_AQUA;
-            case "DARK_BLUE" -> ChatColor.DARK_BLUE;
-            case "DARK_GRAY" -> ChatColor.DARK_GRAY;
-            case "DARK_GREEN" -> ChatColor.DARK_GREEN;
-            case "DARK_PURPLE" -> ChatColor.DARK_PURPLE;
-            case "DARK_RED" -> ChatColor.DARK_RED;
-            case "GOLD" -> ChatColor.GOLD;
-            case "GRAY" -> ChatColor.GRAY;
-            case "GREEN" -> ChatColor.GREEN;
-            case "LIGHT_PURPLE" -> ChatColor.LIGHT_PURPLE;
-            case "RED" -> ChatColor.RED;
-            case "WHITE" -> ChatColor.WHITE;
-            case "YELLOW" -> ChatColor.YELLOW;
-            default -> ChatColor.WHITE;
+            case "AQUA" -> AQUA;
+            case "BLACK" -> BLACK;
+            case "BLUE" -> BLUE;
+            case "DARK_AQUA" -> DARK_AQUA;
+            case "DARK_BLUE" -> DARK_BLUE;
+            case "DARK_GRAY" -> DARK_GRAY;
+            case "DARK_GREEN" -> DARK_GREEN;
+            case "DARK_PURPLE" -> DARK_PURPLE;
+            case "DARK_RED" -> DARK_RED;
+            case "GOLD" -> GOLD;
+            case "GRAY" -> GRAY;
+            case "GREEN" -> GREEN;
+            case "LIGHT_PURPLE" -> LIGHT_PURPLE;
+            case "RED" -> RED;
+            case "WHITE" -> WHITE;
+            case "YELLOW" -> YELLOW;
+            default -> WHITE;
         };
     }
 
@@ -237,43 +241,5 @@ public class BugReportCommand implements CommandExecutor, Listener {
             case YELLOW -> java.awt.Color.YELLOW;
             default -> java.awt.Color.WHITE;
         };
-    }
-}
-
-class Category {
-    private final int id;
-    private final String color;
-    private final String name;
-    private final ItemStack itemStack;
-
-    Category(int id, String name, String color, ItemStack itemStack) {
-        this.id = id;
-        this.name = name;
-        this.color = color;
-        this.itemStack = itemStack;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public String getColor() {
-        return color;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getDescription() {
-        ItemMeta itemMeta = itemStack.getItemMeta();
-        if (itemMeta == null || !itemMeta.hasLore()) {
-            return "";
-        }
-        return Objects.requireNonNull(itemMeta.getLore()).get(0);
-    }
-
-    public Material getItem() {
-        return itemStack.getType();
     }
 }
