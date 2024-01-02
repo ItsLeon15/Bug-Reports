@@ -18,12 +18,6 @@ BugReport is a tool that helps server owners manage any bug reports found by pla
 ## Bug Details GUI
 ![Bug Report Details (1)](https://github.com/ItsLeon15/Bug-Reports/assets/64979109/8ba7bde1-c4c2-4536-ab07-24ec3c484915)
 
-## Fixes for future releases
-- [x] Allow more than 9 bug reports with multiple pages.
-- [x] Add a command to link a Discord Webhook to send all Bug Reports to.
-- [x] Add an option to edit the GUI options in the config.
-- [x] Add support for multiple languages.
-
 ## Current working versions
 - [x] 1.17.X
 - [x] 1.18.X
