@@ -5,6 +5,8 @@ import com.leon.bugreport.commands.BugListArchivedCommand;
 import com.leon.bugreport.commands.BugListSettingsCommand;
 import com.leon.bugreport.commands.BugReportCommand;
 import com.leon.bugreport.commands.LinkDiscordCommand;
+import com.leon.bugreport.expansions.BugPlaceholders;
+import com.leon.bugreport.extensions.PlanHook;
 import com.leon.bugreport.listeners.ReportListener;
 import com.leon.bugreport.listeners.UpdateChecker;
 import org.bstats.bukkit.Metrics;
@@ -20,6 +22,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
+import static com.leon.bugreport.BugReportDatabase.dataSource;
 import static com.leon.bugreport.BugReportDatabase.getStaticUUID;
 import static com.leon.bugreport.BugReportManager.*;
 
@@ -28,16 +31,26 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        if (!getDataFolder().exists()) {
-            if (!getDataFolder().mkdirs()) {
-                plugin.getLogger().warning("Failed to create data folder.");
-            }
+        try {
+            PlanHook.getInstance().hookIntoPlan();
+        } catch (NoClassDefFoundError planIsNotInstalled) {
+            // Ignore catch
         }
 
         try {
             reportManager = new BugReportManager(this);
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+
+        if(Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null){
+            new BugPlaceholders(this).register();
+        }
+
+        if (!getDataFolder().exists()) {
+            if (!getDataFolder().mkdirs()) {
+                plugin.getLogger().warning("Failed to create data folder.");
+            }
         }
 
         registerCommands();
@@ -51,7 +64,7 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
     public void onDisable() {
         bugReports.clear();
         try {
-            BugReportDatabase.dataSource.close();
+            dataSource.close();
         } catch (Exception e) {
             plugin.getLogger().warning("Failed to close database connection.");
         }
@@ -64,17 +77,40 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
         BugReportDatabase.setPlayerLastLoginTimestamp(playerId);
     }
 
+    private int compareVersions(@NotNull String version1, @NotNull String version2) {
+        String[] parts1 = version1.split("\\.");
+        String[] parts2 = version2.split("\\.");
+
+        int minLength = Math.min(parts1.length, parts2.length);
+
+        for (int i = 0; i < minLength; i++) {
+            int part1 = Integer.parseInt(parts1[i]);
+            int part2 = Integer.parseInt(parts2[i]);
+
+            if (part1 < part2) {
+                return -1;
+            } else if (part1 > part2) {
+                return 1;
+            }
+        }
+
+        if (parts1.length < parts2.length) {
+            return -1;
+        } else if (parts1.length > parts2.length) {
+            return 1;
+        }
+
+        return 0;
+    }
+
     @EventHandler
     public void onPlayerJoin(@NotNull PlayerJoinEvent event) {
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
             if (onlinePlayer.isOp()) {
-                Player player = event.getPlayer();
                 new UpdateChecker(this, 110732).getVersion(spigotVersion -> {
-                    int intServerVersion = Integer.parseInt(this.getDescription().getVersion().split("v")[1]);
-                    int intSpigotVersion = Integer.parseInt(spigotVersion.split("v")[1]);
-
-                    if (intServerVersion < intSpigotVersion) {
-                        player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GRAY + "A new version of Bug Report is available: " + ChatColor.YELLOW + ChatColor.BOLD + spigotVersion);
+                    String serverVersion = this.getDescription().getVersion();
+                    if (compareVersions(serverVersion, spigotVersion) < 0) {
+                        onlinePlayer.sendMessage(pluginColor + pluginTitle + " " + "A new version of Bug Report is available: " + ChatColor.YELLOW + ChatColor.BOLD + spigotVersion);
                     }
                 });
             }

@@ -1,6 +1,7 @@
 package com.leon.bugreport;
 
 import com.leon.bugreport.discord.LinkDiscord;
+import com.leon.bugreport.extensions.PlanHook;
 import com.leon.bugreport.listeners.ReportCreatedEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -108,7 +109,7 @@ public class BugReportManager implements Listener {
                 put("enableBugReportNotifications", false);
                 put("discordEmbedTitle", "New Bug Report");
                 put("discordEmbedColor", "Yellow");
-                put("discordEmbedFooter", "Bug Report V0.8.0");
+				put("discordEmbedFooter", "Bug Report V0.8.1");
                 put("discordEmbedThumbnail", "https://www.spigotmc.org/data/resource_icons/110/110732.jpg");
                 put("discordEnableThumbnail", true);
                 put("discordEnableUserAuthor", true);
@@ -221,6 +222,17 @@ public class BugReportManager implements Listener {
 
         reports.add(header);
         bugReports.put(playerId, reports);
+
+        PlanHook.getInstance().updateHook(playerId, playerName);
+
+//        Optional<Caller> caller;
+//        caller = ExtensionService.getInstance().register(new BugReportExtension());
+//
+//        if (caller.isPresent()) {
+//            caller.get().updateServerData();
+//            caller.get().updatePlayerData(playerId, playerName);
+//        }
+
 
         database.addBugReport(playerName, playerId, worldName, header, message, location, gamemode);
 

@@ -1,5 +1,6 @@
 package com.leon.bugreport;
 
+import com.leon.bugreport.extensions.PlanHook;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.bukkit.Bukkit;
@@ -219,6 +220,8 @@ public class BugReportDatabase {
             statement.setString(9, location);
             statement.setString(10, gamemode);
 
+            PlanHook.getInstance().updateHook(playerId, username);
+
             statement.executeUpdate();
             statement.close();
         } catch (Exception e) {
@@ -227,12 +230,124 @@ public class BugReportDatabase {
         }
     }
 
+    public static long loadBugReportCountForPlayer(@NotNull UUID playerID) {
+        int count = 0;
+
+        try (Connection connection = dataSource.getConnection()) {
+            PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM bug_reports WHERE player_id = ?");
+            statement.setString(1, playerID.toString());
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                count = resultSet.getInt(1);
+            }
+            resultSet.close();
+            statement.close();
+        } catch (SQLException e) {
+            plugin.getLogger().severe(e.getMessage());
+        }
+
+        return count;
+    }
+
+    public static long loadArchivedBugReportCountForPlayer(@NotNull UUID playerID) {
+        int count = 0;
+
+        try (Connection connection = dataSource.getConnection()) {
+            PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM bug_reports WHERE player_id = ? AND archived = 1");
+            statement.setString(1, playerID.toString());
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                count = resultSet.getInt(1);
+            }
+            resultSet.close();
+            statement.close();
+        } catch (SQLException e) {
+            plugin.getLogger().severe(e.getMessage());
+        }
+
+        return count;
+    }
+
+    public static long loadNonArchivedBugReportCountForPlayer(@NotNull UUID playerID) {
+        int count = 0;
+
+        try (Connection connection = dataSource.getConnection()) {
+            PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM bug_reports WHERE player_id = ? AND archived = 0");
+            statement.setString(1, playerID.toString());
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                count = resultSet.getInt(1);
+            }
+            resultSet.close();
+            statement.close();
+        } catch (SQLException e) {
+            plugin.getLogger().severe(e.getMessage());
+        }
+
+        return count;
+    }
+
+    public static long loadBugReportCount() {
+        int count = 0;
+
+        try (Connection connection = dataSource.getConnection()) {
+            PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM bug_reports");
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                count = resultSet.getInt(1);
+            }
+            resultSet.close();
+            statement.close();
+        } catch (SQLException e) {
+            plugin.getLogger().severe(e.getMessage());
+        }
+
+        return count;
+    }
+
+    public static long loadArchivedBugReportCount() {
+        int count = 0;
+
+        try (Connection connection = dataSource.getConnection()) {
+            PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM bug_reports WHERE archived = 1");
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                count = resultSet.getInt(1);
+                resultSet.close();
+                statement.close();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe(e.getMessage());
+        }
+
+        return count;
+    }
+
+    public static long loadNonArchivedBugReportCount() {
+        int count = 0;
+
+        try (Connection connection = dataSource.getConnection()) {
+            PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM bug_reports WHERE archived = 0");
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                count = resultSet.getInt(1);
+                resultSet.close();
+                statement.close();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe(e.getMessage());
+        }
+
+        return count;
+    }
+
     public static @NotNull Map<UUID, List<String>> loadBugReports() {
         Map<UUID, List<String>> bugReports = new HashMap<>();
 
         try (Connection connection = dataSource.getConnection()) {
             PreparedStatement statement = connection.prepareStatement("SELECT * FROM bug_reports ORDER BY report_id ASC");
             ResultSet resultSet = statement.executeQuery();
+
             while (resultSet.next()) {
                 UUID playerId = UUID.fromString(resultSet.getString("player_id"));
                 String header = resultSet.getString("header");
@@ -258,8 +373,12 @@ public class BugReportDatabase {
                     "Location: " + location + "\n" +
                     "Gamemode: " + gamemode
                 );
+
+                PlanHook.getInstance().updateHook(playerId, username);
+
                 bugReports.put(getStaticUUID(), reports);
             }
+
             resultSet.close();
             statement.close();
         } catch (SQLException e) {
@@ -314,6 +433,7 @@ public class BugReportDatabase {
     private static void createTables() {
         try (Connection connection = dataSource.getConnection()) {
             connection.createStatement().execute("CREATE TABLE IF NOT EXISTS bug_reports(rowid INTEGER, player_id TEXT, header TEXT, message TEXT, username TEXT, world TEXT, archived INTEGER DEFAULT 0, report_id INTEGER, timestamp BIGINT)");
+            connection.createStatement().execute("CREATE TABLE IF NOT EXISTS player_data(player_id TEXT, last_login_timestamp BIGINT DEFAULT 0)");
         } catch (Exception e) {
             plugin.getLogger().severe("Failed to create tables.");
             plugin.getLogger().severe(e.getMessage());
@@ -348,7 +468,6 @@ public class BugReportDatabase {
             }
             reports.set(existingHeaderPosition, newHeader.toString().trim());
             bugReports.put(getStaticUUID(), reports);
-
         } catch (Exception e) {
             plugin.getLogger().severe("Failed to update bug report archive status.");
             plugin.getLogger().severe(e.getMessage());
@@ -361,6 +480,7 @@ public class BugReportDatabase {
             statement.setInt(1, reportIndex);
             statement.executeUpdate();
             statement.close();
+
             loadBugReports();
         } catch (Exception e) {
             plugin.getLogger().severe("Failed to delete bug report.");

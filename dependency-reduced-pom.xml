@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.leon.bugreport</groupId>
   <artifactId>BugReports</artifactId>
-  <version>0.8.0</version>
+  <version>0.8.1</version>
   <build>
     <plugins>
       <plugin>
@@ -41,6 +41,14 @@
       <id>minecraft-repo</id>
       <url>https://libraries.minecraft.net/</url>
     </repository>
+    <repository>
+      <id>placeholderapi</id>
+      <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
+    </repository>
+    <repository>
+      <id>jitpack</id>
+      <url>https://jitpack.io</url>
+    </repository>
   </repositories>
   <dependencies>
     <dependency>
@@ -53,6 +61,18 @@
       <groupId>com.mojang</groupId>
       <artifactId>authlib</artifactId>
       <version>3.4.40</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>me.clip</groupId>
+      <artifactId>placeholderapi</artifactId>
+      <version>2.11.1</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.github.plan-player-analytics</groupId>
+      <artifactId>Plan</artifactId>
+      <version>5.6.2614</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>

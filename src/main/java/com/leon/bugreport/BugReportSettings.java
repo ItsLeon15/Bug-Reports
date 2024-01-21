@@ -464,7 +464,7 @@ public class BugReportSettings {
                             .replace("%time%", String.valueOf(reportCooldown)), 10, 70, 20);
                     } else {
                         player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + getTextElseDefault(BugReportManager.config.getString("language"), "reportCooldownSuccessMessage")
-                            replace("%time%", String.valueOf(reportCooldown)));
+                                .replace("%time%", String.valueOf(reportCooldown)));
                     }
                 });
             }
