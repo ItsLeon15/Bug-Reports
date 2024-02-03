@@ -4,17 +4,22 @@ import com.djrapitops.plan.extension.CallEvents;
 import com.djrapitops.plan.extension.DataExtension;
 import com.djrapitops.plan.extension.annotation.NumberProvider;
 import com.djrapitops.plan.extension.annotation.PluginInfo;
+import com.djrapitops.plan.extension.annotation.TableProvider;
 import com.djrapitops.plan.extension.icon.Color;
 import com.djrapitops.plan.extension.icon.Family;
+import com.djrapitops.plan.extension.icon.Icon;
+import com.djrapitops.plan.extension.table.Table;
+import com.leon.bugreport.BugReportDatabase;
 
+import java.util.List;
 import java.util.UUID;
 
 import static com.leon.bugreport.BugReportDatabase.*;
 
 @PluginInfo(
-	name = "BugReportPlugin",
+	name = "Bug Report Plugin",
 	iconName = "bug",
-	iconFamily = Family.REGULAR,
+	iconFamily = Family.SOLID,
 	color = Color.YELLOW
 )
 public class BugReportExtension implements DataExtension {
@@ -64,5 +69,39 @@ public class BugReportExtension implements DataExtension {
 	)
 	public long nonArchivedBugReportCount(UUID playerUUID) {
 		return loadNonArchivedBugReportCountForPlayer(playerUUID);
+	}
+
+	@TableProvider(tableColor = Color.AMBER)
+	public Table bugReportPlayerHistory(String playerName) {
+		Table.Factory bugReportPlayerTable = Table.builder()
+				.columnOne("Date Submitted", new Icon(Family.SOLID,"gavel", Color.AMBER))
+				.columnTwo("Reported Bug", new Icon(Family.SOLID, "bug", Color.AMBER));
+
+		List<BugReportPair<String, String>> allBugReports = BugReportDatabase.loadBugReportAllPlayer(playerName);
+		for (BugReportPair<String, String> report : allBugReports) {
+			String timestampString = report.getFirst();
+			String bugMessage = report.getSecond();
+			bugReportPlayerTable.addRow(timestampString, bugMessage);
+		}
+
+		return bugReportPlayerTable.build();
+	}
+
+	// Server Table only!
+
+	@TableProvider(tableColor = Color.AMBER)
+	public Table bugReportCountHistory() {
+		Table.Factory bugReportServer = Table.builder()
+				.columnOne("Bug Reporter", new Icon(Family.SOLID, "gavel", Color.AMBER))
+				.columnTwo("Reported Bug", new Icon(Family.SOLID, "bug", Color.AMBER));
+
+		List<BugReportPair<String, String>> allBugReports = BugReportDatabase.loadBugReportCountsPerPlayer();
+		for (BugReportPair<String, String> report : allBugReports) {
+			String reporter = report.getFirst();
+			String bugMessage = report.getSecond();
+			bugReportServer.addRow(reporter, bugMessage);
+		}
+
+		return bugReportServer.build();
 	}
 }

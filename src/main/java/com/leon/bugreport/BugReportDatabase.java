@@ -1,5 +1,6 @@
 package com.leon.bugreport;
 
+import com.leon.bugreport.extensions.BugReportPair;
 import com.leon.bugreport.extensions.PlanHook;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -303,6 +304,43 @@ public class BugReportDatabase {
         }
 
         return count;
+    }
+
+    public static @NotNull List<BugReportPair<String, String>> loadBugReportCountsPerPlayer() {
+        List<BugReportPair<String, String>> reports = new ArrayList<>();
+        try (Connection connection = dataSource.getConnection()) {
+            String sql = "SELECT username, message FROM bug_reports";
+            try (PreparedStatement statement = connection.prepareStatement(sql);
+                 ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    String username = resultSet.getString("username");
+                    String message = resultSet.getString("message");
+                    reports.add(new BugReportPair<>(username, message));
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe(e.getMessage());
+        }
+        return reports;
+    }
+
+    public static @NotNull List<BugReportPair<String, String>> loadBugReportAllPlayer(String playerName) {
+        List<BugReportPair<String, String>> reports = new ArrayList<>();
+        try (Connection connection = dataSource.getConnection()) {
+            PreparedStatement statement = connection.prepareStatement("SELECT timestamp, message FROM bug_reports WHERE username = ?");
+            statement.setString(1, playerName);
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                long timestamp = resultSet.getLong("timestamp");
+                String message = resultSet.getString("message");
+                String timestampToString = translateTimestampToDate(timestamp);
+                reports.add(new BugReportPair<>(timestampToString, message));
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe(e.getMessage());
+        }
+        return reports;
     }
 
     public static long loadArchivedBugReportCount() {

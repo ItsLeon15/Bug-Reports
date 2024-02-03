@@ -109,7 +109,7 @@ public class BugReportManager implements Listener {
                 put("enableBugReportNotifications", false);
                 put("discordEmbedTitle", "New Bug Report");
                 put("discordEmbedColor", "Yellow");
-				put("discordEmbedFooter", "Bug Report V0.8.1");
+                put("discordEmbedFooter", "Bug Report V0.8.2");
                 put("discordEmbedThumbnail", "https://www.spigotmc.org/data/resource_icons/110/110732.jpg");
                 put("discordEnableThumbnail", true);
                 put("discordEnableUserAuthor", true);
@@ -155,7 +155,7 @@ public class BugReportManager implements Listener {
 
                 ItemStack itemStack = new ItemStack(itemMaterial);
                 ItemMeta itemMeta = itemStack.getItemMeta();
-                itemMeta.setDisplayName(ChatColor.YELLOW + name);
+                Objects.requireNonNull(itemMeta).setDisplayName(ChatColor.YELLOW + name);
                 itemMeta.setLore(Collections.singletonList(ChatColor.GRAY + description));
                 itemStack.setItemMeta(itemMeta);
                 categories.add(new Category(id, name, color, itemStack));
@@ -224,15 +224,6 @@ public class BugReportManager implements Listener {
         bugReports.put(playerId, reports);
 
         PlanHook.getInstance().updateHook(playerId, playerName);
-
-//        Optional<Caller> caller;
-//        caller = ExtensionService.getInstance().register(new BugReportExtension());
-//
-//        if (caller.isPresent()) {
-//            caller.get().updateServerData();
-//            caller.get().updatePlayerData(playerId, playerName);
-//        }
-
 
         database.addBugReport(playerName, playerId, worldName, header, message, location, gamemode);
 
@@ -314,7 +305,7 @@ public class BugReportManager implements Listener {
             ItemStack reportItem = new ItemStack(playerHead);
 
             ItemMeta itemMeta = reportItem.getItemMeta();
-            itemMeta.setDisplayName(ChatColor.YELLOW + "Bug Report #" + reportID);
+            Objects.requireNonNull(itemMeta).setDisplayName(ChatColor.YELLOW + "Bug Report #" + reportID);
             itemMeta.setLore(Collections.singletonList(ChatColor.GRAY + firstLine));
 
             reportItem.setItemMeta(itemMeta);
@@ -334,7 +325,7 @@ public class BugReportManager implements Listener {
         } else {
             createNavigationButtons("back", gui, 36);
         }
-        if (BugReportManager.getCurrentPage(player) == BugReportManager.getTotalPages(player)) {
+        if (BugReportManager.getCurrentPage(player) == BugReportManager.getTotalPages()) {
             gui.setItem(44, new ItemStack(Material.AIR));
         } else {
             createNavigationButtons("forward", gui, 44);
@@ -414,7 +405,7 @@ public class BugReportManager implements Listener {
     private static @NotNull ItemStack createButton(Material material, String name) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(name);
+        Objects.requireNonNull(meta).setDisplayName(name);
         item.setItemMeta(meta);
         return item;
     }
@@ -471,7 +462,7 @@ public class BugReportManager implements Listener {
                 }
                 case "Forward" -> {
                     int currentPage = getCurrentPage(player);
-                    if (currentPage < getTotalPages(player)) {
+                    if (currentPage < getTotalPages()) {
                         setCurrentPage(player, currentPage + 1);
                         player.openInventory(isArchivedGUI ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
                     }
@@ -484,19 +475,11 @@ public class BugReportManager implements Listener {
             }
             if (displayName.startsWith(ChatColor.YELLOW + "Bug Report #")) {
                 int reportID = Integer.parseInt(displayName.substring(14));
-                UUID playerId = player.getUniqueId();
                 List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
                 String report = reports.stream()
                     .filter(reportString -> reportString.contains("Report ID: " + reportID))
                     .findFirst()
                     .orElse(null);
-
-                // if (report.contains("hasBeenRead: 0")) {
-                // report = report.replace("hasBeenRead: 0", "hasBeenRead: 1");
-                // reports.set(reportID, report);
-                // bugReports.put(playerId, reports);
-                // database.updateBugReportHeader(playerId, reportID);
-                // }
 
                 openBugReportDetailsGUI(player, report, reportID, isArchivedGUI);
             }
@@ -531,7 +514,7 @@ public class BugReportManager implements Listener {
         return player.getMetadata("currentPage").get(0).asInt();
     }
 
-    public static int getTotalPages(Player player) {
+    public static int getTotalPages() {
         List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
         return (int) Math.ceil((double) reports.size() / 27);
     }
@@ -673,7 +656,7 @@ public class BugReportManager implements Listener {
         Bukkit.getPluginManager().registerEvents(new BugReportDetailsListener(gui, reportIDGUI), plugin);
     }
 
-    private static @NotNull String translateTimestampToDate(long timestamp) {
+    public static @NotNull String translateTimestampToDate(long timestamp) {
         Date date = new Date(timestamp);
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
@@ -750,6 +733,7 @@ public class BugReportManager implements Listener {
                     HandlerList.unregisterAll(this);
                 }
                 case "Archive" -> {
+                    // TODO: Something is causing both Archive and Delete to be called twice and delete the incorrect ID!
                     BugReportDatabase.updateBugReportArchive(reportIDGUI, 1);
 
                     player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
@@ -758,6 +742,7 @@ public class BugReportManager implements Listener {
                     HandlerList.unregisterAll(this);
                 }
                 case "Delete" -> {
+                    // TODO: Something is causing both Archive and Delete to be called twice and delete the incorrect ID!
                     BugReportDatabase.deleteBugReport(reportIDGUI);
 
                     List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));

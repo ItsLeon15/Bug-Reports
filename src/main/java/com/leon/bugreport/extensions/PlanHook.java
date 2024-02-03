@@ -8,15 +8,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class PlanHook {
-	private static PlanHook instance; // Singleton instance
+	private static PlanHook instance;
 	private Optional<Caller> caller;
 
-	// Private constructor to prevent instantiation
 	private PlanHook() {
 		caller = Optional.empty();
 	}
 
-	// Public method to get the instance
 	public static synchronized PlanHook getInstance() {
 		if (instance == null) {
 			instance = new PlanHook();

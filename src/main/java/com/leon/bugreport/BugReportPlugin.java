@@ -32,15 +32,15 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         try {
-            PlanHook.getInstance().hookIntoPlan();
-        } catch (NoClassDefFoundError planIsNotInstalled) {
-            // Ignore catch
-        }
-
-        try {
             reportManager = new BugReportManager(this);
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+
+        try {
+            PlanHook.getInstance().hookIntoPlan();
+        } catch (NoClassDefFoundError planIsNotInstalled) {
+            // Ignore catch
         }
 
         if(Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null){
