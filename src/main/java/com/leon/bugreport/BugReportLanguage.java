@@ -18,7 +18,7 @@ public class BugReportLanguage {
         loadLanguageTexts(plugin, languageFilePath);
     }
 
-    static void loadLanguageTexts(@NotNull Plugin plugin, String languageFilePath) {
+    public static void loadLanguageTexts(@NotNull Plugin plugin, String languageFilePath) {
         File languageFile = new File(plugin.getDataFolder(), languageFilePath);
         if (!languageFile.exists()) {
             plugin.saveResource(languageFilePath, false);
@@ -50,8 +50,8 @@ public class BugReportLanguage {
 			ConfigurationSection buttonNamesSection = languageTexts.get(lang).getConfigurationSection("buttonNames");
 			if (buttonNamesSection != null) {
 				String[] currentLangTitles = buttonNamesSection.getKeys(false).stream()
-						.map(buttonNamesSection::getString)
-						.toArray(String[]::new);
+					.map(buttonNamesSection::getString)
+					.toArray(String[]::new);
 				int index = Arrays.asList(currentLangTitles).indexOf(ChatColor.stripColor(displayName));
 				if (index != -1 && index < englishTitles.length) {
  					return englishTitles[index];

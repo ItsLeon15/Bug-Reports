@@ -29,6 +29,13 @@ public class bugreportGUI {
 		}
 	}
 
+	public static void updateBugReportItems() {
+		bugReportItems.put("BugReportUnArchive", BugReportLanguage.getTitleFromLanguage("unarchive"));
+		bugReportItems.put("BugReportArchive", BugReportLanguage.getTitleFromLanguage("archive"));
+		bugReportItems.put("BugReportBack", BugReportLanguage.getTitleFromLanguage("back"));
+		bugReportItems.put("BugReportDelete", BugReportLanguage.getTitleFromLanguage("delete"));
+	}
+
 	private static final Map<String, String> bugReportItems = new HashMap<>() {{
 		put("BugReporter", "Username");
 		put("BugReportUUID", "UUID");
@@ -61,6 +68,7 @@ public class bugreportGUI {
 			Integer reportIDGUI,
 			Boolean isArchivedGUI
 	) {
+		updateBugReportItems();
 		YamlConfiguration guiConfig = loadGUIConfig();
 		String bugReportTitle = isArchivedGUI ? "Archived Bug Details - #" : "Bug Report Details - #";
 		int guiSize;
@@ -175,8 +183,14 @@ public class bugreportGUI {
 				return false;
 			}
 
+			if (!bugReportItems.containsKey(itemMap.get("bugReportItem").toString())) {
+				Bukkit.getLogger().warning("Invalid bugReportItem in customGUI.yml: " + itemMap.get("bugReportItem"));
+				return false;
+			}
+
 			if ("BugReporter".equals(itemMap.get("bugReportItem").toString())) {
 				if (!"%player_texture%".equals(itemMap.get("texture"))) {
+					Bukkit.getLogger().warning("Texture for BugReporter item in customGUI.yml must be %player_texture%.");
 					return false;
 				}
 			}

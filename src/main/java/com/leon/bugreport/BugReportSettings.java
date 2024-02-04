@@ -26,6 +26,7 @@ import java.util.function.Consumer;
 
 import static com.leon.bugreport.BugReportManager.*;
 import static com.leon.bugreport.DefaultLanguageSelector.getTextElseDefault;
+import static com.leon.bugreport.gui.bugreportGUI.updateBugReportItems;
 
 public class BugReportSettings {
     public BugReportSettings(BugReportManager reportManager) { }
@@ -392,9 +393,11 @@ public class BugReportSettings {
             } else {
                 player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + getTextElseDefault(languageCode, "languageSetTo").replace("%language%", languageName));
             }
+            updateBugReportItems();
             BugReportManager.config.set("language", languageCode);
             BugReportManager.saveConfig();
             BugReportManager.loadConfig();
+
             player.openInventory(openLanguageGUI());
         }
 
