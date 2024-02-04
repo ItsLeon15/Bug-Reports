@@ -25,6 +25,7 @@ import java.util.*;
 import static com.leon.bugreport.BugReportDatabase.dataSource;
 import static com.leon.bugreport.BugReportDatabase.getStaticUUID;
 import static com.leon.bugreport.BugReportManager.*;
+import static com.leon.bugreport.gui.bugreportGUI.generateNewYML;
 
 public class BugReportPlugin extends JavaPlugin implements Listener {
     private BugReportManager reportManager;
@@ -58,6 +59,7 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
         Metrics metrics = new Metrics(this, 18974);
 
         BugReportLanguage.loadLanguageTexts(plugin, "languages.yml");
+        generateNewYML();
     }
 
     @Override

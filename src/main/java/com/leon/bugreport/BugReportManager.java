@@ -28,9 +28,9 @@ import java.util.*;
 
 import static com.leon.bugreport.API.DataSource.getPlayerHead;
 import static com.leon.bugreport.BugReportDatabase.getStaticUUID;
-import static com.leon.bugreport.BugReportSettings.createCustomPlayerHead;
 import static com.leon.bugreport.BugReportSettings.getSettingsGUI;
 import static com.leon.bugreport.commands.BugReportCommand.stringColorToColorCode;
+import static com.leon.bugreport.gui.bugreportGUI.openBugReportDetailsGUI;
 
 public class BugReportManager implements Listener {
     public static Map<UUID, List<String>> bugReports;
@@ -109,7 +109,7 @@ public class BugReportManager implements Listener {
                 put("enableBugReportNotifications", false);
                 put("discordEmbedTitle", "New Bug Report");
                 put("discordEmbedColor", "Yellow");
-                put("discordEmbedFooter", "Bug Report V0.8.2");
+                put("discordEmbedFooter", "Bug Report V0.9.0");
                 put("discordEmbedThumbnail", "https://www.spigotmc.org/data/resource_icons/110/110732.jpg");
                 put("discordEnableThumbnail", true);
                 put("discordEnableUserAuthor", true);
@@ -402,7 +402,7 @@ public class BugReportManager implements Listener {
         return generateBugReportGUI(player, false);
     }
 
-    private static @NotNull ItemStack createButton(Material material, String name) {
+    public static @NotNull ItemStack createButton(Material material, String name) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
         Objects.requireNonNull(meta).setDisplayName(name);
@@ -540,122 +540,6 @@ public class BugReportManager implements Listener {
         }
     }
 
-    private static void openBugReportDetailsGUI(Player player, String report, Integer reportIDGUI, Boolean isArchivedGUI) {
-        String bugReportTitle = isArchivedGUI ? "Archived Bug Details - #" : "Bug Report Details - #";
-        Inventory gui = Bukkit.createInventory(player, 45, ChatColor.YELLOW + bugReportTitle + reportIDGUI);
-
-        if (report == null) {
-            player.sendMessage(pluginColor + pluginTitle + ChatColor.RED + " Error 101: Report is null. Please report this to the plugin developer.");
-            return;
-        }
-
-        String[] reportLines = report.split("\n");
-        Map<String, String> reportData = new HashMap<>();
-
-        for (String line : reportLines) {
-            int colonIndex = line.indexOf(":");
-            if (colonIndex >= 0) {
-                String key = line.substring(0, colonIndex).trim();
-                String value = line.substring(colonIndex + 1).trim();
-                reportData.put(key, value);
-            }
-        }
-
-        String username = reportData.get("Username");
-        String uuid = reportData.get("UUID");
-        String world = reportData.get("World");
-        String fullMessage = reportData.get("Full Message");
-        String category = reportData.get("Category ID");
-        ItemStack emptyItem = createEmptyItem();
-        String location = reportData.get("Location");
-        String gamemode = reportData.get("Gamemode");
-        String locationTitle;
-
-        if (location == null || location.equals("null")) {
-            location = "Not found";
-        }
-
-        if (location.length() - location.replace(",", "").length() != 3) {
-            location = "Not found";
-            locationTitle = "Location";
-        } else {
-            locationTitle = "Location " + ChatColor.BOLD + "(Click to teleport)";
-        }
-
-        if (gamemode == null || gamemode.equals("null")) {
-            gamemode = "Unknown";
-        }
-
-        ItemStack usernameItem = getPlayerHead(username);
-        String timestampToDate = translateTimestampToDate(Long.parseLong(reportData.get("Timestamp")));
-
-        ItemStack uuidItem = createInfoItem(Material.NAME_TAG, ChatColor.GOLD + "UUID", ChatColor.WHITE + uuid);
-        ItemStack worldItem = createInfoItem(Material.GRASS_BLOCK, ChatColor.GOLD + "World", ChatColor.WHITE + world);
-        ItemStack messageItem = createInfoItem(Material.PAPER, ChatColor.GOLD + "Full Message", ChatColor.WHITE + fullMessage, fullMessage.length() > 32);
-        ItemStack statusItem = createInfoItem((isArchivedGUI ? Material.RED_DYE : Material.LIME_DYE), ChatColor.GOLD + "Status", ChatColor.WHITE + (isArchivedGUI ? "Archived" : "Open"), false);
-        ItemStack timestampItem = createInfoItem(Material.CLOCK, ChatColor.GOLD + "Timestamp", ChatColor.WHITE + timestampToDate, false);
-        ItemStack locationItem = createInfoItem(Material.COMPASS, ChatColor.GOLD + locationTitle, ChatColor.WHITE + location, false);
-        ItemStack gamemodeItem = createInfoItem(Material.DIAMOND_SWORD, ChatColor.GOLD + "Gamemode", ChatColor.WHITE + gamemode, false);
-
-        ItemStack backButton = createButton(Material.BARRIER, ChatColor.RED  + BugReportLanguage.getTitleFromLanguage("back"));
-
-        ItemStack archiveButton = createCustomPlayerHead(
-                "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvY2Y5YjY3YmI5Y2MxYzg4NDg2NzYwYjE3MjY1MDU0MzEyZDY1OWRmMmNjNjc1NTc1MDA0NWJkNzFjZmZiNGU2MCJ9fX0=",
-                ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("archive"),
-                16
-        );
-        ItemStack unarchiveButton = createCustomPlayerHead(
-                "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDVjNTg4YjllYzBhMDhhMzdlMDFhODA5ZWQwOTAzY2MzNGMzZTNmMTc2ZGM5MjIzMDQxN2RhOTNiOTQ4ZjE0OCJ9fX0=",
-                ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("unarchive"),
-                17
-        );
-        ItemStack deleteButton = createCustomPlayerHead(
-                "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmUwZmQxMDE5OWU4ZTRmY2RhYmNhZTRmODVjODU5MTgxMjdhN2M1NTUzYWQyMzVmMDFjNTZkMThiYjk0NzBkMyJ9fX0=",
-                ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("delete"),
-                18
-        );
-
-        for (int i = 0; i < gui.getSize(); i++) {
-            gui.setItem(i, emptyItem);
-        }
-
-        gui.setItem(1, usernameItem);
-        gui.setItem(3, uuidItem);
-        gui.setItem(5, worldItem);
-        gui.setItem(7, messageItem);
-
-        gui.setItem(20, statusItem);
-        gui.setItem(22, timestampItem);
-        gui.setItem(24, locationItem);
-        gui.setItem(26, gamemodeItem);
-
-        gui.setItem(38, !isArchivedGUI ? archiveButton : unarchiveButton);
-        gui.setItem(40, backButton);
-        gui.setItem(42, deleteButton);
-
-        if (!"null".equals(category) && !"".equals(category)) {
-            List<Map<?, ?>> categoryList = config.getMapList("reportCategories");
-
-            Optional<String> categoryNameOptional = categoryList.stream()
-                .filter(categoryMap -> Integer.parseInt(categoryMap.get("id").toString()) == Integer
-                .parseInt(category))
-                .map(categoryMap -> categoryMap.get("name").toString())
-                .findFirst();
-
-            if (categoryNameOptional.isPresent()) {
-                String categoryName = categoryNameOptional.get();
-                ItemStack categoryItem = createInfoItem(Material.CHEST, ChatColor.GOLD + "Category Name", ChatColor.WHITE + categoryName, false);
-                gui.setItem(18, categoryItem);
-            }
-        } else {
-            ItemStack categoryItem = createInfoItem(Material.CHEST, ChatColor.GOLD + "Category Name", ChatColor.WHITE + "None", false);
-            gui.setItem(18, categoryItem);
-        }
-
-        player.openInventory(gui);
-        Bukkit.getPluginManager().registerEvents(new BugReportDetailsListener(gui, reportIDGUI), plugin);
-    }
-
     public static @NotNull String translateTimestampToDate(long timestamp) {
         Date date = new Date(timestamp);
         Calendar calendar = Calendar.getInstance();
@@ -692,7 +576,7 @@ public class BugReportManager implements Listener {
         };
     }
 
-    private record BugReportDetailsListener(Inventory gui, Integer reportIDGUI) implements Listener {
+    public record BugReportDetailsListener(Inventory gui, Integer reportIDGUI) implements Listener {
         @EventHandler(priority = EventPriority.NORMAL)
         public void onInventoryClick(@NotNull InventoryClickEvent event) {
             String title = event.getView().getTitle();
@@ -771,7 +655,7 @@ public class BugReportManager implements Listener {
         }
     }
 
-    private static @NotNull ItemStack createEmptyItem() {
+    public static @NotNull ItemStack createEmptyItem() {
         ItemStack item = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta meta = item.getItemMeta();
         Objects.requireNonNull(meta).setDisplayName(" ");
@@ -780,7 +664,8 @@ public class BugReportManager implements Listener {
         return item;
     }
 
-    private static @NotNull ItemStack createInfoItem(Material material, String name, String value, Boolean @NotNull ... longMessage) {
+    public static @NotNull ItemStack createInfoItem(Material material, String name, String value,
+            Boolean @NotNull... longMessage) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
         Objects.requireNonNull(meta).setDisplayName(name);

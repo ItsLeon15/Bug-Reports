@@ -14,7 +14,7 @@ import static com.leon.bugreport.commands.BugReportCommand.stringColorToColorCod
 
 public class LinkDiscord {
     private static final String EMBED_TITLE = "New Bug Report";
-	private static final String EMBED_FOOTER_TEXT = "Bug Report V0.8.2";
+    private static final String EMBED_FOOTER_TEXT = "Bug Report V0.9.0";
     private static final String EMBED_THUMBNAIL = "https://www.spigotmc.org/data/resource_icons/110/110732.jpg";
     private static final String EMBED_AUTHOR = "true";
     private static final String EMBED_DATE = "true";
@@ -90,7 +90,7 @@ public class LinkDiscord {
 
             connection.setRequestMethod("GET");
             connection.setRequestProperty("Content-Type", "application/json");
-			connection.setRequestProperty("User-Agent", "BugReport/0.8.2");
+            connection.setRequestProperty("User-Agent", "BugReport/0.9.0");
             connection.setConnectTimeout(5000);
             connection.setReadTimeout(5000);
             connection.setDoOutput(true);

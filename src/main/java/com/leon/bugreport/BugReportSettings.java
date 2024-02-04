@@ -31,10 +31,6 @@ public class BugReportSettings {
     public BugReportSettings(BugReportManager reportManager) { }
 
     public static @NotNull Inventory getSettingsGUI() {
-        int secondRow = 9;
-        int thirdRow = 18;
-        int fifthRow = 36;
-
         Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Report - " + BugReportLanguage.getTitleFromLanguage("settings"));
 
         ItemStack setDiscordWebhook = createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGQ0MjMzN2JlMGJkY2EyMTI4MDk3ZjFjNWJiMTEwOWU1YzYzM2MxNzkyNmFmNWZiNmZjMjAwMDAwMTFhZWI1MyJ9fX0=", BugReportLanguage.getTitleFromLanguage("enableDiscordWebhook"), 1);
@@ -61,18 +57,18 @@ public class BugReportSettings {
             }
         }
 
-        gui.setItem(secondRow + 1, setDiscordWebhook);
-        gui.setItem(secondRow + 2, setBugReportNotifications);
-        gui.setItem(secondRow + 3, toggleCategorySelection);
-        gui.setItem(secondRow + 4, maxReportsPerPlayer);
-        gui.setItem(secondRow + 5, setLanguage);
-        gui.setItem(secondRow + 6, otherSettings);
+        gui.setItem(10, setDiscordWebhook);
+        gui.setItem(11, setBugReportNotifications);
+        gui.setItem(12, toggleCategorySelection);
+        gui.setItem(13, maxReportsPerPlayer);
+        gui.setItem(14, setLanguage);
+        gui.setItem(15, otherSettings);
 
-        gui.setItem(thirdRow + 1, getDiscordWebhookToggle() ? onIcon : offIcon);
-        gui.setItem(thirdRow + 2, getBugReportNotificationsToggle() ? onIcon : offIcon);
-        gui.setItem(thirdRow + 3, getCategorySelectionToggle() ? onIcon : offIcon);
+        gui.setItem(19, getDiscordWebhookToggle() ? onIcon : offIcon);
+        gui.setItem(20, getBugReportNotificationsToggle() ? onIcon : offIcon);
+        gui.setItem(21, getCategorySelectionToggle() ? onIcon : offIcon);
 
-        gui.setItem(fifthRow + 4, createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("close")));
+        gui.setItem(40, createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("close")));
 
         return gui;
     }
