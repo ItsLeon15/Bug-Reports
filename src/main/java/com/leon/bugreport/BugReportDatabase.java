@@ -221,7 +221,9 @@ public class BugReportDatabase {
             statement.setString(9, location);
             statement.setString(10, gamemode);
 
-            PlanHook.getInstance().updateHook(playerId, username);
+            if (Bukkit.getPluginManager().isPluginEnabled("Plan")) {
+                PlanHook.getInstance().updateHook(playerId, username);
+            }
 
             statement.executeUpdate();
             statement.close();
@@ -412,7 +414,9 @@ public class BugReportDatabase {
                     "Gamemode: " + gamemode
                 );
 
-                PlanHook.getInstance().updateHook(playerId, username);
+                if (Bukkit.getPluginManager().isPluginEnabled("Plan")) {
+                    PlanHook.getInstance().updateHook(playerId, username);
+                }
 
                 bugReports.put(getStaticUUID(), reports);
             }

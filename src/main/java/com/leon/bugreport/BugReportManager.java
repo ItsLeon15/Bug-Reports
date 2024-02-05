@@ -5,6 +5,7 @@ import com.leon.bugreport.extensions.PlanHook;
 import com.leon.bugreport.listeners.ReportCreatedEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -15,6 +16,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -109,7 +111,7 @@ public class BugReportManager implements Listener {
                 put("enableBugReportNotifications", false);
                 put("discordEmbedTitle", "New Bug Report");
                 put("discordEmbedColor", "Yellow");
-                put("discordEmbedFooter", "Bug Report V0.9.0");
+                put("discordEmbedFooter", "Bug Report V0.9.1");
                 put("discordEmbedThumbnail", "https://www.spigotmc.org/data/resource_icons/110/110732.jpg");
                 put("discordEnableThumbnail", true);
                 put("discordEnableUserAuthor", true);
@@ -207,7 +209,6 @@ public class BugReportManager implements Listener {
             .orElse("0");
 
         String reportIDInt = String.valueOf(Integer.parseInt(reportID) + 1);
-
         String header = "Username: " + playerName + "\n" +
                 "UUID: " + playerUUID + "\n" +
                 "World: " + worldName + "\n" +
@@ -223,7 +224,9 @@ public class BugReportManager implements Listener {
         reports.add(header);
         bugReports.put(playerId, reports);
 
-        PlanHook.getInstance().updateHook(playerId, playerName);
+        if (Bukkit.getPluginManager().isPluginEnabled("Plan")) {
+            PlanHook.getInstance().updateHook(playerId, playerName);
+        }
 
         database.addBugReport(playerName, playerId, worldName, header, message, location, gamemode);
 
@@ -249,8 +252,10 @@ public class BugReportManager implements Listener {
                 plugin.getLogger().warning("Error sending bug report to Discord: " + e.getMessage());
             }
         }
-        ReportCreatedEvent reportEvent = new ReportCreatedEvent(header);
-        Bukkit.getServer().getPluginManager().callEvent(reportEvent);
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            ReportCreatedEvent reportEvent = new ReportCreatedEvent(header);
+            Bukkit.getServer().getPluginManager().callEvent(reportEvent);
+        });
     }
 
     public static @NotNull Inventory generateBugReportGUI(@NotNull Player player, boolean showArchived) {
@@ -644,7 +649,13 @@ public class BugReportManager implements Listener {
                     } else {
                         player.sendMessage(ChatColor.YELLOW + "Teleporting to the location of Bug Report #" + reportIDGUI + "...");
                     }
-                    player.teleport(Objects.requireNonNull(BugReportDatabase.getBugReportLocation(reportIDGUI)));
+
+                    Location teleportLocation = BugReportDatabase.getBugReportLocation(reportIDGUI);
+                    if (teleportLocation != null) {
+                        player.teleport(teleportLocation, PlayerTeleportEvent.TeleportCause.PLUGIN);
+                    } else {
+                        player.sendMessage(ChatColor.RED + "The location of Bug Report #" + reportIDGUI + " is not available.");
+                    }
                 }
                 default -> {
                     return;
