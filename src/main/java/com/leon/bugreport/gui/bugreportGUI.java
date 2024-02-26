@@ -2,6 +2,8 @@ package com.leon.bugreport.gui;
 
 import com.leon.bugreport.BugReportLanguage;
 import com.leon.bugreport.BugReportManager;
+import com.leon.bugreport.BugReportManager.BugReportDetailsListener;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -42,7 +44,7 @@ public class bugreportGUI {
 		put("BugReportWorld", "World");
 		put("BugReportMessage", "Full Message");
 		put("BugReportCategory", "Category ID");
-		put("BugReportStatus", "Status");
+		put("BugReportStatus", "Status (Click to change)");
 		put("BugReportTimestamp", "Timestamp");
 		put("BugReportLocation", "Location " + ChatColor.BOLD + "(Click to teleport)");
 		put("BugReportGamemode", "Gamemode");
@@ -228,7 +230,12 @@ public class bugreportGUI {
 			}
 			case "BugReporter" -> {
 				String username = reportDetails.get("Username");
-				item = getPlayerHead(username);
+
+				if (BugReportManager.config.getBoolean("enablePlayerHeads")) {
+					item = getPlayerHead(username);
+				} else {
+					item = createInfoItem(Material.PLAYER_HEAD, ChatColor.GOLD + "Username", ChatColor.WHITE + username, false);
+				}
 				ItemMeta meta = item.getItemMeta();
 				if (meta != null) {
 					meta.setDisplayName(ChatColor.YELLOW + bugReportItems.getOrDefault(bugReportItemKey, "Unknown Item"));
@@ -246,6 +253,33 @@ public class bugreportGUI {
 		if (isItemSupportsTexture(bugReportItemKey) && textureBase64 != null && !textureBase64.trim().isEmpty()) {
 			item = createCustomPlayerHead(textureBase64, bugReportItems.getOrDefault(bugReportItemKey, "Unknown Item"), 1);
 		} else {
+			ItemStack statusItem = null;
+			String status = reportDetails.get("Status");
+
+			if (status != null) {
+				List<Map<?, ?>> statuses = config.getMapList("statuses");
+				for (Map<?, ?> statusMap : statuses) {
+					if (statusMap.get("id").toString().equals(status)) {
+						String statusName = statusMap.get("name").toString();
+						String statusDescription = statusMap.get("description").toString();
+						ChatColor statusColor = ChatColor.valueOf((String) statusMap.get("color")) != null ?
+								ChatColor.valueOf((String) statusMap.get("color")) :
+								ChatColor.WHITE;
+
+						Material statusIcon = Material.matchMaterial((String) statusMap.get("icon")) != null ?
+								Material.matchMaterial((String) statusMap.get("icon")) :
+								Material.BARRIER;
+
+						statusItem = createInfoItem(statusIcon, statusColor + statusName + " (Click to change)", statusColor + statusDescription, false);
+
+						if (bugReportItemKey.equals("BugReportStatus")) {
+							item = statusItem;
+							return item;
+						}
+					}
+				}
+			}
+
 			item = new ItemStack(defaultMaterial, 1);
 			ItemMeta meta = item.getItemMeta();
 			if (meta != null) {
@@ -275,7 +309,7 @@ public class bugreportGUI {
 			case "BugReportWorld" -> "World";
 			case "BugReportMessage" -> "Full Message";
 			case "BugReportCategory" -> "Category ID";
-			case "BugReportStatus" -> "Status";
+			case "BugReportStatus" -> "Status (Click to change)";
 			case "BugReportTimestamp" -> "Timestamp";
 			case "BugReportLocation" -> "Location";
 			case "BugReportGamemode" -> "Gamemode";
@@ -340,6 +374,7 @@ public class bugreportGUI {
 		ItemStack emptyItem = createEmptyItem();
 		String location = reportData.get("Location");
 		String gamemode = reportData.get("Gamemode");
+		String status = reportData.get("Status");
 		String locationTitle;
 
 		if (location == null || location.equals("null")) {
@@ -357,13 +392,33 @@ public class bugreportGUI {
 			gamemode = "Unknown";
 		}
 
-		ItemStack usernameItem = getPlayerHead(username);
+		ItemStack usernameItem;
+		if (BugReportManager.config.getBoolean("enablePlayerHeads")) {
+			usernameItem = getPlayerHead(username);
+		} else {
+			usernameItem = createInfoItem(Material.PLAYER_HEAD, ChatColor.GOLD + "Username", ChatColor.WHITE + username, false);
+		}
 		String timestampToDate = translateTimestampToDate(Long.parseLong(reportData.get("Timestamp")));
 
 		ItemStack uuidItem = createInfoItem(Material.NAME_TAG, ChatColor.GOLD + "UUID", ChatColor.WHITE + uuid);
 		ItemStack worldItem = createInfoItem(Material.GRASS_BLOCK, ChatColor.GOLD + "World", ChatColor.WHITE + world);
 		ItemStack messageItem = createInfoItem(Material.PAPER, ChatColor.GOLD + "Full Message", ChatColor.WHITE + fullMessage, fullMessage.length() > 32);
-		ItemStack statusItem = createInfoItem((isArchivedGUI ? Material.RED_DYE : Material.LIME_DYE), ChatColor.GOLD + "Status", ChatColor.WHITE + (isArchivedGUI ? "Archived" : "Open"), false);
+		ItemStack statusItem = null;
+
+		if (status != null) {
+			List<Map<?, ?>> statuses = config.getMapList("statuses");
+			for (Map<?, ?> statusMap : statuses) {
+				if (statusMap.get("id").toString().equals(status)) {
+					String statusName = statusMap.get("name").toString();
+					String statusColor = statusMap.get("color").toString();
+					String statusMaterial = statusMap.get("material").toString();
+					statusItem = createInfoItem(Material.valueOf(statusMaterial), statusColor + "Status", ChatColor.WHITE + statusName, false);
+				}
+			}
+		} else {
+			statusItem = createInfoItem((isArchivedGUI ? Material.RED_DYE : Material.LIME_DYE), ChatColor.GOLD + "Status", ChatColor.WHITE + (isArchivedGUI ? "Archived" : "Open"), false);
+		}
+
 		ItemStack timestampItem = createInfoItem(Material.CLOCK, ChatColor.GOLD + "Timestamp", ChatColor.WHITE + timestampToDate, false);
 		ItemStack locationItem = createInfoItem(Material.COMPASS, ChatColor.GOLD + locationTitle, ChatColor.WHITE + location, false);
 		ItemStack gamemodeItem = createInfoItem(Material.DIAMOND_SWORD, ChatColor.GOLD + "Gamemode", ChatColor.WHITE + gamemode, false);

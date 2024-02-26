@@ -11,7 +11,7 @@ enableBugReportNotifications: true
 # Gold, Gray, Green, Light_Purple, Red, White, Yellow
 discordEmbedColor: Green
 discordEmbedTitle: New Bug Report
-discordEmbedFooter: Bug Report v0.9.1
+discordEmbedFooter: Bug Report v0.10.0
 discordEmbedThumbnail: https://www.spigotmc.org/data/resource_icons/110/110732.jpg
 discordEnableThumbnail: true
 discordEnableUserAuthor: true
@@ -65,3 +65,25 @@ reportCategories:
     description: Report something else
     item: minecraft:paper
     color: yellow
+
+statuses:
+  - name: Open
+    description: Report is open
+    icon: minecraft:green_dye
+    color: GREEN
+    id: 1
+  - name: Archived
+    description: Report is archived
+    icon: minecraft:red_dye
+    color: RED
+    id: 2
+  - name: Pending
+    description: Report is pending
+    icon: minecraft:yellow_dye
+    color: YELLOW
+    id: 3
+  - name: Ignored
+    description: Report is ignored
+    icon: minecraft:white_dye
+    color: WHITE
+    id: 4

@@ -38,12 +38,13 @@ public class BugReportLanguage {
 
     public static String getEnglishVersionFromLanguage(String displayName) {
 		String[] englishTitles = {
-				"Back", "Forward", "Page %currentPage% of %totalPages%", "Settings", "Close", "Page",
-				"Enable Discord Webhook", "Enable Bug Report Notifications", "Enable Category Selection",
-				"Set Max Reports Per Player", "Set Language",
-				"On", "Off", "Language",
-				"Cancelled", "Cancel", "Archive", "Unarchive", "Delete", "Other Settings",
-				"Enable Title Message", "Enable Player Heads"
+				"Back", "Forward", "Page %currentPage% of %totalPages%", "Settings",
+				"Close", "Page", "Enable Discord Webhook", "Enable Bug Report Notifications",
+				"Enable Category Selection", "Set Max Reports Per Player", "Set Language", "On",
+				"Off", "Language", "Cancelled", "Cancel", "Archive", "Unarchive", "Delete", "Other Settings",
+				"Enable Title Message", "Enable Player Heads", "View Status", "Edit Status",
+				"Add Status", "Rename Status", "Remove Status", "Status Name",
+				"Status Material", "Status Color", "Status Description"
 		};
 
 		for (String lang : languageTexts.keySet()) {

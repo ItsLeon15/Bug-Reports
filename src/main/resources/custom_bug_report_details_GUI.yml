@@ -14,6 +14,8 @@
 # BugReportCategory, BugReportTimestamp, BugReportLocation
 # BugReportGamemode, BugReportArchive, BugReportDelete
 
+# BugReportStatus will be terminated if a custom status is provided.
+
 bug_report_details_GUI:
   guiSize: 45 # The GUI size can be between 9 and 54 but has to be a multiple of 9.
   items:

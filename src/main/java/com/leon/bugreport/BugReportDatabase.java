@@ -9,14 +9,12 @@ import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.io.File;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-
 import static com.leon.bugreport.BugReportManager.*;
 
 public class BugReportDatabase {
@@ -116,7 +114,7 @@ public class BugReportDatabase {
         return null;
     }
 
-    private void addColumnIfNotExists(String tableName, String columnName, String columnDefinition) {
+    private static void addColumnIfNotExists(String tableName, String columnName, String columnDefinition) {
         try (Connection connection = dataSource.getConnection()) {
             try (ResultSet resultSet = connection.getMetaData().getColumns(null, null, tableName, columnName)) {
                 if (!resultSet.next()) {
@@ -204,7 +202,7 @@ public class BugReportDatabase {
 
     public void addBugReport(String username, @NotNull UUID playerId, String world, String header, String fullMessage, String location, String gamemode) {
         try (Connection connection = dataSource.getConnection()) {
-            PreparedStatement statement = connection.prepareStatement("INSERT INTO bug_reports(player_id, header, message, username, world, archived, report_id, timestamp, location, gamemode) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            PreparedStatement statement = connection.prepareStatement("INSERT INTO bug_reports(player_id, header, message, username, world, archived, report_id, timestamp, location, gamemode, status) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             int report_id = 1;
             ResultSet resultSet = connection.createStatement().executeQuery("SELECT report_id FROM bug_reports ORDER BY report_id DESC LIMIT 1");
             if (resultSet.next()) {
@@ -220,6 +218,7 @@ public class BugReportDatabase {
             statement.setLong(8, System.currentTimeMillis());
             statement.setString(9, location);
             statement.setString(10, gamemode);
+            statement.setString(11, "0");
 
             if (Bukkit.getPluginManager().isPluginEnabled("Plan")) {
                 PlanHook.getInstance().updateHook(playerId, username);
@@ -399,6 +398,7 @@ public class BugReportDatabase {
                 long timestamp = resultSet.getLong("timestamp");
                 String location = resultSet.getString("location");
                 String gamemode = resultSet.getString("gamemode");
+                String status = resultSet.getString("status");
 
                 List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
                 reports.add(
@@ -411,7 +411,8 @@ public class BugReportDatabase {
                     "Report ID: " + report_id + "\n" +
                     "Timestamp: " + timestamp + "\n" +
                     "Location: " + location + "\n" +
-                    "Gamemode: " + gamemode
+                    "Gamemode: " + gamemode + "\n" +
+                    "Status: " + status
                 );
 
                 if (Bukkit.getPluginManager().isPluginEnabled("Plan")) {
@@ -448,12 +449,12 @@ public class BugReportDatabase {
             hikariConfig.setUsername(username);
             hikariConfig.setPassword(password);
             dataSource = new HikariDataSource(hikariConfig);
+            plugin.getLogger().info("Connected to remote database");
         } catch (Exception e) {
             plugin.getLogger().severe("Failed to connect to remote database.");
             plugin.getLogger().severe(e.getMessage());
         }
 
-        plugin.getLogger().info("Connected to remote database");
         createTables();
     }
 
@@ -463,21 +464,56 @@ public class BugReportDatabase {
             HikariConfig hikariConfig = new HikariConfig();
             hikariConfig.setJdbcUrl("jdbc:sqlite:" + databaseFile.getAbsolutePath());
             dataSource = new HikariDataSource(hikariConfig);
+            plugin.getLogger().info("Connected to local database");
         } catch (Exception e) {
             plugin.getLogger().severe("Failed to connect to local database.");
             plugin.getLogger().severe(e.getMessage());
         }
 
-        plugin.getLogger().info("Connected to local database");
         createTables();
     }
 
     private static void createTables() {
         try (Connection connection = dataSource.getConnection()) {
-            connection.createStatement().execute("CREATE TABLE IF NOT EXISTS bug_reports(rowid INTEGER, player_id TEXT, header TEXT, message TEXT, username TEXT, world TEXT, archived INTEGER DEFAULT 0, report_id INTEGER, timestamp BIGINT)");
+            connection.createStatement().execute("CREATE TABLE IF NOT EXISTS bug_reports(rowid INTEGER, player_id TEXT, header TEXT, message TEXT, username TEXT, world TEXT, archived INTEGER DEFAULT 0, report_id INTEGER, timestamp BIGINT, status TEXT)");
             connection.createStatement().execute("CREATE TABLE IF NOT EXISTS player_data(player_id TEXT, last_login_timestamp BIGINT DEFAULT 0)");
+
+            connection.createStatement().execute("ALTER TABLE bug_reports ADD COLUMN status TEXT");
         } catch (Exception e) {
             plugin.getLogger().severe("Failed to create tables.");
+            plugin.getLogger().severe(e.getMessage());
+        }
+    }
+
+    public static void updateReportStatus(int reportIDGUI, int statusID) {
+        try (Connection connection = dataSource.getConnection()) {
+            try (PreparedStatement statement = connection.prepareStatement("UPDATE bug_reports SET status = ? WHERE report_id = ?")) {
+                statement.setInt(1, statusID);
+                statement.setInt(2, reportIDGUI);
+                statement.executeUpdate();
+            }
+
+            List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
+
+            String existingHeader = reports.stream()
+                    .filter(reportString -> reportString.contains("Report ID: " + reportIDGUI))
+                    .findFirst()
+                    .orElse(null);
+            int existingHeaderPosition = reports.indexOf(existingHeader);
+            String[] lines = existingHeader != null ? existingHeader.split("\n") : new String[0];
+            StringBuilder newHeader = new StringBuilder();
+            for (String line : lines) {
+                if (line.startsWith("Status:")) {
+                    newHeader.append("Status: ").append(statusID);
+                } else {
+                    newHeader.append(line);
+                }
+                newHeader.append("\n");
+            }
+            reports.set(existingHeaderPosition, newHeader.toString().trim());
+            bugReports.put(getStaticUUID(), reports);
+        } catch (Exception e) {
+            plugin.getLogger().severe("Failed to update bug report status.");
             plugin.getLogger().severe(e.getMessage());
         }
     }

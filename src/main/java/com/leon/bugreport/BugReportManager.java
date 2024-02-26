@@ -21,6 +21,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -111,7 +112,7 @@ public class BugReportManager implements Listener {
                 put("enableBugReportNotifications", false);
                 put("discordEmbedTitle", "New Bug Report");
                 put("discordEmbedColor", "Yellow");
-                put("discordEmbedFooter", "Bug Report V0.9.1");
+                put("discordEmbedFooter", "Bug Report V0.10.0");
                 put("discordEmbedThumbnail", "https://www.spigotmc.org/data/resource_icons/110/110732.jpg");
                 put("discordEnableThumbnail", true);
                 put("discordEnableUserAuthor", true);
@@ -305,7 +306,14 @@ public class BugReportManager implements Listener {
             String firstLine = report.split("\n")[0];
 
             String username = firstLine.split(": ")[1];
-            ItemStack playerHead = getPlayerHead(username);
+
+            ItemStack playerHead;
+            if (BugReportManager.config.getBoolean("enablePlayerHeads")) {
+                playerHead = getPlayerHead(username);
+            } else {
+                playerHead = createInfoItem(Material.ENCHANTED_BOOK, ChatColor.GOLD + "Username",
+                        ChatColor.WHITE + username, false);
+            }
 
             ItemStack reportItem = new ItemStack(playerHead);
 
@@ -516,7 +524,8 @@ public class BugReportManager implements Listener {
     }
 
     public static int getCurrentPage(@NotNull Player player) {
-        return player.getMetadata("currentPage").get(0).asInt();
+        List<MetadataValue> metadata = player.getMetadata("currentPage");
+        return !metadata.isEmpty() ? metadata.get(0).asInt() : 0;
     }
 
     public static int getTotalPages() {
@@ -611,27 +620,31 @@ public class BugReportManager implements Listener {
 
             String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(itemMeta.getDisplayName());
 
+            if (customDisplayName.contains("(Click to change)")) {
+                player.openInventory(BugReportSettings.getStatusSelectionGUI(reportIDGUI));
+            }
+
             switch (customDisplayName) {
                 case "Back" -> player .openInventory(isArchivedDetails ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
                 case "Unarchive" -> {
                     BugReportDatabase.updateBugReportArchive(reportIDGUI, 0);
 
                     player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
-                    player.sendMessage(ChatColor.YELLOW + "Bug Report #" + reportIDGUI + " has been unarchived.");
+                    player.sendMessage(
+                            pluginColor + pluginTitle + " Bug Report #" + reportIDGUI + " has been unarchived.");
 
                     HandlerList.unregisterAll(this);
                 }
                 case "Archive" -> {
-                    // TODO: Something is causing both Archive and Delete to be called twice and delete the incorrect ID!
                     BugReportDatabase.updateBugReportArchive(reportIDGUI, 1);
 
                     player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
-                    player.sendMessage(ChatColor.YELLOW + "Bug Report #" + reportIDGUI + " has been archived.");
+                    player.sendMessage(
+                            pluginColor + pluginTitle + " Bug Report #" + reportIDGUI + " has been archived.");
 
                     HandlerList.unregisterAll(this);
                 }
                 case "Delete" -> {
-                    // TODO: Something is causing both Archive and Delete to be called twice and delete the incorrect ID!
                     BugReportDatabase.deleteBugReport(reportIDGUI);
 
                     List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
@@ -645,7 +658,9 @@ public class BugReportManager implements Listener {
                 }
                 case "Location (Click to teleport)" -> {
                     if (checkForKey("useTitleInsteadOfMessage", true)) {
-                        player.sendTitle (pluginColor + pluginTitle, ChatColor.GREEN + "Teleporting to the location of Bug Report #" + reportIDGUI + "...", 10, 70, 20);
+                        player.sendTitle(pluginColor + pluginTitle,
+                                ChatColor.GREEN + " Teleporting to the location of Bug Report #" + reportIDGUI + "...",
+                                10, 70, 20);
                     } else {
                         player.sendMessage(ChatColor.YELLOW + "Teleporting to the location of Bug Report #" + reportIDGUI + "...");
                     }
