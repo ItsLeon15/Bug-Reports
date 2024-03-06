@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.leon.bugreport</groupId>
     <artifactId>BugReports</artifactId>
-    <version>0.10.0</version>
+    <version>0.10.1</version>
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
@@ -38,13 +38,13 @@
         <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
-            <version>24.0.1</version>
+            <version>24.1.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
-            <version>5.0.1</version>
+            <version>5.1.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -102,6 +102,35 @@
                         <goals>
                             <goal>shade</goal>
                         </goals>
+                        <configuration>
+                            <minimizeJar>true</minimizeJar>
+                            <filters>
+                                <filter>
+                                    <excludeDefaults>false</excludeDefaults>
+                                    <artifact>*:*</artifact>
+                                    <includes>
+                                        <include>org/glassfish/json/JsonProviderImpl</include>
+                                        <include>com/sun/xml/bind/v2/model/nav/ReflectionNavigator</include>
+                                    </includes>
+                                    <excludes>
+                                        <exclude>**/*.md</exclude>
+                                        <exclude>**/*.markdown</exclude>
+                                        <exclude>**/*.header</exclude>
+                                        <exclude>**/*.xml</exclude>
+                                        <exclude>**/pom.properties</exclude>
+                                        <exclude>**/io.netty.versions.properties</exclude>
+                                        <exclude>**/*.args</exclude>
+                                        <exclude>**/*.so</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>HelloWorldBootstrap</mainClass>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                            </transformers>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

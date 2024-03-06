@@ -27,6 +27,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.io.Serial;
 import java.util.*;
 
 import static com.leon.bugreport.API.DataSource.getPlayerHead;
@@ -37,6 +38,7 @@ import static com.leon.bugreport.gui.bugreportGUI.openBugReportDetailsGUI;
 
 public class BugReportManager implements Listener {
     public static Map<UUID, List<String>> bugReports;
+    public static boolean debugMode;
     private static BugReportDatabase database;
     public static Plugin plugin;
 
@@ -51,6 +53,14 @@ public class BugReportManager implements Listener {
 
     public static String pluginTitle;
     public static ChatColor pluginColor;
+
+    public static void setDebugMode(int debugMode) {
+        if (debugMode == 1) {
+            BugReportManager.debugMode = true;
+        } else if (debugMode == 0) {
+            BugReportManager.debugMode = false;
+        }
+    }
 
     public BugReportManager(Plugin plugin) throws Exception {
         BugReportManager.plugin = plugin;
@@ -105,14 +115,17 @@ public class BugReportManager implements Listener {
 
     public static void checkConfig() {
         Map<String, ?> newValues = new HashMap<>() {
+            @Serial
+            private static final long serialVersionUID = -2578293471267967277L;
             {
                 put("webhookURL", "https://discord.com/api/webhooks/");
                 put("enableDiscordWebhook", true);
                 put("enablePluginReportCategories", false);
+                put("enablePluginReportBook", false);
                 put("enableBugReportNotifications", false);
                 put("discordEmbedTitle", "New Bug Report");
                 put("discordEmbedColor", "Yellow");
-                put("discordEmbedFooter", "Bug Report V0.10.0");
+                put("discordEmbedFooter", "Bug Report V0.10.1");
                 put("discordEmbedThumbnail", "https://www.spigotmc.org/data/resource_icons/110/110732.jpg");
                 put("discordEnableThumbnail", true);
                 put("discordEnableUserAuthor", true);
@@ -176,6 +189,7 @@ public class BugReportManager implements Listener {
     }
 
     public static void saveConfig() {
+        if (BugReportManager.debugMode) plugin.getLogger().info("Saving config.yml...");
         try {
             config.save(configFile);
         } catch (Exception e) {
@@ -184,14 +198,16 @@ public class BugReportManager implements Listener {
     }
 
     public void setWebhookURL(String webhookURL) {
+        if (BugReportManager.debugMode) plugin.getLogger().info("Setting Discord Webhook URL to " + webhookURL);
         config.set("webhookURL", webhookURL);
         saveConfig();
         discord.setWebhookURL(webhookURL);
     }
 
     public void submitBugReport(@NotNull Player player, String message, Integer categoryId) {
-        UUID playerId = player.getUniqueId();
+        if (BugReportManager.debugMode) plugin.getLogger().info("Submitting bug report for " + player.getName() + "...");
         List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
+        UUID playerId = player.getUniqueId();
         String playerName = player.getName();
         String playerUUID = playerId.toString();
         String worldName = player.getWorld().getName();
@@ -211,27 +227,30 @@ public class BugReportManager implements Listener {
 
         String reportIDInt = String.valueOf(Integer.parseInt(reportID) + 1);
         String header = "Username: " + playerName + "\n" +
-                "UUID: " + playerUUID + "\n" +
-                "World: " + worldName + "\n" +
-                "hasBeenRead: 0" + "\n" +
-                "Category ID: " + categoryId + "\n" +
-                "Full Message: " + message + "\n" +
-                "Archived: 0" + "\n" +
-                "Report ID: " + reportIDInt + "\n" +
-                "Timestamp: " + System.currentTimeMillis() + "\n" +
-                "Location: " + location + "\n" +
-                "Gamemode: " + gamemode;
+            "UUID: " + playerUUID + "\n" +
+            "World: " + worldName + "\n" +
+            "hasBeenRead: 0" + "\n" +
+            "Category ID: " + categoryId + "\n" +
+            "Full Message: " + message + "\n" +
+            "Archived: 0" + "\n" +
+            "Report ID: " + reportIDInt + "\n" +
+            "Timestamp: " + System.currentTimeMillis() + "\n" +
+            "Location: " + location + "\n" +
+            "Gamemode: " + gamemode;
 
         reports.add(header);
         bugReports.put(playerId, reports);
 
         if (Bukkit.getPluginManager().isPluginEnabled("Plan")) {
+            if (BugReportManager.debugMode) plugin.getLogger().info("Updating Plan hook for " + playerName + "...");
             PlanHook.getInstance().updateHook(playerId, playerName);
         }
 
+        if (BugReportManager.debugMode) plugin.getLogger().info("Adding bug report to database...");
         database.addBugReport(playerName, playerId, worldName, header, message, location, gamemode);
 
         if (config.getBoolean("enableBugReportNotifications", true)) {
+            if (BugReportManager.debugMode) plugin.getLogger().info("Sending bug report notification to online players...");
             String defaultMessage = pluginColor + pluginTitle + " " + ChatColor.GRAY + DefaultLanguageSelector.getTextElseDefault(language, "bugReportNotificationMessage").replace("%player%", ChatColor.AQUA + playerName + ChatColor.GRAY);
 
             for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
@@ -242,6 +261,7 @@ public class BugReportManager implements Listener {
         }
 
         if (config.getBoolean("enableDiscordWebhook", true)) {
+            if (BugReportManager.debugMode) plugin.getLogger().info("Sending bug report to Discord...");
             String webhookURL = config.getString("webhookURL", "");
             if (webhookURL.isEmpty()) {
                 plugin.getLogger().warning(DefaultLanguageSelector.getTextElseDefault(language, "missingDiscordWebhookURLMessage"));
@@ -249,6 +269,7 @@ public class BugReportManager implements Listener {
 
             try {
                 discord.sendBugReport(message, worldName, playerName, location, gamemode);
+                if (BugReportManager.debugMode) plugin.getLogger().info("Bug report sent to Discord.");
             } catch (Exception e) {
                 plugin.getLogger().warning("Error sending bug report to Discord: " + e.getMessage());
             }
@@ -290,11 +311,12 @@ public class BugReportManager implements Listener {
         int currentPage = Math.max(1, Math.min(getCurrentPage(player), totalPages));
 
         Inventory gui = Bukkit.createInventory(
-                null,
-                45,
-                ChatColor.YELLOW + (showArchived ? "Archived Bugs" : "Bug Report") + " - " + Objects.requireNonNull(BugReportLanguage.getTitleFromLanguage("pageInfo"))
-                    .replace("%currentPage%", String.valueOf(currentPage))
-                    .replace("%totalPages%", String.valueOf(totalPages)));
+            null,
+            45,
+            ChatColor.YELLOW + (showArchived ? "Archived Bugs" : "Bug Report") + " - " + Objects.requireNonNull(BugReportLanguage.getTitleFromLanguage("pageInfo"))
+                .replace("%currentPage%", String.valueOf(currentPage))
+                .replace("%totalPages%", String.valueOf(totalPages))
+        );
 
         int startIndex = (currentPage - 1) * itemsPerPage;
         int endIndex = Math.min(startIndex + itemsPerPage, filteredReports.size());
@@ -311,8 +333,7 @@ public class BugReportManager implements Listener {
             if (BugReportManager.config.getBoolean("enablePlayerHeads")) {
                 playerHead = getPlayerHead(username);
             } else {
-                playerHead = createInfoItem(Material.ENCHANTED_BOOK, ChatColor.GOLD + "Username",
-                        ChatColor.WHITE + username, false);
+                playerHead = createInfoItem(Material.ENCHANTED_BOOK, ChatColor.GOLD + "Username", ChatColor.WHITE + username, false);
             }
 
             ItemStack reportItem = new ItemStack(playerHead);
@@ -351,7 +372,7 @@ public class BugReportManager implements Listener {
         return gui;
     }
 
-    private static String getReportID(String report) {
+    private static String getReportID(@NotNull String report) {
         String[] reportLines = report.split("\n");
 
         Map<String, String> reportData = new HashMap<>();
@@ -438,6 +459,8 @@ public class BugReportManager implements Listener {
         public void onInventoryClick(@NotNull InventoryClickEvent event) {
             String TitleText = ChatColor.stripColor(event.getView().getTitle());
 
+            if (BugReportManager.debugMode) plugin.getLogger().info("Clicked inventory: " + TitleText);
+
             boolean isArchivedGUI = TitleText.startsWith("Archived Bugs");
 
             if (!TitleText.startsWith("Bug Report") && !isArchivedGUI) {
@@ -464,6 +487,8 @@ public class BugReportManager implements Listener {
 
             String displayName = itemMeta.getDisplayName();
             String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(displayName);
+
+            if (BugReportManager.debugMode) plugin.getLogger().info("Clicked item: " + customDisplayName);
 
             switch (customDisplayName) {
                 case "Back" -> {
@@ -494,10 +519,12 @@ public class BugReportManager implements Listener {
                     .findFirst()
                     .orElse(null);
 
+                if (BugReportManager.debugMode) plugin.getLogger().info("Opening bug report details GUI for report ID " + reportID);
                 openBugReportDetailsGUI(player, report, reportID, isArchivedGUI);
             }
 
             if (customDisplayName.equals("Settings")) {
+                if (BugReportManager.debugMode) plugin.getLogger().info("Opening settings GUI...");
                 player.openInventory(getSettingsGUI());
             }
 
@@ -534,6 +561,7 @@ public class BugReportManager implements Listener {
     }
 
     public static void setCurrentPage(@NotNull Player player, int page) {
+        if (BugReportManager.debugMode) plugin.getLogger().info("Setting current page to " + page + " for " + player.getName());
         player.setMetadata("currentPage", new FixedMetadataValue (plugin, page));
     }
 
@@ -624,10 +652,14 @@ public class BugReportManager implements Listener {
                 player.openInventory(BugReportSettings.getStatusSelectionGUI(reportIDGUI));
             }
 
+            if (BugReportManager.debugMode) plugin.getLogger().info("Clicked item: " + customDisplayName);
+
             switch (customDisplayName) {
-                case "Back" -> player .openInventory(isArchivedDetails ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
+                case "Back" -> player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
                 case "Unarchive" -> {
                     BugReportDatabase.updateBugReportArchive(reportIDGUI, 0);
+
+                    if (BugReportManager.debugMode) plugin.getLogger().info("Unarchiving bug report #" + reportIDGUI + "...");
 
                     player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
                     player.sendMessage(
@@ -638,6 +670,8 @@ public class BugReportManager implements Listener {
                 case "Archive" -> {
                     BugReportDatabase.updateBugReportArchive(reportIDGUI, 1);
 
+                    if (BugReportManager.debugMode) plugin.getLogger().info("Archiving bug report #" + reportIDGUI + "...");
+
                     player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
                     player.sendMessage(
                             pluginColor + pluginTitle + " Bug Report #" + reportIDGUI + " has been archived.");
@@ -646,6 +680,8 @@ public class BugReportManager implements Listener {
                 }
                 case "Delete" -> {
                     BugReportDatabase.deleteBugReport(reportIDGUI);
+
+                    if (BugReportManager.debugMode) plugin.getLogger().info("Deleting bug report #" + reportIDGUI + "...");
 
                     List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
                     reports.removeIf(report -> report.contains("Report ID: " + reportIDGUI));
@@ -657,6 +693,7 @@ public class BugReportManager implements Listener {
                     HandlerList.unregisterAll(this);
                 }
                 case "Location (Click to teleport)" -> {
+                    if (BugReportManager.debugMode) plugin.getLogger().info("Teleporting to the location of bug report #" + reportIDGUI + "...");
                     if (checkForKey("useTitleInsteadOfMessage", true)) {
                         player.sendTitle(pluginColor + pluginTitle,
                                 ChatColor.GREEN + " Teleporting to the location of Bug Report #" + reportIDGUI + "...",
@@ -670,6 +707,7 @@ public class BugReportManager implements Listener {
                         player.teleport(teleportLocation, PlayerTeleportEvent.TeleportCause.PLUGIN);
                     } else {
                         player.sendMessage(ChatColor.RED + "The location of Bug Report #" + reportIDGUI + " is not available.");
+                        player.closeInventory();
                     }
                 }
                 default -> {
@@ -690,8 +728,7 @@ public class BugReportManager implements Listener {
         return item;
     }
 
-    public static @NotNull ItemStack createInfoItem(Material material, String name, String value,
-            Boolean @NotNull... longMessage) {
+    public static @NotNull ItemStack createInfoItem(Material material, String name, String value, Boolean @NotNull... longMessage) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
         Objects.requireNonNull(meta).setDisplayName(name);

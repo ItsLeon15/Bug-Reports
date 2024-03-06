@@ -2,8 +2,6 @@ package com.leon.bugreport.gui;
 
 import com.leon.bugreport.BugReportLanguage;
 import com.leon.bugreport.BugReportManager;
-import com.leon.bugreport.BugReportManager.BugReportDetailsListener;
-
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -17,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.io.Serial;
 import java.util.*;
 
 import static com.leon.bugreport.API.DataSource.getPlayerHead;
@@ -38,22 +37,25 @@ public class bugreportGUI {
 		bugReportItems.put("BugReportDelete", BugReportLanguage.getTitleFromLanguage("delete"));
 	}
 
-	private static final Map<String, String> bugReportItems = new HashMap<>() {{
-		put("BugReporter", "Username");
-		put("BugReportUUID", "UUID");
-		put("BugReportWorld", "World");
-		put("BugReportMessage", "Full Message");
-		put("BugReportCategory", "Category ID");
-		put("BugReportStatus", "Status (Click to change)");
-		put("BugReportTimestamp", "Timestamp");
-		put("BugReportLocation", "Location " + ChatColor.BOLD + "(Click to teleport)");
-		put("BugReportGamemode", "Gamemode");
-		put("BugReportUnArchive", BugReportLanguage.getTitleFromLanguage("unarchive"));
-		put("BugReportArchive", BugReportLanguage.getTitleFromLanguage("archive"));
-		put("BugReportBack", BugReportLanguage.getTitleFromLanguage("back"));
-		put("BugReportDelete", BugReportLanguage.getTitleFromLanguage("delete"));
-	}};
-
+	private static final Map<String, String> bugReportItems = new HashMap<>() {
+		@Serial
+		private static final long serialVersionUID = 2870322851221649721L;
+		{
+			put("BugReporter", "Username");
+			put("BugReportUUID", "UUID");
+			put("BugReportWorld", "World");
+			put("BugReportMessage", "Full Message");
+			put("BugReportCategory", "Category ID");
+			put("BugReportStatus", "Status (Click to change)");
+			put("BugReportTimestamp", "Timestamp");
+			put("BugReportLocation", "Location " + ChatColor.BOLD + "(Click to teleport)");
+			put("BugReportGamemode", "Gamemode");
+			put("BugReportUnArchive", BugReportLanguage.getTitleFromLanguage("unarchive"));
+			put("BugReportArchive", BugReportLanguage.getTitleFromLanguage("archive"));
+			put("BugReportBack", BugReportLanguage.getTitleFromLanguage("back"));
+			put("BugReportDelete", BugReportLanguage.getTitleFromLanguage("delete"));
+		}
+	};
 
 	private static @Nullable YamlConfiguration loadGUIConfig() {
 		File configFile = new File(plugin.getDataFolder(), "custom_bug_report_details_GUI.yml");
@@ -137,7 +139,7 @@ public class bugreportGUI {
 
 					Map<String, String> reportDetails = parseReportDetails(report);
 
-					ItemStack itemStack = createItemForReportDetail(bugReportItem, material, texture, reportDetails, reportIDGUI, isArchivedGUI);
+					ItemStack itemStack = createItemForReportDetail(bugReportItem, material, texture, reportDetails, isArchivedGUI);
 					gui.setItem(slot, itemStack);
 				} catch (IllegalArgumentException e) {
 					Bukkit.getLogger().warning("Error parsing material or slot number: " + e.getMessage());
@@ -206,7 +208,6 @@ public class bugreportGUI {
 			Material defaultMaterial,
 			@Nullable String textureBase64,
 			@NotNull Map<String, String> reportDetails,
-			Integer reportIDGUI,
 			Boolean isArchivedGUI
 	) {
 		String reportDetailKey = deriveReportDetailKey(bugReportItemKey);
@@ -253,7 +254,7 @@ public class bugreportGUI {
 		if (isItemSupportsTexture(bugReportItemKey) && textureBase64 != null && !textureBase64.trim().isEmpty()) {
 			item = createCustomPlayerHead(textureBase64, bugReportItems.getOrDefault(bugReportItemKey, "Unknown Item"), 1);
 		} else {
-			ItemStack statusItem = null;
+			ItemStack statusItem;
 			String status = reportDetails.get("Status");
 
 			if (status != null) {

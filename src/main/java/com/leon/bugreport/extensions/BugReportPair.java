@@ -1,5 +1,8 @@
 package com.leon.bugreport.extensions;
 
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+
 public class BugReportPair<L, R> {
 	private final L first;
 	private final R second;
@@ -17,7 +20,8 @@ public class BugReportPair<L, R> {
 		return second;
 	}
 
-	public static <L, R> BugReportPair<L, R> of(L first, R second) {
+	@Contract(value = "_, _ -> new", pure = true)
+	public static <L, R> @NotNull BugReportPair<L, R> of(L first, R second) {
 		return new BugReportPair<>(first, second);
 	}
 }

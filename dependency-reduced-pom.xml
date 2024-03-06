@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.leon.bugreport</groupId>
   <artifactId>BugReports</artifactId>
-    <version>0.10.0</version>
+  <version>0.10.1</version>
   <build>
     <plugins>
       <plugin>
@@ -15,6 +15,35 @@
             <goals>
               <goal>shade</goal>
             </goals>
+            <configuration>
+              <minimizeJar>true</minimizeJar>
+              <filters>
+                <filter>
+                  <excludeDefaults>false</excludeDefaults>
+                  <artifact>*:*</artifact>
+                  <includes>
+                    <include>org/glassfish/json/JsonProviderImpl</include>
+                    <include>com/sun/xml/bind/v2/model/nav/ReflectionNavigator</include>
+                  </includes>
+                  <excludes>
+                    <exclude>**/*.md</exclude>
+                    <exclude>**/*.markdown</exclude>
+                    <exclude>**/*.header</exclude>
+                    <exclude>**/*.xml</exclude>
+                    <exclude>**/pom.properties</exclude>
+                    <exclude>**/io.netty.versions.properties</exclude>
+                    <exclude>**/*.args</exclude>
+                    <exclude>**/*.so</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+              <transformers>
+                <transformer>
+                  <mainClass>HelloWorldBootstrap</mainClass>
+                </transformer>
+                <transformer />
+              </transformers>
+            </configuration>
           </execution>
         </executions>
         <configuration>

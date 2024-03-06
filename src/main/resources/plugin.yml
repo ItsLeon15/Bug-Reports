@@ -1,22 +1,28 @@
 name: BugReport
-version: 0.10.0
+version: 0.10.1
 main: com.leon.bugreport.BugReportPlugin
 api-version: 1.13
 author: ItsLeon15
 softdepend: [PlaceholderAPI, Plan]
 
+permissions:
+  bugreport.admin:
+    description: Allows the player to manage bug reports
+    default: op
+  bugreport.notify:
+    description: Receive notifications for bug reports
+    default: op
+
 commands:
   bugreport:
     aliases:
       - br
-      - report
     description: Submit a bug report
     usage: /bugreport <message>
     executor: com.leon.bugreport.BugReportCommand
   buglist:
     aliases:
       - bl
-      - reports
     description: View bug reports
     usage: /buglist
     executor: com.leon.bugreport.BugListCommand

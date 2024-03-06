@@ -15,9 +15,12 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerEditBookEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -36,10 +39,77 @@ public class BugReportCommand implements CommandExecutor, Listener {
         this.categorySelectionMap = new HashMap<>();
     }
 
+    @EventHandler
+    public void onBookEdit(@NotNull PlayerEditBookEvent event) {
+        Player player = event.getPlayer();
+        BookMeta bookMeta = event.getNewBookMeta();
+        boolean isSigning = event.isSigning();
+
+        if (isSigning) {
+            if (!bookMeta.hasCustomModelData() || bookMeta.getCustomModelData() != 1889234213) {
+                return;
+            }
+            List<String> pages = bookMeta.getPages();
+            String content = String.join(" ", pages);
+            reportManager.submitBugReport(player, content, null);
+            player.sendMessage(pluginColor + pluginTitle + " " + GREEN + DefaultLanguageSelector.getTextElseDefault(language, "bugReportConfirmationMessage"));
+
+			new BukkitRunnable() {
+                @Override
+                public void run() {
+                    boolean foundAndRemoved = false;
+                    ItemStack[] contents = player.getInventory().getContents();
+                    for (ItemStack item : contents) {
+                        if (item != null && item.hasItemMeta() && item.getItemMeta() instanceof BookMeta meta) {
+                            if (meta.hasCustomModelData() && meta.getCustomModelData() == 1889234213 &&
+                                    (item.getType() == Material.WRITTEN_BOOK || item.getType() == Material.WRITABLE_BOOK)) {
+                                player.getInventory().remove(item);
+                                player.updateInventory();
+                                foundAndRemoved = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!foundAndRemoved) {
+                        plugin.getLogger().warning("Logging: Failed to find and remove book for player " + player.getName());
+                    } else {
+                        plugin.getLogger().info("Logging: Removed book for player " + player.getName());
+                    }
+                }
+            }.runTaskLater(plugin, 1L);
+		}
+    }
+
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage("This command can only be run by a player.");
+            return true;
+        }
+
+        if (config.getBoolean("enablePluginReportBook", true)) {
+            ItemStack bugReportBook = new ItemStack(Material.WRITABLE_BOOK);
+            BookMeta meta = (BookMeta) bugReportBook.getItemMeta();
+            if (meta != null) {
+                meta.setCustomModelData(1889234213);
+                meta.setDisplayName(ChatColor.YELLOW + "Bug Report");
+                meta.setTitle("Bug Report");
+                meta.setAuthor(player.getName());
+                meta.addPage("Write your bug report here...");
+                bugReportBook.setItemMeta(meta);
+            }
+
+            if (player.getInventory().firstEmpty() == -1) {
+                player.sendMessage(pluginColor + pluginTitle + " " + RED + "Your inventory is full, please make some space before getting a bug report book");
+                return true;
+            }
+
+            player.getInventory().addItem(bugReportBook);
+            StringBuilder message = new StringBuilder();
+            message.append(pluginColor).append(pluginTitle).append(" ").append(ChatColor.YELLOW).append("Bug Report book added to your inventory\n");
+            message.append(pluginColor).append(pluginTitle).append(" ").append(ChatColor.YELLOW).append("Write your bug report in the book and sign it to submit");
+
+            player.sendMessage(message.toString());
             return true;
         }
 

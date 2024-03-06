@@ -6,6 +6,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
 import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -30,7 +31,8 @@ public class BugReportLanguage {
             for (String language : languageSection.getKeys(false)) {
                 ConfigurationSection textsSection = languageSection.getConfigurationSection(language);
                 if (textsSection != null) {
-                    languageTexts.put(language, textsSection);
+					if (BugReportManager.debugMode) plugin.getLogger().info("Loading language: " + language);
+					languageTexts.put(language, textsSection);
                 }
             }
         }
@@ -41,10 +43,10 @@ public class BugReportLanguage {
 				"Back", "Forward", "Page %currentPage% of %totalPages%", "Settings",
 				"Close", "Page", "Enable Discord Webhook", "Enable Bug Report Notifications",
 				"Enable Category Selection", "Set Max Reports Per Player", "Set Language", "On",
-				"Off", "Language", "Cancelled", "Cancel", "Archive", "Unarchive", "Delete", "Other Settings",
-				"Enable Title Message", "Enable Player Heads", "View Status", "Edit Status",
-				"Add Status", "Rename Status", "Remove Status", "Status Name",
-				"Status Material", "Status Color", "Status Description"
+				"Off", "Language", "Cancelled", "Cancel", "Archive", "Unarchive", "Delete",
+				"Other Settings", "Enable Title Message", "Enable Player Heads", "Enable Report Book",
+				"View Status", "Edit Status", "Add Status", "Rename Status", "Remove Status",
+				"Status Name", "Status Material", "Status Color", "Status Description"
 		};
 
 		for (String lang : languageTexts.keySet()) {
@@ -55,7 +57,7 @@ public class BugReportLanguage {
 					.toArray(String[]::new);
 				int index = Arrays.asList(currentLangTitles).indexOf(ChatColor.stripColor(displayName));
 				if (index != -1 && index < englishTitles.length) {
- 					return englishTitles[index];
+					return englishTitles[index];
 				}
 			}
 		}
@@ -71,7 +73,7 @@ public class BugReportLanguage {
         ConfigurationSection languageSection = languageTexts.get(BugReportManager.language);
         if (languageSection != null) {
             ConfigurationSection buttonNamesSection = languageSection.getConfigurationSection("buttonNames");
-            return buttonNamesSection != null ? buttonNamesSection.getString(key) : null;
+			return buttonNamesSection != null ? buttonNamesSection.getString(key) : null;
         }
         return null;
     }

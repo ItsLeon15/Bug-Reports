@@ -12,6 +12,7 @@ import com.leon.bugreport.listeners.UpdateChecker;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -39,12 +40,14 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
         }
 
         try {
+            if (BugReportManager.debugMode) plugin.getLogger().info("Hooking into Plan");
             PlanHook.getInstance().hookIntoPlan();
         } catch (NoClassDefFoundError planIsNotInstalled) {
             // Ignore catch
         }
 
-        if(Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null){
+        if(Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            if (BugReportManager.debugMode) plugin.getLogger().info("Hooking into PlaceholderAPI");
             new BugPlaceholders(this).register();
         }
 
@@ -64,6 +67,8 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
+        if (BugReportManager.debugMode) plugin.getLogger().info("Disabling Bug Report");
+
         bugReports.clear();
         try {
             dataSource.close();
@@ -80,6 +85,7 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
     }
 
     private int compareVersions(@NotNull String version1, @NotNull String version2) {
+        if (BugReportManager.debugMode) plugin.getLogger().info("Comparing versions: " + version1 + " and " + version2);
         String[] parts1 = version1.split("\\.");
         String[] parts2 = version2.split("\\.");
 
@@ -124,19 +130,7 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
                 long lastLoginTimestamp = BugReportDatabase.getPlayerLastLoginTimestamp(playerId);
 
                 List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
-                List<String> newReports = new ArrayList<>();
-                for (String report : reports) {
-                    String[] lines = report.split("\n");
-                    long reportTimestampLong = 0;
-                    for (String line : lines) {
-                        if (line.startsWith("Timestamp:")) {
-                            reportTimestampLong = Long.parseLong(line.substring(10).trim());
-                        }
-                    }
-                    if (reportTimestampLong > lastLoginTimestamp) {
-                        newReports.add(report);
-                    }
-                }
+                List<String> newReports = getNewReports(reports, lastLoginTimestamp);
 
                 if (!newReports.isEmpty()) {
                     player.sendMessage(ChatColor.YELLOW + pluginTitle + " " + ChatColor.GRAY + DefaultLanguageSelector.getTextElseDefault(language, "newReportsMessage")
@@ -149,15 +143,43 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
         }
     }
 
+    @NotNull
+    private static List<String> getNewReports(@NotNull List<String> reports, long lastLoginTimestamp) {
+        List<String> newReports = new ArrayList<>();
+        for (String report : reports) {
+            String[] lines = report.split("\n");
+            long reportTimestampLong = 0;
+            for (String line : lines) {
+                if (line.startsWith("Timestamp:")) {
+                    reportTimestampLong = Long.parseLong(line.substring(10).trim());
+                }
+            }
+            if (reportTimestampLong > lastLoginTimestamp) {
+                newReports.add(report);
+            }
+        }
+        return newReports;
+    }
+
     private void registerCommands() {
+        if (BugReportManager.debugMode) plugin.getLogger().info("Registering commands");
+        BugReportCommand bugReportCommandExecutor = new BugReportCommand(reportManager);
+        UniversalTabCompleter universalTabCompleter = new UniversalTabCompleter();
+
         Objects.requireNonNull(getCommand("buglistarchived")).setExecutor(new BugListArchivedCommand(reportManager));
         Objects.requireNonNull(getCommand("buglistsettings")).setExecutor(new BugListSettingsCommand(reportManager));
         Objects.requireNonNull(getCommand("buglinkdiscord")).setExecutor(new LinkDiscordCommand(reportManager));
-        Objects.requireNonNull(getCommand("bugreport")).setExecutor(new BugReportCommand(reportManager));
-        Objects.requireNonNull(getCommand("buglist")).setExecutor(new BugListCommand(reportManager));
+
+        PluginCommand bugReportCommand = Objects.requireNonNull(this.getCommand("bugreport"));
+        bugReportCommand.setExecutor(bugReportCommandExecutor);
+
+        PluginCommand bugListCommand = Objects.requireNonNull(this.getCommand("buglist"));
+        bugListCommand.setTabCompleter(universalTabCompleter);
+        bugListCommand.setExecutor(new BugListCommand(reportManager));
     }
 
     private void registerListeners() {
+        if (BugReportManager.debugMode) plugin.getLogger().info("Registering listeners");
         getServer().getPluginManager().registerEvents(new BugReportSettings.BugReportSettingsListener(), this);
         getServer().getPluginManager().registerEvents(new BugReportManager.BugReportListener(), this);
         getServer().getPluginManager().registerEvents(new BugReportCommand(reportManager), this);

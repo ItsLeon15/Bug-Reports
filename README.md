@@ -39,6 +39,7 @@ webhookURL: https://discord.com/api/webhooks/
 
 enableDiscordWebhook: false
 enablePluginReportCategories: false
+enablePluginReportBook: false
 enableBugReportNotifications: true
 
 # # Available placeholders:
