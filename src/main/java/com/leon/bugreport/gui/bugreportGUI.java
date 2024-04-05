@@ -23,23 +23,10 @@ import static com.leon.bugreport.BugReportManager.*;
 import static com.leon.bugreport.BugReportSettings.createCustomPlayerHead;
 
 public class bugreportGUI {
-	public static void generateNewYML() {
-		File configFile = new File(plugin.getDataFolder(), "custom_bug_report_details_GUI.yml");
-		if (!configFile.exists()) {
-			plugin.saveResource("custom_bug_report_details_GUI.yml", false);
-		}
-	}
-
-	public static void updateBugReportItems() {
-		bugReportItems.put("BugReportUnArchive", BugReportLanguage.getTitleFromLanguage("unarchive"));
-		bugReportItems.put("BugReportArchive", BugReportLanguage.getTitleFromLanguage("archive"));
-		bugReportItems.put("BugReportBack", BugReportLanguage.getTitleFromLanguage("back"));
-		bugReportItems.put("BugReportDelete", BugReportLanguage.getTitleFromLanguage("delete"));
-	}
-
 	private static final Map<String, String> bugReportItems = new HashMap<>() {
 		@Serial
 		private static final long serialVersionUID = 2870322851221649721L;
+
 		{
 			put("BugReporter", "Username");
 			put("BugReportUUID", "UUID");
@@ -57,6 +44,20 @@ public class bugreportGUI {
 		}
 	};
 
+	public static void generateNewYML() {
+		File configFile = new File(plugin.getDataFolder(), "custom_bug_report_details_GUI.yml");
+		if (!configFile.exists()) {
+			plugin.saveResource("custom_bug_report_details_GUI.yml", false);
+		}
+	}
+
+	public static void updateBugReportItems() {
+		bugReportItems.put("BugReportUnArchive", BugReportLanguage.getTitleFromLanguage("unarchive"));
+		bugReportItems.put("BugReportArchive", BugReportLanguage.getTitleFromLanguage("archive"));
+		bugReportItems.put("BugReportBack", BugReportLanguage.getTitleFromLanguage("back"));
+		bugReportItems.put("BugReportDelete", BugReportLanguage.getTitleFromLanguage("delete"));
+	}
+
 	private static @Nullable YamlConfiguration loadGUIConfig() {
 		File configFile = new File(plugin.getDataFolder(), "custom_bug_report_details_GUI.yml");
 		if (!configFile.exists()) {
@@ -66,12 +67,7 @@ public class bugreportGUI {
 		return YamlConfiguration.loadConfiguration(configFile);
 	}
 
-	public static void openBugReportDetailsGUI(
-			Player player,
-			String report,
-			Integer reportIDGUI,
-			Boolean isArchivedGUI
-	) {
+	public static void openBugReportDetailsGUI(Player player, String report, Integer reportIDGUI, Boolean isArchivedGUI) {
 		updateBugReportItems();
 		YamlConfiguration guiConfig = loadGUIConfig();
 		String bugReportTitle = isArchivedGUI ? "Archived Bug Details - #" : "Bug Report Details - #";
@@ -99,14 +95,7 @@ public class bugreportGUI {
 		Bukkit.getPluginManager().registerEvents(new BugReportDetailsListener(gui, reportIDGUI), plugin);
 	}
 
-	private static void setupGUIFromConfig(
-			Inventory gui,
-			Player player,
-			@NotNull YamlConfiguration guiConfig,
-			String report,
-			Integer reportIDGUI,
-			Boolean isArchivedGUI
-	) {
+	private static void setupGUIFromConfig(Inventory gui, Player player, @NotNull YamlConfiguration guiConfig, String report, Integer reportIDGUI, Boolean isArchivedGUI) {
 		if (!validateGUIConfig(guiConfig)) {
 			Bukkit.getLogger().severe("The layout of the customGUI.yml file is incorrect. Falling back to the default layout.");
 			setupDefaultGUI(gui, player, report, reportIDGUI, isArchivedGUI);
@@ -122,8 +111,7 @@ public class bugreportGUI {
 					String materialKey = itemMap.get("material").toString();
 					Material material;
 
-					if ((isArchivedGUI && bugReportItem.equals("BugReportArchive")) ||
-							(!isArchivedGUI && bugReportItem.equals("BugReportUnArchive"))) {
+					if ((isArchivedGUI && bugReportItem.equals("BugReportArchive")) || (!isArchivedGUI && bugReportItem.equals("BugReportUnArchive"))) {
 						continue;
 					}
 
@@ -203,13 +191,7 @@ public class bugreportGUI {
 		return true;
 	}
 
-	private static @NotNull ItemStack createItemForReportDetail(
-			String bugReportItemKey,
-			Material defaultMaterial,
-			@Nullable String textureBase64,
-			@NotNull Map<String, String> reportDetails,
-			Boolean isArchivedGUI
-	) {
+	private static @NotNull ItemStack createItemForReportDetail(String bugReportItemKey, Material defaultMaterial, @Nullable String textureBase64, @NotNull Map<String, String> reportDetails, Boolean isArchivedGUI) {
 		String reportDetailKey = deriveReportDetailKey(bugReportItemKey);
 		var ref = new Object() {
 			String detailValue = reportDetails.getOrDefault(reportDetailKey, "N/A");
@@ -222,11 +204,7 @@ public class bugreportGUI {
 				String categoryID = reportDetails.getOrDefault("Category ID", "N/A");
 				if (!"N/A".equals(categoryID)) {
 					List<Map<?, ?>> categoryList = config.getMapList("reportCategories");
-					ref.detailValue = categoryList.stream()
-							.filter(categoryMap -> categoryID.equals(String.valueOf(categoryMap.get("id"))))
-							.map(categoryMap -> (String) categoryMap.get("name"))
-							.findFirst()
-							.orElse("Unknown Category");
+					ref.detailValue = categoryList.stream().filter(categoryMap -> categoryID.equals(String.valueOf(categoryMap.get("id")))).map(categoryMap -> (String) categoryMap.get("name")).findFirst().orElse("Unknown Category");
 				}
 			}
 			case "BugReporter" -> {
@@ -263,13 +241,10 @@ public class bugreportGUI {
 					if (statusMap.get("id").toString().equals(status)) {
 						String statusName = statusMap.get("name").toString();
 						String statusDescription = statusMap.get("description").toString();
-						ChatColor statusColor = ChatColor.valueOf((String) statusMap.get("color")) != null ?
-								ChatColor.valueOf((String) statusMap.get("color")) :
-								ChatColor.WHITE;
 
-						Material statusIcon = Material.matchMaterial((String) statusMap.get("icon")) != null ?
-								Material.matchMaterial((String) statusMap.get("icon")) :
-								Material.BARRIER;
+						ChatColor statusColor = ChatColor.valueOf((String) statusMap.get("color")) != null ? ChatColor.valueOf((String) statusMap.get("color")) : ChatColor.WHITE;
+
+						Material statusIcon = Material.matchMaterial((String) statusMap.get("icon")) != null ? Material.matchMaterial((String) statusMap.get("icon")) : Material.BARRIER;
 
 						statusItem = createInfoItem(statusIcon, statusColor + statusName + " (Click to change)", statusColor + statusDescription, false);
 
@@ -329,10 +304,7 @@ public class bugreportGUI {
 	 * @return true if the item supports custom textures; false otherwise.
 	 */
 	private static boolean isItemSupportsTexture(String bugReportItemKey) {
-		return List.of("BugReportUUID", "BugReportWorld", "BugReportMessage",
-			"BugReportCategory", "BugReportTimestamp", "BugReportLocation",
-			"BugReportGamemode", "BugReportUnArchive", "BugReportArchive",
-			"BugReportDelete").contains(bugReportItemKey);
+		return List.of("BugReportUUID", "BugReportWorld", "BugReportMessage", "BugReportCategory", "BugReportTimestamp", "BugReportLocation", "BugReportGamemode", "BugReportUnArchive", "BugReportArchive", "BugReportDelete").contains(bugReportItemKey);
 	}
 
 	private static @NotNull Map<String, String> parseReportDetails(@NotNull String report) {
@@ -351,31 +323,20 @@ public class bugreportGUI {
 
 	public static void setupDefaultGUI(Inventory gui, Player player, String report, Integer reportIDGUI, Boolean isArchivedGUI) {
 		if (report == null) {
-			player.sendMessage(pluginColor + pluginTitle + ChatColor.RED + " Error 101: Report is null. Please report this to the plugin developer.");
+			player.sendMessage(pluginColor + pluginTitle + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + " Error 101: Report is null. Please report this to the plugin developer.");
 			return;
 		}
 
-		String[] reportLines = report.split("\n");
-		Map<String, String> reportData = new HashMap<>();
+		String username = getReportByKey(report, "Username");
+		String uuid = getReportByKey(report, "UUID");
+		String world = getReportByKey(report, "World");
+		String fullMessage = getReportByKey(report, "Full Message");
+		String category = getReportByKey(report, "Category ID");
+		String location = getReportByKey(report, "Location");
+		String gamemode = getReportByKey(report, "Gamemode");
+		String status = getReportByKey(report, "Status");
 
-		for (String line : reportLines) {
-			int colonIndex = line.indexOf(":");
-			if (colonIndex >= 0) {
-				String key = line.substring(0, colonIndex).trim();
-				String value = line.substring(colonIndex + 1).trim();
-				reportData.put(key, value);
-			}
-		}
-
-		String username = reportData.get("Username");
-		String uuid = reportData.get("UUID");
-		String world = reportData.get("World");
-		String fullMessage = reportData.get("Full Message");
-		String category = reportData.get("Category ID");
 		ItemStack emptyItem = createEmptyItem();
-		String location = reportData.get("Location");
-		String gamemode = reportData.get("Gamemode");
-		String status = reportData.get("Status");
 		String locationTitle;
 
 		if (location == null || location.equals("null")) {
@@ -399,8 +360,8 @@ public class bugreportGUI {
 		} else {
 			usernameItem = createInfoItem(Material.PLAYER_HEAD, ChatColor.GOLD + "Username", ChatColor.WHITE + username, false);
 		}
-		String timestampToDate = translateTimestampToDate(Long.parseLong(reportData.get("Timestamp")));
 
+		String timestampToDate = translateTimestampToDate(Long.parseLong(getReportByKey(report, "Timestamp")));
 		ItemStack uuidItem = createInfoItem(Material.NAME_TAG, ChatColor.GOLD + "UUID", ChatColor.WHITE + uuid);
 		ItemStack worldItem = createInfoItem(Material.GRASS_BLOCK, ChatColor.GOLD + "World", ChatColor.WHITE + world);
 		ItemStack messageItem = createInfoItem(Material.PAPER, ChatColor.GOLD + "Full Message", ChatColor.WHITE + fullMessage, fullMessage.length() > 32);
@@ -423,8 +384,7 @@ public class bugreportGUI {
 		ItemStack timestampItem = createInfoItem(Material.CLOCK, ChatColor.GOLD + "Timestamp", ChatColor.WHITE + timestampToDate, false);
 		ItemStack locationItem = createInfoItem(Material.COMPASS, ChatColor.GOLD + locationTitle, ChatColor.WHITE + location, false);
 		ItemStack gamemodeItem = createInfoItem(Material.DIAMOND_SWORD, ChatColor.GOLD + "Gamemode", ChatColor.WHITE + gamemode, false);
-
-		ItemStack backButton = createButton(Material.BARRIER, ChatColor.RED  + BugReportLanguage.getTitleFromLanguage("back"));
+		ItemStack backButton = createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("back"));
 
 		ItemStack archiveButton = createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvY2Y5YjY3YmI5Y2MxYzg4NDg2NzYwYjE3MjY1MDU0MzEyZDY1OWRmMmNjNjc1NTc1MDA0NWJkNzFjZmZiNGU2MCJ9fX0=", ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("archive"), 16);
 		ItemStack unarchiveButton = createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDVjNTg4YjllYzBhMDhhMzdlMDFhODA5ZWQwOTAzY2MzNGMzZTNmMTc2ZGM5MjIzMDQxN2RhOTNiOTQ4ZjE0OCJ9fX0=", ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("unarchive"), 17);
@@ -451,10 +411,7 @@ public class bugreportGUI {
 		if (!"null".equals(category) && !"".equals(category)) {
 			List<Map<?, ?>> categoryList = config.getMapList("reportCategories");
 
-			Optional<String> categoryNameOptional = categoryList.stream()
-					.filter(categoryMap -> Integer.parseInt(categoryMap.get("id").toString()) == Integer.parseInt(category))
-					.map(categoryMap -> categoryMap.get("name").toString())
-					.findFirst();
+			Optional<String> categoryNameOptional = categoryList.stream().filter(categoryMap -> Integer.parseInt(categoryMap.get("id").toString()) == Integer.parseInt(category)).map(categoryMap -> categoryMap.get("name").toString()).findFirst();
 
 			if (categoryNameOptional.isPresent()) {
 				String categoryName = categoryNameOptional.get();

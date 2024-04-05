@@ -9,8 +9,11 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import static com.leon.bugreport.BugReportManager.endingPluginTitleColor;
 import static com.leon.bugreport.BugReportManager.pluginColor;
 import static com.leon.bugreport.BugReportManager.pluginTitle;
+
+import java.util.Objects;
 
 public class LinkDiscordCommand implements CommandExecutor {
     private final BugReportManager reportManager;
@@ -22,28 +25,36 @@ public class LinkDiscordCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("Only players can use this command."); // TODO: Language support
+            sender.sendMessage("Only players can use this command.");
             return true;
         }
 
         if (player.hasPermission("bugreport.admin")) {
             if (args.length < 1) {
-                player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + "Usage: /buglinkdiscord <webhook URL>"); // TODO: Language support
+                player.sendMessage(pluginColor + pluginTitle + " "
+                        + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
+                        + "Usage: /buglinkdiscord <webhook URL>");
                 return true;
             }
 
             String webhookURL = args[0];
 
             if (!isWebhookURLValid(webhookURL)) {
-                player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + "Invalid webhook URL."); // TODO: Language support
+                player.sendMessage(pluginColor + pluginTitle + " "
+                        + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
+                        + "Invalid webhook URL.");
                 return true;
             }
 
             reportManager.setWebhookURL(webhookURL);
 
-            player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.GREEN + "Webhook URL has been set successfully."); // TODO: Language support
+            player.sendMessage(pluginColor + pluginTitle + " "
+                    + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN)
+                    + "Webhook URL has been set successfully.");
         } else {
-            player.sendMessage(pluginColor + pluginTitle + " " + ChatColor.RED + "You don't have permission to use this command."); // TODO: Language support
+            player.sendMessage(pluginColor + pluginTitle + " "
+                    + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
+                    + "You don't have permission to use this command.");
         }
 
         return true;

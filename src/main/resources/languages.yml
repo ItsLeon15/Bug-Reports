@@ -62,6 +62,8 @@ languages:
     statusColorChanged: "Status color changed to %color%"
     statusDescriptionChanged: "Status description changed to %description%"
     invalidColor: "Invalid color. Please enter a valid color"
+    newReportsMessage: "You have %numReports% new reports"
+    noNewReportsMessage: "You have no new reports"
   es:
     buttonNames:
       back: "Atrás"
@@ -125,6 +127,8 @@ languages:
     statusColorChanged: "Color del estado cambiado a %color%"
     statusDescriptionChanged: "Descripción del estado cambiada a %description%"
     invalidColor: "Color no válido. Por favor ingrese un color válido"
+    newReportsMessage: "Tienes %numReports% nuevos informes"
+    noNewReportsMessage: "No tienes nuevos informes"
   fr:
     buttonNames:
       back: "Dos"
@@ -188,6 +192,8 @@ languages:
     statusColorChanged: "Couleur de l'état changée à %color%"
     statusDescriptionChanged: "Description de l'état changée à %description%"
     invalidColor: "Couleur non valide. Veuillez saisir une couleur valide"
+    newReportsMessage: "Vous avez %numReports% nouveaux rapports"
+    noNewReportsMessage: "Vous n'avez pas de nouveaux rapports"
   de:
     buttonNames:
       back: "Zurück"
@@ -251,6 +257,8 @@ languages:
     statusColorChanged: "Farbe des Status geändert auf %color%"
     statusDescriptionChanged: "Beschreibung des Status geändert auf %description%"
     invalidColor: "Ungültige Farbe. Bitte geben Sie eine gültige Farbe ein"
+    newReportsMessage: "Sie haben %numReports% neue Berichte"
+    noNewReportsMessage: "Sie haben keine neuen Berichte"
   it:
     buttonNames:
       back: "Indietro"
@@ -314,6 +322,8 @@ languages:
     statusColorChanged: "Il colore dello stato è stato impostato su %color%"
     statusDescriptionChanged: "La descrizione dello stato è stato impostata su %description%"
     invalidColor: "Colore non valido. Inserisci un colore valido"
+    newReportsMessage: "Hai %numReports% nuove segnalazioni"
+    noNewReportsMessage: "Non hai nuove segnalazioni"
   zh:
     buttonNames:
       back: "返回"
@@ -377,6 +387,8 @@ languages:
     statusColorChanged: "状态的颜色已设置为 %color%"
     statusDescriptionChanged: "状态的描述已设置为 %description%"
     invalidColor: "颜色无效。请输入有效的颜色"
+    newReportsMessage: "您有 %numReports% 条新报告"
+    noNewReportsMessage: "您没有新报告"
   ru:
     buttonNames:
       back: "Назад"
@@ -440,3 +452,5 @@ languages:
     statusColorChanged: "Цвет статуса установлен на %color%"
     statusDescriptionChanged: "Описание статуса установлен на %description%"
     invalidColor: "Неверный цвет. Введите цвет, который существует"
+    newReportsMessage: "У вас %numReports% новых отчетов"
+    noNewReportsMessage: "У вас нет новых отчетов"

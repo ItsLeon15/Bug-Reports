@@ -1,9 +1,9 @@
 name: BugReport
-version: 0.10.1
+version: 0.11.0
 main: com.leon.bugreport.BugReportPlugin
 api-version: 1.13
 author: ItsLeon15
-softdepend: [PlaceholderAPI, Plan]
+softdepend: [ PlaceholderAPI, Plan ]
 
 permissions:
   bugreport.admin:

@@ -12,7 +12,7 @@ enableBugReportNotifications: true
 # Gold, Gray, Green, Light_Purple, Red, White, Yellow
 discordEmbedColor: Green
 discordEmbedTitle: New Bug Report
-discordEmbedFooter: Bug Report v0.10.1
+discordEmbedFooter: Bug Report v0.11.0
 discordEmbedThumbnail: https://www.spigotmc.org/data/resource_icons/110/110732.jpg
 discordEnableThumbnail: true
 discordEnableUserAuthor: true
@@ -32,6 +32,10 @@ report-confirmation-message: Thanks for submitting a report!
 # Dark_Gray, Dark_Green, Dark_Purple, Dark_Red
 # Gold, Gray, Green, Light_Purple, Red, White, Yellow
 pluginColor: Yellow
+
+# You are able to use & for color codes such as "&8[&6Bug Report&8]&9".
+# For a list of color codes, visit https://htmlcolorcodes.com/minecraft-color-codes (Format Codes will NOT work!)
+# This will override the pluginColor option.
 pluginTitle: '[Bug Report]'
 
 # This can either be "mysql" or "local".
