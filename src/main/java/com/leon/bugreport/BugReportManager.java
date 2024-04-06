@@ -146,7 +146,7 @@ public class BugReportManager implements Listener {
 				put("enableBugReportNotifications", true);
 				put("discordEmbedTitle", "New Bug Report");
 				put("discordEmbedColor", "Yellow");
-				put("discordEmbedFooter", "Bug Report V0.11.0");
+				put("discordEmbedFooter", "Bug Report V0.11.1");
 				put("discordEmbedThumbnail", "https://www.spigotmc.org/data/resource_icons/110/110732.jpg");
 				put("discordEnableThumbnail", true);
 				put("discordEnableUserAuthor", true);

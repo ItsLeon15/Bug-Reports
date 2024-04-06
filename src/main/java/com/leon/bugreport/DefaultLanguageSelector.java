@@ -35,6 +35,18 @@ public class DefaultLanguageSelector {
 			put("otherSettings", "Other Settings");
 			put("enableTitleMessage", "Enable Title Message");
 			put("enablePlayerHeads", "Enable Player Heads");
+			put("enableReportBook", "Enable Report Book");
+			put("viewStatus", "View Status");
+			put("editStatus", "Edit Status");
+			put("renameStatus", "Rename Status");
+			put("removeStatus", "Remove Status");
+			put("statusName", "Status Name");
+			put("statusMaterial", "Status Material");
+			put("statusColor", "Status Color");
+			put("statusDescription", "Status Description");
+			put("statusSelection", "Status Selection");
+			put("confirmationDelete", "Delete Bug Report?");
+			put("confirmationArchive", "Archive Bug Report?");
 			put("missingValueMessage", "Missing '%key%' in reportCategories in config.yml");
 			put("missingReportCategoryMessage", "Missing reportCategories in config.yml");
 			put("wentWrongLoadingCategoriesMessage", "Something went wrong while loading the report categories");

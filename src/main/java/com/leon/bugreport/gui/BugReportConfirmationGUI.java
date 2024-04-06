@@ -81,8 +81,10 @@ public class BugReportConfirmationGUI {
 
 			if (BugReportManager.debugMode) plugin.getLogger().info("Clicked inventory: " + TitleText);
 
-			boolean isArchivedDetails = TitleText.startsWith("Archive Bug Report?");
-			boolean isDeletedDetails = TitleText.startsWith("Delete Bug Report?");
+			String englishTitle = BugReportLanguage.getEnglishVersionFromLanguage(TitleText);
+
+			boolean isArchivedDetails = englishTitle.startsWith("Archive Bug Report?");
+			boolean isDeletedDetails = englishTitle.startsWith("Delete Bug Report?");
 
 			if (!isArchivedDetails && !isDeletedDetails) {
 				return;

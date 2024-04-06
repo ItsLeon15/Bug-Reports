@@ -45,8 +45,9 @@ public class BugReportLanguage {
 				"Enable Category Selection", "Set Max Reports Per Player", "Set Language", "On",
 				"Off", "Language", "Cancelled", "Cancel", "Archive", "Unarchive", "Delete",
 				"Other Settings", "Enable Title Message", "Enable Player Heads", "Enable Report Book",
-				"View Status", "Edit Status", "Add Status", "Rename Status", "Remove Status",
-				"Status Name", "Status Material", "Status Color", "Status Description"
+				"View Status", "Edit Status", "Rename Status", "Remove Status",
+				"Status Name", "Status Material", "Status Color", "Status Description", "Status Selection",
+				"Delete Bug Report?", "Archive Bug Report?"
 		};
 
 		for (String lang : languageTexts.keySet()) {
