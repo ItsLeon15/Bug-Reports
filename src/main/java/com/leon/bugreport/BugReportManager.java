@@ -2,6 +2,7 @@ package com.leon.bugreport;
 
 import com.leon.bugreport.discord.LinkDiscord;
 import com.leon.bugreport.extensions.PlanHook;
+import com.leon.bugreport.gui.BugReportConfirmationGUI;
 import com.leon.bugreport.listeners.ReportCreatedEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -466,8 +467,6 @@ public class BugReportManager implements Listener {
 	}
 
 	public void submitBugReport(@NotNull Player player, String message, Integer categoryId) {
-		player.playSound(player.getLocation(), "ui.button.click", 1.0F, 1.0F);
-
 		if (BugReportManager.debugMode)
 			plugin.getLogger().info("Submitting bug report for " + player.getName() + "...");
 		List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
@@ -573,6 +572,7 @@ public class BugReportManager implements Listener {
 					int currentPage = getCurrentPage(player);
 					if (currentPage > 1) {
 						setCurrentPage(player, currentPage - 1);
+						player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
 						player.openInventory(isArchivedGUI ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
 					}
 				}
@@ -580,12 +580,17 @@ public class BugReportManager implements Listener {
 					int currentPage = getCurrentPage(player);
 					if (currentPage < getTotalPages()) {
 						setCurrentPage(player, currentPage + 1);
+						player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
 						player.openInventory(isArchivedGUI ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
 					}
 				}
-				case "Settings" -> player.openInventory(getSettingsGUI());
+				case "Settings" -> {
+					player.openInventory(getSettingsGUI());
+					player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+				}
 				case "Close" -> {
 					closingInventoryMap.put(player.getUniqueId(), true);
+					player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
 					player.closeInventory();
 				}
 			}
@@ -596,6 +601,8 @@ public class BugReportManager implements Listener {
 
 				if (BugReportManager.debugMode)
 					plugin.getLogger().info("Opening bug report details GUI for report ID " + reportID);
+
+				player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
 				openBugReportDetailsGUI(player, report, reportID, isArchivedGUI);
 			}
 
@@ -639,7 +646,6 @@ public class BugReportManager implements Listener {
 			event.setCancelled(true);
 
 			Player player = (Player) event.getWhoClicked();
-			UUID playerId = player.getUniqueId();
 
 			Inventory clickedInventory = event.getClickedInventory();
 			ItemStack clickedItem = event.getCurrentItem();
@@ -654,18 +660,23 @@ public class BugReportManager implements Listener {
 				return;
 			}
 
-			String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(itemMeta.getDisplayName());
+			String itemName = itemMeta.getDisplayName();
+			String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(itemName);
 
 			if (customDisplayName.contains("(Click to change)")) {
+				player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
 				player.openInventory(BugReportSettings.getStatusSelectionGUI(reportIDGUI));
 			}
 
 			if (BugReportManager.debugMode) plugin.getLogger().info("Clicked item: " + customDisplayName);
 
 			switch (customDisplayName) {
-				case "Back" ->
-						player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
+				case "Back" -> {
+					player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+					player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
+				}
 				case "Unarchive" -> {
+					player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
 					BugReportDatabase.updateBugReportArchive(reportIDGUI, 0);
 
 					if (BugReportManager.debugMode)
@@ -677,32 +688,25 @@ public class BugReportManager implements Listener {
 					HandlerList.unregisterAll(this);
 				}
 				case "Archive" -> {
-					BugReportDatabase.updateBugReportArchive(reportIDGUI, 1);
+					player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
 
 					if (BugReportManager.debugMode)
 						plugin.getLogger().info("Archiving bug report #" + reportIDGUI + "...");
 
-					player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
-					player.sendMessage(pluginColor + pluginTitle + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + " Bug Report #" + reportIDGUI + " has been archived.");
-
-					HandlerList.unregisterAll(this);
+					Bukkit.getPluginManager().registerEvents(new BugReportConfirmationGUI.BugReportConfirmationListener(gui, reportIDGUI, isArchivedDetails), plugin);
+					BugReportConfirmationGUI.openConfirmationGUI(player, true);
 				}
 				case "Delete" -> {
-					BugReportDatabase.deleteBugReport(reportIDGUI);
+					player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
 
 					if (BugReportManager.debugMode)
-						plugin.getLogger().info("Deleting bug report #" + reportIDGUI + "...");
+						plugin.getLogger().info("Opening confirmation GUI for deletion on Bug Report #" + reportIDGUI + "...");
 
-					List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
-					reports.removeIf(report -> report.contains("Report ID: " + reportIDGUI));
-					bugReports.put(playerId, reports);
-
-					player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
-					player.sendMessage(pluginColor + pluginTitle + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + " Bug Report #" + reportIDGUI + " has been deleted.");
-
-					HandlerList.unregisterAll(this);
+					Bukkit.getPluginManager().registerEvents(new BugReportConfirmationGUI.BugReportConfirmationListener(gui, reportIDGUI, isArchivedDetails), plugin);
+					BugReportConfirmationGUI.openConfirmationGUI(player, false);
 				}
 				case "Location (Click to teleport)" -> {
+					player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
 					if (BugReportManager.debugMode)
 						plugin.getLogger().info("Teleporting to the location of bug report #" + reportIDGUI + "...");
 

@@ -88,7 +88,7 @@ public class BugListCommand implements CommandExecutor {
 				new UpdateChecker((JavaPlugin) plugin, 110732).getVersion(version -> {
 					String pluginVersion = plugin.getDescription().getVersion();
 					String pluginURL = "https://www.spigotmc.org/resources/bug-report.110732/";
-					String pluginDesc = "Bug Report is a plugin that lets players submit bug reports to server admins";
+					String pluginDesc = "Bug Report is a plugin that let's players submit bug reports to server admins";
 					String pluginAuthor = "ItsLeon15";
 
 					versionMessage.append(ChatColor.GOLD).append("Version: ").append(pluginVersion.equalsIgnoreCase(version) ? ChatColor.GREEN : ChatColor.RED).append(pluginVersion).append(pluginVersion.equalsIgnoreCase(version) ? " (Up to date)" : " (Out of date)").append("\n");
