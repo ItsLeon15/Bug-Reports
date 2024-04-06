@@ -713,14 +713,14 @@ public class BugReportManager implements Listener {
 					if (checkForKey("useTitleInsteadOfMessage", true)) {
 						player.sendTitle(pluginColor + pluginTitle, Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) + " Teleporting to the location of Bug Report #" + reportIDGUI + "." + "." + ".", 10, 70, 20);
 					} else {
-						player.sendMessage(ChatColor.YELLOW + "Teleporting to the location of Bug Report #" + reportIDGUI + "...");
+						player.sendMessage(pluginColor + pluginTitle + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) + " Teleporting to the location of Bug Report #" + reportIDGUI + ".");
 					}
 
 					Location teleportLocation = BugReportDatabase.getBugReportLocation(reportIDGUI);
 					if (teleportLocation != null) {
 						player.teleport(teleportLocation, PlayerTeleportEvent.TeleportCause.PLUGIN);
 					} else {
-						player.sendMessage(ChatColor.RED + "The location of Bug Report #" + reportIDGUI + " is not " + "available.");
+						player.sendMessage(pluginColor + pluginTitle + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + " The location of Bug Report #" + reportIDGUI + ".");
 						player.closeInventory();
 					}
 				}

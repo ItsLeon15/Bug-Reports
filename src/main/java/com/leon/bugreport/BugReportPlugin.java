@@ -153,9 +153,9 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 				List<String> newReports = getNewReports(reports, lastLoginTimestamp);
 
 				if (!newReports.isEmpty()) {
-					player.sendMessage(ChatColor.YELLOW + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GRAY) + DefaultLanguageSelector.getTextElseDefault(language, "newReportsMessage").replace("%numReports%", String.valueOf(newReports.size())));
+					player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GRAY) + DefaultLanguageSelector.getTextElseDefault(language, "newReportsMessage").replace("%numReports%", String.valueOf(newReports.size())));
 				} else {
-					player.sendMessage(ChatColor.YELLOW + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GRAY) + DefaultLanguageSelector.getTextElseDefault(language, "noNewReportsMessage"));
+					player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GRAY) + DefaultLanguageSelector.getTextElseDefault(language, "noNewReportsMessage"));
 				}
 			}
 		}
