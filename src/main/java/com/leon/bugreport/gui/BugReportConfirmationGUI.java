@@ -115,6 +115,8 @@ public class BugReportConfirmationGUI {
 				if (BugReportManager.debugMode) plugin.getLogger().info("Opening archived confirmation GUI.");
 				switch (customDisplayName) {
 					case "Archive" -> {
+						player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+
 						if (BugReportManager.debugMode) plugin.getLogger().info("Archiving report: " + reportIDGUI);
 						new BugReportConfirmationGUI().archiveReport(player, reportIDGUI, true);
 
@@ -123,6 +125,8 @@ public class BugReportConfirmationGUI {
 						HandlerList.unregisterAll(this);
 					}
 					case "Back" -> {
+						player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+
 						if (BugReportManager.debugMode) plugin.getLogger().info("Going back to bug reports.");
 						player.openInventory(fromArchivedGUI ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
 
@@ -135,6 +139,8 @@ public class BugReportConfirmationGUI {
 				if (BugReportManager.debugMode) plugin.getLogger().info("Opening delete confirmation GUI.");
 				switch (customDisplayName) {
 					case "Delete" -> {
+						player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+
 						if (BugReportManager.debugMode) plugin.getLogger().info("Deleting report: " + reportIDGUI);
 						new BugReportConfirmationGUI().deleteReport(player, reportIDGUI, isArchivedDetails);
 
@@ -143,6 +149,8 @@ public class BugReportConfirmationGUI {
 						HandlerList.unregisterAll(this);
 					}
 					case "Back" -> {
+						player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+
 						if (BugReportManager.debugMode) plugin.getLogger().info("Going back to archived reports.");
 						player.openInventory(fromArchivedGUI ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
 
