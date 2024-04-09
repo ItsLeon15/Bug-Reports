@@ -25,8 +25,10 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
+import static com.leon.bugreport.BugReportDatabase.getStaticUUID;
 import static com.leon.bugreport.BugReportManager.*;
 import static com.leon.bugreport.DefaultLanguageSelector.getTextElseDefault;
+import static com.leon.bugreport.gui.bugreportGUI.openBugReportDetailsGUI;
 import static com.leon.bugreport.gui.bugreportGUI.updateBugReportItems;
 
 public class BugReportSettings {
@@ -74,22 +76,14 @@ public class BugReportSettings {
 		return gui;
 	}
 
-	static @NotNull ItemStack createButton(Material material, String displayName) {
-		ItemStack item = new ItemStack(material);
-		ItemMeta meta = item.getItemMeta();
-		Objects.requireNonNull(meta).setDisplayName(displayName);
-		item.setItemMeta(meta);
-		return item;
-	}
-
 	private static boolean getDiscordWebhookToggle() {
 		return config.getBoolean("enableDiscordWebhook");
 	}
 
 	private static void setDiscordWebhookToggle(@NotNull Player player) {
-		player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+		playButtonClickSound(player);
 
-		if (BugReportManager.debugMode)
+		if (debugMode)
 			plugin.getLogger().info("Discord Webhook toggle clicked by " + player.getName());
 		boolean toggle = getDiscordWebhookToggle();
 		config.set("enableDiscordWebhook", !toggle);
@@ -102,9 +96,9 @@ public class BugReportSettings {
 	}
 
 	private static void setBugReportNotificationsToggle(@NotNull Player player) {
-		player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+		playButtonClickSound(player);
 
-		if (BugReportManager.debugMode)
+		if (debugMode)
 			plugin.getLogger().info("Bug Report Notifications toggle clicked by " + player.getName());
 		boolean toggle = getBugReportNotificationsToggle();
 		config.set("enableBugReportNotifications", !toggle);
@@ -117,9 +111,9 @@ public class BugReportSettings {
 	}
 
 	private static void setCategorySelectionToggle(@NotNull Player player) {
-		player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+		playButtonClickSound(player);
 
-		if (BugReportManager.debugMode)
+		if (debugMode)
 			plugin.getLogger().info("Category Selection toggle clicked by " + player.getName());
 		boolean toggle = getCategorySelectionToggle();
 		config.set("enablePluginReportCategories", !toggle);
@@ -128,9 +122,9 @@ public class BugReportSettings {
 	}
 
 	private static void setLanguageToggle(@NotNull Player player) {
-		player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+		playButtonClickSound(player);
 
-		if (BugReportManager.debugMode) plugin.getLogger().info("Language toggle clicked by " + player.getName());
+		if (debugMode) plugin.getLogger().info("Language toggle clicked by " + player.getName());
 		player.openInventory(openLanguageGUI());
 	}
 
@@ -176,13 +170,13 @@ public class BugReportSettings {
 	}
 
 	public static @NotNull ItemStack createCustomPlayerHead(String texture, String name, int modelData) {
-		if (BugReportManager.debugMode)
+		if (debugMode)
 			plugin.getLogger().info("Creating custom player head with texture: " + texture + ", name: " + name + ", modelData: " + modelData);
 		return createCustomPlayerHead(texture, name, modelData, null);
 	}
 
 	public static @NotNull ItemStack createCustomPlayerHead(String texture, String name, int modelData, ChatColor nameColor) {
-		if (BugReportManager.debugMode)
+		if (debugMode)
 			plugin.getLogger().info("Creating custom player head with texture: " + texture + ", name: " + name + ", modelData: " + modelData + ", nameColor: " + nameColor);
 		ItemStack playerHead = new ItemStack(Material.PLAYER_HEAD);
 		SkullMeta skullMeta = (SkullMeta) playerHead.getItemMeta();
@@ -193,7 +187,7 @@ public class BugReportSettings {
 				JsonObject textureJson = JsonParser.parseString(decodedValue).getAsJsonObject();
 				String textureUrl = textureJson.getAsJsonObject("textures").getAsJsonObject("SKIN").get("url").getAsString();
 
-				if (BugReportManager.debugMode) plugin.getLogger().info("Texture URL: " + textureUrl);
+				if (debugMode) plugin.getLogger().info("Texture URL: " + textureUrl);
 
 				PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
 				PlayerTextures textures = profile.getTextures();
@@ -205,7 +199,7 @@ public class BugReportSettings {
 				skullMeta.setCustomModelData(modelData);
 				playerHead.setItemMeta(skullMeta);
 
-				if (BugReportManager.debugMode) plugin.getLogger().info("Custom player head created successfully.");
+				if (debugMode) plugin.getLogger().info("Custom player head created successfully.");
 			} catch (Exception e) {
 				plugin.getLogger().warning("Failed to create custom player head: " + e.getMessage());
 				return new ItemStack(Material.PLAYER_HEAD);
@@ -227,7 +221,6 @@ public class BugReportSettings {
 			String statusDescription = (String) statusMap.get("description");
 
 			ChatColor newStatusColor = ChatColor.valueOf((String) statusMap.get("color")) != null ? ChatColor.valueOf((String) statusMap.get("color")) : ChatColor.WHITE;
-
 			Material newStatusIcon = Material.matchMaterial((String) statusMap.get("icon")) != null ? Material.matchMaterial((String) statusMap.get("icon")) : Material.BARRIER;
 
 			ItemStack statusItem = createButton(newStatusIcon, newStatusColor + statusName);
@@ -240,7 +233,7 @@ public class BugReportSettings {
 			gui.addItem(statusItem);
 		}
 
-		gui.setItem(40, createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("close")));
+		gui.setItem(40, createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("back")));
 
 		return gui;
 	}
@@ -269,7 +262,7 @@ public class BugReportSettings {
 			updateBugReportItems();
 			config.set("language", languageCode);
 
-			if (BugReportManager.debugMode) plugin.getLogger().info("Language set to " + languageCode);
+			if (debugMode) plugin.getLogger().info("Language set to " + languageCode);
 			saveConfig();
 			loadConfig();
 
@@ -283,6 +276,8 @@ public class BugReportSettings {
 			if (displayName.contains("Bug Report - ")) {
 				displayName = displayName.substring(13);
 			}
+
+			if (BugReportManager.debugMode) plugin.getLogger().info("Clicked inventory: " + displayName);
 
 			String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(displayName);
 
@@ -308,8 +303,14 @@ public class BugReportSettings {
 				String itemDisplayName = itemMeta.getDisplayName();
 				String customItemDisplayName = ChatColor.stripColor(itemDisplayName);
 
-				if (customItemDisplayName.equals("Close")) {
-					player.closeInventory();
+				if (customItemDisplayName.equals("Back")) {
+					playButtonClickSound(player);
+
+					List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
+					String report = reports.stream().filter(reportString -> reportString.contains("Report ID: " + newReportIDGUI)).findFirst().orElse(null);
+					Boolean fromArchivedGUI = report != null && report.contains("Archived") && report.contains("Archived: 1");
+
+					openBugReportDetailsGUI(player, report, newReportIDGUI, fromArchivedGUI);
 					return;
 				}
 
@@ -317,12 +318,19 @@ public class BugReportSettings {
 				for (Map<?, ?> statusMap : statuses) {
 					String statusName = (String) statusMap.get("name");
 					if (statusName.equals(customItemDisplayName)) {
-						player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+						playButtonClickSound(player);
 
 						Integer statusID = (Integer) statusMap.get("id");
 						BugReportDatabase.updateReportStatus(newReportIDGUI, statusID);
 						player.closeInventory();
+
 						player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "The status of the report has been updated to " + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ".");
+
+						List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
+						String report = reports.stream().filter(reportString -> reportString.contains("Report ID: " + newReportIDGUI)).findFirst().orElse(null);
+						Boolean fromArchivedGUI = report != null && report.contains("Archived") && report.contains("Archived: 1");
+
+						openBugReportDetailsGUI(player, report, newReportIDGUI, fromArchivedGUI);
 					}
 				}
 			}
@@ -366,7 +374,7 @@ public class BugReportSettings {
 					case "Enable Bug Report Notifications" -> setBugReportNotificationsToggle(player);
 					case "Enable Category Selection" -> setCategorySelectionToggle(player);
 					case "Set Max Reports Per Player" -> {
-						player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+						playButtonClickSound(player);
 
 						player.closeInventory();
 						if (config.getBoolean("useTitleInsteadOfMessage")) {
@@ -385,11 +393,11 @@ public class BugReportSettings {
 						setReportCooldownClickMap.put(player.getUniqueId(), customItemDisplayName);
 					}
 					case "Other Settings" -> {
-						player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+						playButtonClickSound(player);
 						player.openInventory(getOtherSettingsGUI());
 					}
 					case "View Status" -> {
-						player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+						playButtonClickSound(player);
 						player.openInventory(getViewStatusGUI());
 					}
 				}
@@ -416,7 +424,7 @@ public class BugReportSettings {
 				String customItemDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(itemDisplayName);
 
 				if (customItemDisplayName.equals("Back")) {
-					player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+					playButtonClickSound(player);
 
 					player.openInventory(getSettingsGUI());
 					return;
@@ -424,7 +432,7 @@ public class BugReportSettings {
 
 				if (clickedItem.getItemMeta().hasCustomModelData()) {
 					int customModelData = clickedItem.getItemMeta().getCustomModelData();
-					player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+					playButtonClickSound(player);
 
 					switch (customModelData) {
 						case 11 -> setLanguage("en", "English", player);
@@ -459,7 +467,7 @@ public class BugReportSettings {
 				String customItemDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(itemDisplayName);
 
 				if (customItemDisplayName.equals("Back")) {
-					player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+					playButtonClickSound(player);
 
 					player.openInventory(getSettingsGUI());
 					return;
@@ -493,7 +501,7 @@ public class BugReportSettings {
 				String customItemDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(itemDisplayName);
 
 				if (customItemDisplayName.equals("Back")) {
-					player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+					playButtonClickSound(player);
 
 					player.openInventory(getSettingsGUI());
 					return;
@@ -509,7 +517,7 @@ public class BugReportSettings {
 					Integer statusID = (Integer) statusMap.get("id");
 
 					if (statusName.equals(customItemDisplayName)) {
-						player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+						playButtonClickSound(player);
 
 						savedStatusName = statusName;
 						savedStatusID = statusID;
@@ -540,7 +548,7 @@ public class BugReportSettings {
 				String customItemDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(itemDisplayName);
 
 				if (customItemDisplayName.equals("Back")) {
-					player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+					playButtonClickSound(player);
 					player.openInventory(getViewStatusGUI());
 					return;
 				}
@@ -554,7 +562,7 @@ public class BugReportSettings {
 					for (Map<?, ?> statusMap : statuses) {
 						String statusName = (String) statusMap.get("name");
 						if (statusMap.get("id").equals(savedStatusID)) {
-							player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+							playButtonClickSound(player);
 
 							player.closeInventory();
 							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "Type 'confirm' to delete the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
@@ -570,7 +578,7 @@ public class BugReportSettings {
 					for (Map<?, ?> statusMap : statuses) {
 						String statusName = (String) statusMap.get("name");
 						if (statusMap.get("id").equals(savedStatusID)) {
-							player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+							playButtonClickSound(player);
 
 							player.closeInventory();
 							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "Type the new name for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
@@ -586,7 +594,7 @@ public class BugReportSettings {
 					for (Map<?, ?> statusMap : statuses) {
 						String statusName = (String) statusMap.get("name");
 						if (statusMap.get("id").equals(savedStatusID)) {
-							player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+							playButtonClickSound(player);
 							player.closeInventory();
 
 							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "Type the new material for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
@@ -601,7 +609,7 @@ public class BugReportSettings {
 					for (Map<?, ?> statusMap : statuses) {
 						String statusName = (String) statusMap.get("name");
 						if (statusMap.get("id").equals(savedStatusID)) {
-							player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+							playButtonClickSound(player);
 
 							player.closeInventory();
 							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "Type the new color for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
@@ -618,7 +626,7 @@ public class BugReportSettings {
 						String statusName = (String) statusMap.get("name");
 
 						if (statusMap.get("id").equals(savedStatusID)) {
-							player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+							playButtonClickSound(player);
 
 							player.closeInventory();
 							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "Type the new description for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
@@ -760,12 +768,12 @@ public class BugReportSettings {
 		}
 
 		private void setTitleMessage(@NotNull Player player) {
-			player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+			playButtonClickSound(player);
 
 			boolean toggle = getTitleMessage();
 			config.set("useTitleInsteadOfMessage", !toggle);
 			saveConfig();
-			if (BugReportManager.debugMode) plugin.getLogger().info("Title message set to " + !toggle);
+			if (debugMode) plugin.getLogger().info("Title message set to " + !toggle);
 			player.getOpenInventory().setItem(19, getTitleMessage() ? createButton(Material.LIME_DYE, ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage("true")) : createButton(Material.GRAY_DYE, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("false")));
 		}
 
@@ -774,12 +782,12 @@ public class BugReportSettings {
 		}
 
 		private void setPlayerHead(@NotNull Player player) {
-			player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+			playButtonClickSound(player);
 
 			boolean toggle = getPlayerHead();
 			config.set("enablePlayerHeads", !toggle);
 			saveConfig();
-			if (BugReportManager.debugMode) plugin.getLogger().info("Player heads set to " + !toggle);
+			if (debugMode) plugin.getLogger().info("Player heads set to " + !toggle);
 			player.getOpenInventory().setItem(20, getPlayerHead() ? createButton(Material.LIME_DYE, ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage("true")) : createButton(Material.GRAY_DYE, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("false")));
 		}
 
@@ -788,12 +796,12 @@ public class BugReportSettings {
 		}
 
 		private void setReportBook(@NotNull Player player) {
-			player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+			playButtonClickSound(player);
 
 			boolean toggle = getReportBook();
 			config.set("enablePluginReportBook", !toggle);
 			saveConfig();
-			if (BugReportManager.debugMode) plugin.getLogger().info("Report book set to " + !toggle);
+			if (debugMode) plugin.getLogger().info("Report book set to " + !toggle);
 			player.getOpenInventory().setItem(21, getReportBook() ? createButton(Material.LIME_DYE, ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage("true")) : createButton(Material.GRAY_DYE, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("false")));
 		}
 

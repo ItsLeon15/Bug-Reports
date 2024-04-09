@@ -15,7 +15,7 @@ import java.util.Objects;
 import static com.leon.bugreport.BugReportManager.*;
 
 public class BugListCommand implements CommandExecutor {
-	public BugListCommand(BugReportManager reportManager) {
+	public BugListCommand() {
 	}
 
 	@Override
@@ -52,9 +52,17 @@ public class BugListCommand implements CommandExecutor {
 		switch (args[0].toLowerCase()) {
 			case "help" -> {
 				String commandFormat = ChatColor.GOLD + "/%s" + ChatColor.WHITE + " - " + ChatColor.GRAY + "%s\n";
-				String message = pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) + "Admin Commands:\n" + String.format(commandFormat, "bugreport", "Submits a bug report.") + String.format(commandFormat, "buglist", "Opens the buglist GUI.") + String.format(commandFormat, "buglist help", "Displays this help message.") + String.format(commandFormat, "buglist reload", "Reloads the plugin and config.") + String.format(commandFormat, "buglistarchived", "Opens the buglist archived GUI.") + String.format(commandFormat, "buglistsettings", "Opens the buglist settings GUI.") + String.format(commandFormat, "buglinkdiscord", "Links Bug Report to a Discord channel.");
 
-				player.sendMessage(message);
+				StringBuilder messageBuilder = new StringBuilder();
+				messageBuilder.append(pluginColor).append(pluginTitle).append(" ").append(Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN)).append("Admin Commands:\n");
+
+				String[][] commands = new String[][]{{"bugreport", "Submits a bug report."}, {"buglist", "Opens the buglist GUI."}, {"buglist help", "Displays this help message."}, {"buglist reload", "Reloads the plugin and config."}, {"buglistarchived", "Opens the buglist archived GUI."}, {"buglistsettings", "Opens the buglist settings GUI."}, {"buglinkdiscord", "Links Bug Report to a Discord channel."}};
+
+				for (String[] helpCommand : commands) {
+					messageBuilder.append(String.format(commandFormat, helpCommand[0], helpCommand[1]));
+				}
+
+				player.sendMessage(String.valueOf(messageBuilder));
 			}
 			case "reload" -> {
 				BugReportLanguage.loadLanguageTexts(plugin, "languages.yml");
@@ -87,13 +95,13 @@ public class BugListCommand implements CommandExecutor {
 
 				new UpdateChecker((JavaPlugin) plugin, 110732).getVersion(version -> {
 					String pluginVersion = plugin.getDescription().getVersion();
-					String pluginURL = "https://www.spigotmc.org/resources/bug-report.110732/";
-					String pluginDesc = "Bug Report is a plugin that let's players submit bug reports to server admins";
+					String pluginURL = "https://www.spigotmc.org/resources/bug-report-1-16-4-1-20-4.110732";
+					String pluginDescription = "Bug Report is a plugin that lets players submit bug reports to server admins";
 					String pluginAuthor = "ItsLeon15";
 
 					versionMessage.append(ChatColor.GOLD).append("Version: ").append(pluginVersion.equalsIgnoreCase(version) ? ChatColor.GREEN : ChatColor.RED).append(pluginVersion).append(pluginVersion.equalsIgnoreCase(version) ? " (Up to date)" : " (Out of date)").append("\n");
 					versionMessage.append(ChatColor.GOLD).append("URL: ").append(ChatColor.WHITE).append(pluginURL).append("\n");
-					versionMessage.append(ChatColor.GOLD).append("Description: ").append(ChatColor.WHITE).append(pluginDesc).append("\n");
+					versionMessage.append(ChatColor.GOLD).append("Description: ").append(ChatColor.WHITE).append(pluginDescription).append("\n");
 					versionMessage.append(ChatColor.GOLD).append("Author: ").append(ChatColor.WHITE).append(pluginAuthor).append("\n");
 					player.sendMessage(versionMessage.toString());
 				});

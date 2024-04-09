@@ -1,5 +1,6 @@
 package com.leon.bugreport.discord;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -7,6 +8,8 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
+import java.util.*;
 
 import static com.leon.bugreport.BugReportManager.config;
 import static com.leon.bugreport.BugReportManager.plugin;
@@ -15,12 +18,9 @@ import static com.leon.bugreport.commands.BugReportCommand.stringColorToColorCod
 
 public class LinkDiscord {
 	private static final String EMBED_TITLE = "New Bug Report";
-	private static final String EMBED_FOOTER_TEXT = "Bug Report V0.11.1";
+	private static final String EMBED_FOOTER_TEXT = "Bug Report V0.11.2";
 	private static final String EMBED_THUMBNAIL = "https://www.spigotmc.org/data/resource_icons/110/110732.jpg";
-	private static final String EMBED_AUTHOR = "true";
-	private static final String EMBED_DATE = "true";
-	private static final String EMBED_THUMBNAIL_ENABLED = "true";
-	private static final Color EMBED_COLOR = Color.RED;
+	private static final Color EMBED_COLOR = Color.YELLOW;
 	private String webhookURL;
 
 	public LinkDiscord(String webhookURL) {
@@ -31,51 +31,112 @@ public class LinkDiscord {
 		this.webhookURL = webhookURL;
 	}
 
-	public void sendBugReport(String message, String world, String username, String location, String gamemode) {
-		if (webhookURL.isEmpty()) {
-			plugin.getLogger().warning("Webhook URL is not configured. Bug report not sent to Discord.");
-			return;
-		}
-
+	private DiscordWebhook.EmbedObject generateDefaultEmbed() {
 		String discordEmbedTitle = config.getString("discordEmbedTitle");
 		String discordEmbedFooter = config.getString("discordEmbedFooter");
 		String discordEmbedThumbnail = config.getString("discordEmbedThumbnail");
-		String discordEnableUserAuthor = config.getString("discordEnableUserAuthor");
-		String discordIncludeDate = config.getString("discordIncludeDate");
-		String discordEnableThumbnail = config.getString("discordEnableThumbnail");
 		Color discordEmbedColor = chatColorToColor(stringColorToColorCode(config.getString("discordEmbedColor")));
 
 		discordEmbedFooter = (discordEmbedFooter == null || discordEmbedFooter.isEmpty()) ? EMBED_FOOTER_TEXT : discordEmbedFooter;
 		discordEmbedColor = (discordEmbedColor == null) ? EMBED_COLOR : discordEmbedColor;
-		discordEmbedThumbnail = (discordEmbedThumbnail == null || discordEmbedThumbnail.isEmpty()) ? EMBED_THUMBNAIL : discordEmbedThumbnail;
 		discordEmbedTitle = (discordEmbedTitle == null || discordEmbedTitle.isEmpty()) ? EMBED_TITLE : discordEmbedTitle;
-		discordEnableUserAuthor = (discordEnableUserAuthor == null) ? EMBED_AUTHOR : discordEnableUserAuthor;
-		discordIncludeDate = (discordIncludeDate == null) ? EMBED_DATE : discordIncludeDate;
-		discordEnableThumbnail = (discordEnableThumbnail == null) ? EMBED_THUMBNAIL_ENABLED : discordEnableThumbnail;
-		String newUUID = discordEnableUserAuthor.equals("true") ? getUserIDFromAPI(username) : "Not Available";
+		discordEmbedThumbnail = (discordEmbedThumbnail == null || discordEmbedThumbnail.isEmpty()) ? EMBED_THUMBNAIL : discordEmbedThumbnail;
 
-		String userAuthorURL = "https://crafatar.com/avatars/" + newUUID;
+		return new DiscordWebhook.EmbedObject().setTitle(discordEmbedTitle).setFooter(discordEmbedFooter, null).setColor(discordEmbedColor).setThumbnail(discordEmbedThumbnail);
+	}
 
-		try {
-			URL url = new URL(userAuthorURL);
-			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-			connection.setRequestMethod("GET");
-			connection.connect();
+	private void sendEmptyEmbedOrDefault(String username, DiscordWebhook.EmbedObject @NotNull ... existingEmbedObject) {
+		DiscordWebhook.EmbedObject embedObject = existingEmbedObject.length > 0 ? existingEmbedObject[0] : generateDefaultEmbed();
 
-			if (connection.getResponseCode() != 200) {
-				userAuthorURL = "https://www.spigotmc.org/data/resource_icons/110/110732.jpg";
-			}
-		} catch (Exception e) {
-			plugin.getLogger().warning("Error checking userAuthorURL: " + e.getMessage());
+		String discordEnableUserAuthor = config.getString("discordEnableUserAuthor");
+		String discordIncludeDate = config.getString("discordIncludeDate");
+		String discordEnableThumbnail = config.getString("discordEnableThumbnail");
+		String discordEmbedThumbnail = config.getString("discordEmbedThumbnail");
+		String userAuthorURL = "https://crafatar.com/avatars/" + getUserIDFromAPI(username);
+
+		if (Objects.equals(discordEnableUserAuthor, "true")) {
+			embedObject.setAuthor(username, userAuthorURL, userAuthorURL);
 		}
 
+		if (Objects.equals(discordIncludeDate, "true")) {
+			embedObject.setTimestamp();
+		}
+
+		if (Objects.equals(discordEnableThumbnail, "true")) {
+			embedObject.setThumbnail(discordEmbedThumbnail);
+		}
+
+		sendEmbed(embedObject);
+	}
+
+	public void sendBugReport(String message, String world, String username, String location, String gamemode, Integer category) {
+		if (webhookURL == null || webhookURL.isEmpty()) {
+			System.out.println("Webhook URL is not configured. Bug report not sent to Discord.");
+			return;
+		}
+
+		if (!config.contains("discordEmbedFields")) {
+			plugin.getLogger().warning("discordEmbedFields key is not present in the config. Sending an empty embed.");
+		}
+
+		List<Map<?, ?>> discordEmbedFields = config.getMapList("discordEmbedFields");
+		if (discordEmbedFields.isEmpty()) {
+			plugin.getLogger().warning("discordEmbedFields is empty in the config. Bug report not sent to Discord.");
+			sendEmptyEmbedOrDefault(username);
+			return;
+		}
+
+		sendDiscordMessageEmbedFull(message, world, username, location, gamemode, category, discordEmbedFields);
+	}
+
+	private void sendDiscordMessageEmbedFull(String message, String world, String username, String location, String gamemode, Integer category, @NotNull List<Map<?, ?>> discordEmbedFields) {
+		List<DiscordEmbedDetails> discordDetails = new ArrayList<>();
+
+		for (Map<?, ?> field : discordEmbedFields) {
+			String name = (String) field.get("name");
+			int id = (int) field.get("id");
+			String value = (String) field.get("value");
+			boolean inline = (boolean) field.get("inline");
+			discordDetails.add(new DiscordEmbedDetails(name, id, value, inline));
+		}
+
+		discordDetails.sort(Comparator.comparingInt(DiscordEmbedDetails::getId));
+
+		DiscordWebhook.EmbedObject embedObject = generateDefaultEmbed();
+
+		for (DiscordEmbedDetails detail : discordDetails) {
+			String name = detail.getName();
+			String detailValue = detail.getValue();
+
+			String value = getValueForField(detailValue, username, world, location, gamemode, category, message);
+
+			if (checkIfValueIsValid(detailValue)) {
+				Boolean inline = detail.getInline();
+				embedObject.addField(name, value, inline);
+			} else {
+				plugin.getLogger().warning("Invalid placeholder value: " + detailValue + ". Skipping this field.");
+			}
+		}
+
+		sendEmptyEmbedOrDefault(username, embedObject);
+	}
+
+	@Contract(pure = true)
+	private boolean checkIfValueIsValid(@NotNull String placeholderValue) {
+		return switch (placeholderValue) {
+			case "%report_username%", "%report_full_message%", "%report_category%", "%report_status%",
+			     "%report_gamemode%", "%report_location%", "%report_world%", "%report_uuid%" -> true;
+			default -> false;
+		};
+	}
+
+	private @NotNull String getValueForField(@NotNull String fieldValue, String username, String world, String location, String gamemode, Integer category, String message) {
+		return fieldValue.replace("%report_username%", username).replace("%report_uuid%", getUserIDFromAPI(username)).replace("%report_world%", world).replace("%report_location%", location).replace("%report_gamemode%", gamemode).replace("%report_status%", "Active") // Assuming status is always "Active" here
+				.replace("%report_category%", getCategoryName(category)).replace("%report_full_message%", message);
+	}
+
+	private void sendEmbed(DiscordWebhook.EmbedObject embedObject) {
 		DiscordWebhook webhook = new DiscordWebhook(webhookURL);
-		DiscordWebhook.EmbedObject embedObject = new DiscordWebhook.EmbedObject().setTitle(discordEmbedTitle).addField("Username", username, true).addField("UUID", newUUID, true).addField("World", world, true).addField("Location (X, Y, Z)", location, true).addField("Gamemode", gamemode, true).addField("Full Message", message, false).setFooter(discordEmbedFooter, null).setColor(discordEmbedColor);
-
-		if (discordEnableUserAuthor.equals("true")) embedObject.setAuthor(username, userAuthorURL, userAuthorURL);
-		if (discordIncludeDate.equals("true")) embedObject.setTimestamp();
-		if (discordEnableThumbnail.equals("true")) embedObject.setThumbnail(discordEmbedThumbnail);
-
 		webhook.addEmbed(embedObject);
 
 		try {
@@ -83,6 +144,16 @@ public class LinkDiscord {
 		} catch (Exception e) {
 			plugin.getLogger().warning("Error sending bug report to Discord: " + e.getMessage());
 		}
+	}
+
+	private String getCategoryName(Integer category) {
+		List<Map<?, ?>> categoryList = config.getMapList("reportCategories");
+		for (Map<?, ?> categoryMap : categoryList) {
+			if (categoryMap.get("id").equals(category)) {
+				return (String) categoryMap.get("name");
+			}
+		}
+		return "Unknown Category";
 	}
 
 	private @NotNull String getUserIDFromAPI(String username) {
@@ -95,7 +166,7 @@ public class LinkDiscord {
 
 			connection.setRequestMethod("GET");
 			connection.setRequestProperty("Content-Type", "application/json");
-			connection.setRequestProperty("User-Agent", "BugReport/0.11.1");
+			connection.setRequestProperty("User-Agent", "BugReport/0.11.2");
 			connection.setConnectTimeout(5000);
 			connection.setReadTimeout(5000);
 			connection.setDoOutput(true);
@@ -113,6 +184,7 @@ public class LinkDiscord {
 		}
 
 		String[] splitContent = content.toString().split("\"raw_id\":\"");
+
 		if (splitContent.length > 1) {
 			return splitContent[1].split("\"")[0];
 		} else {

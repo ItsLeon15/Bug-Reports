@@ -245,7 +245,6 @@ public class bugreportGUI {
 						ChatColor statusColor = ChatColor.valueOf((String) statusMap.get("color")) != null ? ChatColor.valueOf((String) statusMap.get("color")) : ChatColor.WHITE;
 
 						Material statusIcon = Material.matchMaterial((String) statusMap.get("icon")) != null ? Material.matchMaterial((String) statusMap.get("icon")) : Material.BARRIER;
-
 						statusItem = createInfoItem(statusIcon, statusColor + statusName + " (Click to change)", statusColor + statusDescription, false);
 
 						if (bugReportItemKey.equals("BugReportStatus")) {
@@ -258,6 +257,7 @@ public class bugreportGUI {
 
 			item = new ItemStack(defaultMaterial, 1);
 			ItemMeta meta = item.getItemMeta();
+
 			if (meta != null) {
 				meta.setDisplayName(ChatColor.YELLOW + bugReportItems.getOrDefault(bugReportItemKey, "Unknown Item"));
 				List<String> lore = new ArrayList<>();
@@ -385,7 +385,6 @@ public class bugreportGUI {
 		ItemStack locationItem = createInfoItem(Material.COMPASS, ChatColor.GOLD + locationTitle, ChatColor.WHITE + location, false);
 		ItemStack gamemodeItem = createInfoItem(Material.DIAMOND_SWORD, ChatColor.GOLD + "Gamemode", ChatColor.WHITE + gamemode, false);
 		ItemStack backButton = createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("back"));
-
 		ItemStack archiveButton = createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvY2Y5YjY3YmI5Y2MxYzg4NDg2NzYwYjE3MjY1MDU0MzEyZDY1OWRmMmNjNjc1NTc1MDA0NWJkNzFjZmZiNGU2MCJ9fX0=", ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("archive"), 16);
 		ItemStack unarchiveButton = createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDVjNTg4YjllYzBhMDhhMzdlMDFhODA5ZWQwOTAzY2MzNGMzZTNmMTc2ZGM5MjIzMDQxN2RhOTNiOTQ4ZjE0OCJ9fX0=", ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("unarchive"), 17);
 		ItemStack deleteButton = createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmUwZmQxMDE5OWU4ZTRmY2RhYmNhZTRmODVjODU5MTgxMjdhN2M1NTUzYWQyMzVmMDFjNTZkMThiYjk0NzBkMyJ9fX0=", ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("delete"), 18);

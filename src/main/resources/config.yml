@@ -12,11 +12,45 @@ enableBugReportNotifications: true
 # Gold, Gray, Green, Light_Purple, Red, White, Yellow
 discordEmbedColor: Green
 discordEmbedTitle: New Bug Report
-discordEmbedFooter: Bug Report v0.11.1
+discordEmbedFooter: Bug Report v0.11.2
 discordEmbedThumbnail: https://www.spigotmc.org/data/resource_icons/110/110732.jpg
 discordEnableThumbnail: true
 discordEnableUserAuthor: true
 discordIncludeDate: true
+
+discordEmbedFields:
+  - name: "Username"
+    id: 1
+    value: "%report_username%"
+    inline: true
+  - name: "UUID"
+    id: 2
+    value: "%report_uuid%"
+    inline: true
+  - name: "World"
+    id: 3
+    value: "%report_world%"
+    inline: true
+  - name: "Location (X, Y, Z)"
+    id: 4
+    value: "%report_location%"
+    inline: true
+  - name: "Gamemode"
+    id: 5
+    value: "%report_gamemode%"
+    inline: true
+  - name: "Status"
+    id: 6
+    value: "%report_status%"
+    inline: true
+  - name: "Category"
+    id: 7
+    value: "%report_category%"
+    inline: true
+  - name: "Full Message"
+    id: 8
+    value: "%report_full_message%"
+    inline: false
 
 useTitleInsteadOfMessage: false
 enablePlayerHeads: true

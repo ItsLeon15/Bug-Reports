@@ -77,7 +77,8 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 
 		registerCommands();
 		registerListeners();
-		Metrics metrics = new Metrics(this, 18974);
+
+		new Metrics(this, 18974);
 
 		BugReportLanguage.loadLanguageTexts(plugin, "languages.yml");
 		generateNewYML();
@@ -175,7 +176,7 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 
 		PluginCommand bugListCommand = Objects.requireNonNull(this.getCommand("buglist"));
 		bugListCommand.setTabCompleter(universalTabCompleter);
-		bugListCommand.setExecutor(new BugListCommand(reportManager));
+		bugListCommand.setExecutor(new BugListCommand());
 	}
 
 	private void registerListeners() {

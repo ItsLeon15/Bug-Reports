@@ -72,9 +72,7 @@ public class BugReportManager implements Listener {
 
 				if (colorCode != null) {
 					ChatColor endingPluginTitleColorOther = getChatColorByCode("§" + colorCode);
-					if (endingPluginTitleColorOther != null) {
-						endingPluginTitleColor = endingPluginTitleColorOther;
-					}
+					if (endingPluginTitleColorOther != null) endingPluginTitleColor = endingPluginTitleColorOther;
 				}
 			}
 
@@ -146,7 +144,7 @@ public class BugReportManager implements Listener {
 				put("enableBugReportNotifications", true);
 				put("discordEmbedTitle", "New Bug Report");
 				put("discordEmbedColor", "Yellow");
-				put("discordEmbedFooter", "Bug Report V0.11.1");
+				put("discordEmbedFooter", "Bug Report V0.11.2");
 				put("discordEmbedThumbnail", "https://www.spigotmc.org/data/resource_icons/110/110732.jpg");
 				put("discordEnableThumbnail", true);
 				put("discordEnableUserAuthor", true);
@@ -267,6 +265,10 @@ public class BugReportManager implements Listener {
 		return reportData.get(keyName);
 	}
 
+	public static void playButtonClickSound(@NotNull Player player) {
+		player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+	}
+
 	private static void createNavigationButtons(String forward, @NotNull Inventory bugReportGUI, int index) {
 		ItemStack forwardButton = new ItemStack(Material.ARROW);
 		ItemMeta forwardMeta = forwardButton.getItemMeta();
@@ -279,7 +281,7 @@ public class BugReportManager implements Listener {
 	private static List<String> getFilteredReports(boolean showArchived, @NotNull List<String> reports) {
 		List<String> filteredReports = new ArrayList<>();
 		for (String report : reports) {
-			if ((showArchived && report.contains("Archived: 1")) || (!showArchived && !report.contains("DUMMY") && !report.contains("Archived: 1"))) {
+			if (showArchived && report.contains("Archived: 1") || (!showArchived && !report.contains("DUMMY") && !report.contains("Archived: 1"))) {
 				filteredReports.add(report);
 			}
 		}
@@ -429,11 +431,10 @@ public class BugReportManager implements Listener {
 
 			for (Map<?, ?> categoryMap : categoryList) {
 				String name = categoryMap.get("name").toString();
-				int id = Integer.parseInt(categoryMap.get("id").toString());
-
 				String description = categoryMap.get("description").toString();
 				String itemString = categoryMap.get("item").toString();
 				String color = categoryMap.get("color").toString().toUpperCase();
+				int id = Integer.parseInt(categoryMap.get("id").toString());
 
 				Material itemMaterial = Material.matchMaterial(itemString);
 				if (itemMaterial == null) {
@@ -471,14 +472,13 @@ public class BugReportManager implements Listener {
 			plugin.getLogger().info("Submitting bug report for " + player.getName() + "...");
 		List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
 		UUID playerId = player.getUniqueId();
+
 		String playerName = player.getName();
 		String playerUUID = playerId.toString();
 		String worldName = player.getWorld().getName();
 		String gamemode = player.getGameMode().toString();
 		String location = player.getWorld().getName() + ", " + player.getLocation().getBlockX() + ", " + player.getLocation().getBlockY() + ", " + player.getLocation().getBlockZ();
-
 		String reportID = reports.stream().filter(report -> report.contains("Report ID: ")).reduce((first, second) -> second).map(report -> Arrays.stream(report.split("\n")).filter(line -> line.contains("Report ID:")).findFirst().orElse("Report ID: 0")).map(reportIDLine -> reportIDLine.split(": ")[1].trim()).orElse("0");
-
 		String reportIDInt = String.valueOf(Integer.parseInt(reportID) + 1);
 		String header = "Username: " + playerName + "\n" + "UUID: " + playerUUID + "\n" + "World: " + worldName + "\n" + "hasBeenRead: 0" + "\n" + "Category ID: " + categoryId + "\n" + "Full Message: " + message + "\n" + "Archived: 0" + "\n" + "Report ID: " + reportIDInt + "\n" + "Timestamp: " + System.currentTimeMillis() + "\n" + "Location: " + location + "\n" + "Gamemode: " + gamemode;
 
@@ -513,7 +513,7 @@ public class BugReportManager implements Listener {
 			}
 
 			try {
-				discord.sendBugReport(message, worldName, playerName, location, gamemode);
+				discord.sendBugReport(message, worldName, playerName, location, gamemode, categoryId);
 				if (BugReportManager.debugMode) plugin.getLogger().info("Bug report sent to Discord.");
 			} catch (Exception e) {
 				plugin.getLogger().warning("Error sending bug report to Discord: " + e.getMessage());
@@ -572,7 +572,7 @@ public class BugReportManager implements Listener {
 					int currentPage = getCurrentPage(player);
 					if (currentPage > 1) {
 						setCurrentPage(player, currentPage - 1);
-						player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+						playButtonClickSound(player);
 						player.openInventory(isArchivedGUI ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
 					}
 				}
@@ -580,17 +580,17 @@ public class BugReportManager implements Listener {
 					int currentPage = getCurrentPage(player);
 					if (currentPage < getTotalPages()) {
 						setCurrentPage(player, currentPage + 1);
-						player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+						playButtonClickSound(player);
 						player.openInventory(isArchivedGUI ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
 					}
 				}
 				case "Settings" -> {
 					player.openInventory(getSettingsGUI());
-					player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+					playButtonClickSound(player);
 				}
 				case "Close" -> {
 					closingInventoryMap.put(player.getUniqueId(), true);
-					player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+					playButtonClickSound(player);
 					player.closeInventory();
 				}
 			}
@@ -602,7 +602,7 @@ public class BugReportManager implements Listener {
 				if (BugReportManager.debugMode)
 					plugin.getLogger().info("Opening bug report details GUI for report ID " + reportID);
 
-				player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+				playButtonClickSound(player);
 				openBugReportDetailsGUI(player, report, reportID, isArchivedGUI);
 			}
 
@@ -643,6 +643,9 @@ public class BugReportManager implements Listener {
 				return;
 			}
 
+			// The ID is the number after the # in the title
+			String bugReportID = title.split("#")[1].split(" ")[0];
+
 			event.setCancelled(true);
 
 			Player player = (Player) event.getWhoClicked();
@@ -664,7 +667,7 @@ public class BugReportManager implements Listener {
 			String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(itemName);
 
 			if (customDisplayName.contains("(Click to change)")) {
-				player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+				playButtonClickSound(player);
 				player.openInventory(BugReportSettings.getStatusSelectionGUI(reportIDGUI));
 			}
 
@@ -672,11 +675,11 @@ public class BugReportManager implements Listener {
 
 			switch (customDisplayName) {
 				case "Back" -> {
-					player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+					playButtonClickSound(player);
 					player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
 				}
 				case "Unarchive" -> {
-					player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+					playButtonClickSound(player);
 					BugReportDatabase.updateBugReportArchive(reportIDGUI, 0);
 
 					if (BugReportManager.debugMode)
@@ -688,25 +691,25 @@ public class BugReportManager implements Listener {
 					HandlerList.unregisterAll(this);
 				}
 				case "Archive" -> {
-					player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+					playButtonClickSound(player);
 
 					if (BugReportManager.debugMode)
 						plugin.getLogger().info("Archiving bug report #" + reportIDGUI + "...");
 
 					Bukkit.getPluginManager().registerEvents(new BugReportConfirmationGUI.BugReportConfirmationListener(gui, reportIDGUI, isArchivedDetails), plugin);
-					BugReportConfirmationGUI.openConfirmationGUI(player, true);
+					BugReportConfirmationGUI.openConfirmationGUI(player, true, bugReportID);
 				}
 				case "Delete" -> {
-					player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+					playButtonClickSound(player);
 
 					if (BugReportManager.debugMode)
 						plugin.getLogger().info("Opening confirmation GUI for deletion on Bug Report #" + reportIDGUI + "...");
 
 					Bukkit.getPluginManager().registerEvents(new BugReportConfirmationGUI.BugReportConfirmationListener(gui, reportIDGUI, isArchivedDetails), plugin);
-					BugReportConfirmationGUI.openConfirmationGUI(player, false);
+					BugReportConfirmationGUI.openConfirmationGUI(player, false, bugReportID);
 				}
 				case "Location (Click to teleport)" -> {
-					player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+					playButtonClickSound(player);
 					if (BugReportManager.debugMode)
 						plugin.getLogger().info("Teleporting to the location of bug report #" + reportIDGUI + "...");
 
@@ -720,7 +723,7 @@ public class BugReportManager implements Listener {
 					if (teleportLocation != null) {
 						player.teleport(teleportLocation, PlayerTeleportEvent.TeleportCause.PLUGIN);
 					} else {
-						player.sendMessage(pluginColor + pluginTitle + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + " The location of Bug Report #" + reportIDGUI + ".");
+						player.sendMessage(pluginColor + pluginTitle + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + " The location of Bug Report #" + reportIDGUI + " is not available.");
 						player.closeInventory();
 					}
 				}

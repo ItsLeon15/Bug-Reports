@@ -22,33 +22,32 @@ import java.util.*;
 import static com.leon.bugreport.BugReportDatabase.getStaticUUID;
 import static com.leon.bugreport.BugReportManager.*;
 import static com.leon.bugreport.BugReportSettings.createCustomPlayerHead;
+import static com.leon.bugreport.gui.bugreportGUI.openBugReportDetailsGUI;
 
 public class BugReportConfirmationGUI {
-	public static void openConfirmationGUI(@NotNull Player player, @NotNull Boolean isArchived) {
-		player.openInventory(getConfirmationGUI(isArchived));
+	public static void openConfirmationGUI(@NotNull Player player, @NotNull Boolean isArchived, String bugReportID) {
+		player.openInventory(getConfirmationGUI(isArchived, bugReportID));
 	}
 
-	public static @NotNull Inventory getConfirmationGUI(boolean isArchived) {
+	public static @NotNull Inventory getConfirmationGUI(boolean isArchived, String bugReportID) {
+		// TODO: Add the bug report ID to the title without any destructive actions.
 		String guiTitle;
 
 		if (isArchived) {
-			guiTitle = ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("confirmationArchive");
+			guiTitle = ChatColor.YELLOW + Objects.requireNonNull(BugReportLanguage.getTitleFromLanguage("confirmationArchive"));
 		} else {
-			guiTitle = ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("confirmationDelete");
+			guiTitle = ChatColor.YELLOW + Objects.requireNonNull(BugReportLanguage.getTitleFromLanguage("confirmationDelete"));
 		}
 
 		Inventory gui = Bukkit.createInventory(null, 27, guiTitle);
-
 		ItemStack backButton = createButton(Material.BARRIER, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("back"));
 		gui.setItem(15, backButton);
 
 		if (isArchived) {
 			ItemStack archiveButton = createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvY2Y5YjY3YmI5Y2MxYzg4NDg2NzYwYjE3MjY1MDU0MzEyZDY1OWRmMmNjNjc1NTc1MDA0NWJkNzFjZmZiNGU2MCJ9fX0=", ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("archive"), 16);
-//			ItemStack archiveButton = createButton(Material.EMERALD, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("archive"));
 			gui.setItem(11, archiveButton);
 		} else {
 			ItemStack deleteButton = createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmUwZmQxMDE5OWU4ZTRmY2RhYmNhZTRmODVjODU5MTgxMjdhN2M1NTUzYWQyMzVmMDFjNTZkMThiYjk0NzBkMyJ9fX0=", ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("delete"), 18);
-//			ItemStack deleteButton = createButton(Material.REDSTONE, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("delete"));
 			gui.setItem(11, deleteButton);
 		}
 
@@ -77,16 +76,18 @@ public class BugReportConfirmationGUI {
 	                                            Boolean fromArchivedGUI) implements Listener {
 		@EventHandler(priority = EventPriority.NORMAL)
 		public void onInventoryClick(@NotNull InventoryClickEvent event) {
-			String TitleText = ChatColor.stripColor(event.getView().getTitle());
+			String displayName = ChatColor.stripColor(event.getView().getTitle());
 
-			if (BugReportManager.debugMode) plugin.getLogger().info("Clicked inventory: " + TitleText);
+			if (BugReportManager.debugMode) plugin.getLogger().info("Clicked inventory: " + displayName);
 
-			String englishTitle = BugReportLanguage.getEnglishVersionFromLanguage(TitleText);
+			String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(displayName);
 
-			boolean isArchivedDetails = englishTitle.startsWith("Archive Bug Report?");
-			boolean isDeletedDetails = englishTitle.startsWith("Delete Bug Report?");
+			boolean isArchivedDetails = customDisplayName.startsWith("Archive Bug Report");
+			boolean isDeletedDetails = customDisplayName.startsWith("Delete Bug Report");
 
 			if (!isArchivedDetails && !isDeletedDetails) {
+				plugin.getLogger().warning("Something went wrong with the languages.yml file. Please remove the file and restart the server.");
+				plugin.getLogger().warning("If the issue persists, please contact the developer.");
 				return;
 			}
 
@@ -108,16 +109,16 @@ public class BugReportConfirmationGUI {
 				return;
 			}
 
-			String displayName = itemMeta.getDisplayName();
-			String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(ChatColor.stripColor(displayName));
+			String itemDisplayName = itemMeta.getDisplayName();
+			String customItemDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(ChatColor.stripColor(itemDisplayName));
 
-			if (BugReportManager.debugMode) plugin.getLogger().info("Clicked item: " + customDisplayName);
+			if (BugReportManager.debugMode) plugin.getLogger().info("Clicked item: " + customItemDisplayName);
 
 			if (isArchivedDetails) {
 				if (BugReportManager.debugMode) plugin.getLogger().info("Opening archived confirmation GUI.");
-				switch (customDisplayName) {
+				switch (customItemDisplayName) {
 					case "Archive" -> {
-						player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+						playButtonClickSound(player);
 
 						if (BugReportManager.debugMode) plugin.getLogger().info("Archiving report: " + reportIDGUI);
 						new BugReportConfirmationGUI().archiveReport(player, reportIDGUI, true);
@@ -127,21 +128,19 @@ public class BugReportConfirmationGUI {
 						HandlerList.unregisterAll(this);
 					}
 					case "Back" -> {
-						player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+						playButtonClickSound(player);
 
 						if (BugReportManager.debugMode) plugin.getLogger().info("Going back to bug reports.");
-						player.openInventory(fromArchivedGUI ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
-
-						HandlerList.unregisterAll(this);
+						returnFromConfirmationGUI(player, false);
 					}
 				}
 			}
 
 			if (isDeletedDetails) {
 				if (BugReportManager.debugMode) plugin.getLogger().info("Opening delete confirmation GUI.");
-				switch (customDisplayName) {
+				switch (customItemDisplayName) {
 					case "Delete" -> {
-						player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+						playButtonClickSound(player);
 
 						if (BugReportManager.debugMode) plugin.getLogger().info("Deleting report: " + reportIDGUI);
 						new BugReportConfirmationGUI().deleteReport(player, reportIDGUI, isArchivedDetails);
@@ -151,15 +150,24 @@ public class BugReportConfirmationGUI {
 						HandlerList.unregisterAll(this);
 					}
 					case "Back" -> {
-						player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
+						playButtonClickSound(player);
 
 						if (BugReportManager.debugMode) plugin.getLogger().info("Going back to archived reports.");
-						player.openInventory(fromArchivedGUI ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
-
-						HandlerList.unregisterAll(this);
+						returnFromConfirmationGUI(player, false);
 					}
 				}
 			}
+		}
+
+		private void returnFromConfirmationGUI(@NotNull Player player, Boolean fromArchivedGUI) {
+			player.openInventory(fromArchivedGUI ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
+
+			List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
+			String report = reports.stream().filter(reportString -> reportString.contains("Report ID: " + reportIDGUI)).findFirst().orElse(null);
+
+			openBugReportDetailsGUI(player, report, reportIDGUI, fromArchivedGUI);
+
+			HandlerList.unregisterAll(this);
 		}
 	}
 }
