@@ -1,29 +1,61 @@
 ## What is BugReport?
-BugReport is a tool that helps server owners manage any bug reports found by players that can be accessed by a GUI. This is especially helpful as information about where the player is located and their UUID is automatically stored and shown to admins.
+
+Bug Report is a tool that helps server owners manage any bugs found by players which can then be accessed by a GUI. This
+is especially helpful as information about the player is stored as soon as they submit a bug report. Information
+collected when a bug report is submitted is as follows:
+
+- Server Name
+- Player Name
+- Player's UUID
+- Current World Name
+- Full Message
+- Category ID (If the option is turned on)
+- Status (Can be customized using a GUI)
+- Date & Time
+- Player's Location
+- Player's Game Mode
+
+You can archive/unarchive/delete bug reports, customize the "Bug Report Details" GUI, customize all of the statuses,
+language selector and more!
 
 ## Commands
+
 - bugreport <message> - **Adds a new bug report either via message or a GUI for the categories**.
 - buglist - **This shows a GUI with all the reports made on the settings page**.
 - buglistsettings - **This shows the Bug List Settings GUI**.
-- buglistarchived - **See all of the bug reports that have been archived in a GUI**.
+- buglistarchived - **See all the bug reports that have been archived in a GUI**.
 - buglinkdiscord <Webhook URL> - **Links a Discord Webhook to send all Bug Reports to**.
 
+## Command Aliases
+
+- **/br <message>** (/bugreport <Message>)
+- **/bl** (/buglist)
+- **/bla** (/buglistarchived)
+- **/bls** (/buglistsettings)
+- **/bld <Webhook URL>** (/buglinkdiscord <Webhook URL>)
+
 ## Permissions
+
 - bugreport.admin - **Allows a user to access the buglist command**.
 - bugreport.notify - **Let a player be notified every time a bug report is sent**.
 
 ## Bug List GUI
+
 ![https://www.spigotmc.org/attachments/bug-report-list-gui-png.795626/](https://www.spigotmc.org/attachments/bug-report-list-gui-png.795626/)
 
 ## Bug Details GUI
+
 ![https://www.spigotmc.org/attachments/bug-report-details-png.795652/](https://www.spigotmc.org/attachments/bug-report-details-png.795652/)
 
 ## Plan Support
-Bug Report now supports the Plan API. To use Bug Report with Plan, you will need to install Plan onto your Spigot Server and it should set up everything automatically.
+
+Bug Report now supports the Plan API. To use Bug Report with Plan, you will need to install Plan onto your Spigot Server
+and it should set up everything automatically.
 
 ![https://proxy.spigotmc.org/11743b792604519bd95c3ab037a541508e8a5712?url=https%3A%2F%2Fcdn.discordapp.com%2Fattachments%2F1126552957597519892%2F1197707477647638569%2Fimage.png](https://proxy.spigotmc.org/11743b792604519bd95c3ab037a541508e8a5712?url=https%3A%2F%2Fcdn.discordapp.com%2Fattachments%2F1126552957597519892%2F1197707477647638569%2Fimage.png)
 
 ## Placeholder API Support
+
 Bug Report now supports Placeholder API, the keys for Bug Report is the following with more to come in the future.
 
 - %bugreports_totalBugReports% - (**Returns the total amount of bug reports**)
@@ -31,9 +63,12 @@ Bug Report now supports Placeholder API, the keys for Bug Report is the followin
 - %bugreports_totalNonArchivedBugReports% - (**Returns the total amount of non-archived bug reports**)
 
 ## Discord Support
-- If you need any support or have features you want to be added to Bug Report, you can join the Discord here - https://discord.gg/jXsV3xQJD4.
+
+- If you need any support or have features you want to be added to Bug Report, you can join the Discord
+  here - https://discord.gg/jXsV3xQJD4.
 
 Example Config
+
 ```yaml
 webhookURL: https://discord.com/api/webhooks/
 
@@ -106,4 +141,6 @@ reportCategories:
 ```
 
 ## Metrics Collection
-Bug Report uses bStats to collect anonymous statistics about servers. If you would like to disable metrics collection, you can do so by editing the ``plugins/bStats/config.yml`` file.
+
+Bug Report uses bStats to collect anonymous statistics about servers. If you would like to disable metrics collection,
+you can do so by editing the ``plugins/bStats/config.yml`` file.
