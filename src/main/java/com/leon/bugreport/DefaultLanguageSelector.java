@@ -45,8 +45,8 @@ public class DefaultLanguageSelector {
 			put("statusColor", "Status Color");
 			put("statusDescription", "Status Description");
 			put("statusSelection", "Status Selection");
-			put("confirmationDelete", "Delete Bug Report %bugReportID%?");
-			put("confirmationArchive", "Archive Bug Report %bugReportID%?");
+			put("confirmationDelete", "Delete Bug Report?");
+			put("confirmationArchive", "Archive Bug Report?");
 			put("missingValueMessage", "Missing '%key%' in reportCategories in config.yml");
 			put("missingReportCategoryMessage", "Missing reportCategories in config.yml");
 			put("wentWrongLoadingCategoriesMessage", "Something went wrong while loading the report categories");

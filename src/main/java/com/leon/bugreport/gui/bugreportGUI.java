@@ -37,6 +37,7 @@ public class bugreportGUI {
 			put("BugReportTimestamp", "Timestamp");
 			put("BugReportLocation", "Location " + ChatColor.BOLD + "(Click to teleport)");
 			put("BugReportGamemode", "Gamemode");
+			put("BugReportServerName", "Server Name");
 			put("BugReportUnArchive", BugReportLanguage.getTitleFromLanguage("unarchive"));
 			put("BugReportArchive", BugReportLanguage.getTitleFromLanguage("archive"));
 			put("BugReportBack", BugReportLanguage.getTitleFromLanguage("back"));
@@ -289,6 +290,7 @@ public class bugreportGUI {
 			case "BugReportTimestamp" -> "Timestamp";
 			case "BugReportLocation" -> "Location";
 			case "BugReportGamemode" -> "Gamemode";
+			case "BugReportServerName" -> "Server Name";
 			case "BugReportUnArchive" -> BugReportLanguage.getTitleFromLanguage("unarchive");
 			case "BugReportArchive" -> BugReportLanguage.getTitleFromLanguage("archive");
 			case "BugReportBack" -> BugReportLanguage.getTitleFromLanguage("back");
@@ -304,7 +306,7 @@ public class bugreportGUI {
 	 * @return true if the item supports custom textures; false otherwise.
 	 */
 	private static boolean isItemSupportsTexture(String bugReportItemKey) {
-		return List.of("BugReportUUID", "BugReportWorld", "BugReportMessage", "BugReportCategory", "BugReportTimestamp", "BugReportLocation", "BugReportGamemode", "BugReportUnArchive", "BugReportArchive", "BugReportDelete").contains(bugReportItemKey);
+		return List.of("BugReportUUID", "BugReportWorld", "BugReportMessage", "BugReportCategory", "BugReportTimestamp", "BugReportLocation", "BugReportGamemode", "BugReportServerName", "BugReportUnArchive", "BugReportArchive", "BugReportDelete").contains(bugReportItemKey);
 	}
 
 	private static @NotNull Map<String, String> parseReportDetails(@NotNull String report) {
@@ -335,6 +337,7 @@ public class bugreportGUI {
 		String location = getReportByKey(report, "Location");
 		String gamemode = getReportByKey(report, "Gamemode");
 		String status = getReportByKey(report, "Status");
+		String serverName = getReportByKey(report, "serverName");
 
 		ItemStack emptyItem = createEmptyItem();
 		String locationTitle;
@@ -365,6 +368,7 @@ public class bugreportGUI {
 		ItemStack uuidItem = createInfoItem(Material.NAME_TAG, ChatColor.GOLD + "UUID", ChatColor.WHITE + uuid);
 		ItemStack worldItem = createInfoItem(Material.GRASS_BLOCK, ChatColor.GOLD + "World", ChatColor.WHITE + world);
 		ItemStack messageItem = createInfoItem(Material.PAPER, ChatColor.GOLD + "Full Message", ChatColor.WHITE + fullMessage, fullMessage.length() > 32);
+		ItemStack serverNameItem = createInfoItem(Material.COMPASS, ChatColor.GOLD + "Server Name", ChatColor.WHITE + serverName, false);
 		ItemStack statusItem = null;
 
 		if (status != null) {
@@ -393,10 +397,11 @@ public class bugreportGUI {
 			gui.setItem(i, emptyItem);
 		}
 
-		gui.setItem(1, usernameItem);
-		gui.setItem(3, uuidItem);
-		gui.setItem(5, worldItem);
-		gui.setItem(7, messageItem);
+		gui.setItem(0, usernameItem);
+		gui.setItem(2, uuidItem);
+		gui.setItem(4, worldItem);
+		gui.setItem(6, messageItem);
+		gui.setItem(8, serverNameItem);
 
 		gui.setItem(20, statusItem);
 		gui.setItem(22, timestampItem);

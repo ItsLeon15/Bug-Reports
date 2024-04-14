@@ -2,7 +2,7 @@
 
 # The list of valid bugReportItem instances are
 # BugReporter, BugReportUUID, BugReportWorld, BugReportMessage, BugReportCategory, BugReportStatus, BugReportTimestamp
-# BugReportLocation, BugReportGamemode, BugReportArchive, BugReportBack, BugReportDelete
+# BugReportLocation, BugReportGamemode, BugReportArchive, BugReportBack, BugReportDelete, BugReportServerName
 
 # Any of these items can have a texture, the list of textures can be obtained from here: https://minecraft-heads.com/custom-heads
 # Then select the "Value" under the "For Developers:" section and paste it in the texture field.
@@ -12,26 +12,30 @@
 # The list of all items that can have a texture are:
 # BugReportUUID, BugReportWorld, BugReportMessage
 # BugReportCategory, BugReportTimestamp, BugReportLocation
-# BugReportGamemode, BugReportArchive, BugReportDelete
+# BugReportGamemode, BugReportArchive, BugReportDelete, BugReportServerName
 
 # BugReportStatus will be terminated if a custom status is provided.
 
 bug_report_details_GUI:
   guiSize: 45 # The GUI size can be between 9 and 54 but has to be a multiple of 9.
   items:
-    - slot: 1
+    - slot: 0
+      bugReportItem: BugReportServerName
+      material: DIAMOND
+      texture: ""
+    - slot: 2
       bugReportItem: BugReporter
       material: PLAYER_HEAD # For player texture, use %player_texture%. Only works for BugReporter.
       texture: "%player_texture%"
-    - slot: 3
+    - slot: 4
       bugReportItem: BugReportUUID
       material: NAME_TAG
       texture: ""
-    - slot: 5
+    - slot: 6
       bugReportItem: BugReportWorld
       material: GRASS_BLOCK
       texture: ""
-    - slot: 7
+    - slot: 8
       bugReportItem: BugReportMessage
       material: PAPER
       texture: ""
@@ -41,7 +45,7 @@ bug_report_details_GUI:
       texture: ""
     - slot: 20
       bugReportItem: BugReportStatus
-      material: [LIME_DYE, RED_DYE] # First item is Active, Second is Archived
+      material: [ LIME_DYE, RED_DYE ] # First item is Active, Second is Archived
     - slot: 22
       bugReportItem: BugReportTimestamp
       material: CLOCK

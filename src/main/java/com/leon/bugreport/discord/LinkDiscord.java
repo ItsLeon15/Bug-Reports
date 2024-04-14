@@ -18,7 +18,7 @@ import static com.leon.bugreport.commands.BugReportCommand.stringColorToColorCod
 
 public class LinkDiscord {
 	private static final String EMBED_TITLE = "New Bug Report";
-	private static final String EMBED_FOOTER_TEXT = "Bug Report V0.11.2";
+	private static final String EMBED_FOOTER_TEXT = "Bug Report V0.11.3";
 	private static final String EMBED_THUMBNAIL = "https://www.spigotmc.org/data/resource_icons/110/110732.jpg";
 	private static final Color EMBED_COLOR = Color.YELLOW;
 	private String webhookURL;
@@ -69,7 +69,7 @@ public class LinkDiscord {
 		sendEmbed(embedObject);
 	}
 
-	public void sendBugReport(String message, String world, String username, String location, String gamemode, Integer category) {
+	public void sendBugReport(String message, String world, String username, String location, String gamemode, Integer category, String serverName) {
 		if (webhookURL == null || webhookURL.isEmpty()) {
 			System.out.println("Webhook URL is not configured. Bug report not sent to Discord.");
 			return;
@@ -86,10 +86,10 @@ public class LinkDiscord {
 			return;
 		}
 
-		sendDiscordMessageEmbedFull(message, world, username, location, gamemode, category, discordEmbedFields);
+		sendDiscordMessageEmbedFull(message, world, username, location, gamemode, category, serverName, discordEmbedFields);
 	}
 
-	private void sendDiscordMessageEmbedFull(String message, String world, String username, String location, String gamemode, Integer category, @NotNull List<Map<?, ?>> discordEmbedFields) {
+	private void sendDiscordMessageEmbedFull(String message, String world, String username, String location, String gamemode, Integer category, String serverName, @NotNull List<Map<?, ?>> discordEmbedFields) {
 		List<DiscordEmbedDetails> discordDetails = new ArrayList<>();
 
 		for (Map<?, ?> field : discordEmbedFields) {
@@ -108,7 +108,7 @@ public class LinkDiscord {
 			String name = detail.getName();
 			String detailValue = detail.getValue();
 
-			String value = getValueForField(detailValue, username, world, location, gamemode, category, message);
+			String value = getValueForField(detailValue, username, world, location, gamemode, category, message, serverName);
 
 			if (checkIfValueIsValid(detailValue)) {
 				Boolean inline = detail.getInline();
@@ -125,14 +125,29 @@ public class LinkDiscord {
 	private boolean checkIfValueIsValid(@NotNull String placeholderValue) {
 		return switch (placeholderValue) {
 			case "%report_username%", "%report_full_message%", "%report_category%", "%report_status%",
-			     "%report_gamemode%", "%report_location%", "%report_world%", "%report_uuid%" -> true;
+			     "%report_gamemode%", "%report_location%", "%report_world%", "%report_uuid%", "%report_server_name%" ->
+					true;
 			default -> false;
 		};
 	}
 
-	private @NotNull String getValueForField(@NotNull String fieldValue, String username, String world, String location, String gamemode, Integer category, String message) {
-		return fieldValue.replace("%report_username%", username).replace("%report_uuid%", getUserIDFromAPI(username)).replace("%report_world%", world).replace("%report_location%", location).replace("%report_gamemode%", gamemode).replace("%report_status%", "Active") // Assuming status is always "Active" here
-				.replace("%report_category%", getCategoryName(category)).replace("%report_full_message%", message);
+	private @NotNull String getValueForField(@NotNull String fieldValue, String username, String world, String location, String gamemode, Integer category, String message, String serverName) {
+		Map<String, String> replacements = new HashMap<>();
+		replacements.put("%report_username%", username);
+		replacements.put("%report_uuid%", getUserIDFromAPI(username));
+		replacements.put("%report_world%", world);
+		replacements.put("%report_location%", location);
+		replacements.put("%report_status%", "Active");
+		replacements.put("%report_gamemode%", gamemode);
+		replacements.put("%report_category%", getCategoryName(category));
+		replacements.put("%report_server_name%", serverName);
+		replacements.put("%report_full_message%", message);
+
+		for (Map.Entry<String, String> entry : replacements.entrySet()) {
+			fieldValue = fieldValue.replace(entry.getKey(), entry.getValue());
+		}
+
+		return fieldValue;
 	}
 
 	private void sendEmbed(DiscordWebhook.EmbedObject embedObject) {
@@ -166,7 +181,7 @@ public class LinkDiscord {
 
 			connection.setRequestMethod("GET");
 			connection.setRequestProperty("Content-Type", "application/json");
-			connection.setRequestProperty("User-Agent", "BugReport/0.11.2");
+			connection.setRequestProperty("User-Agent", "BugReport/0.11.3");
 			connection.setConnectTimeout(5000);
 			connection.setReadTimeout(5000);
 			connection.setDoOutput(true);

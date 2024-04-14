@@ -28,6 +28,7 @@ import java.util.stream.IntStream;
 import static com.leon.bugreport.BugReportDatabase.getStaticUUID;
 import static com.leon.bugreport.BugReportManager.*;
 import static com.leon.bugreport.DefaultLanguageSelector.getTextElseDefault;
+import static com.leon.bugreport.commands.BugReportCommand.checkIfChatColorIsValid;
 import static com.leon.bugreport.gui.bugreportGUI.openBugReportDetailsGUI;
 import static com.leon.bugreport.gui.bugreportGUI.updateBugReportItems;
 
@@ -241,7 +242,6 @@ public class BugReportSettings {
 	public static class BugReportSettingsListener implements Listener {
 		private final Map<UUID, String> setMaxReportsClickMap = new HashMap<>();
 		private final Map<UUID, String> setReportCooldownClickMap = new HashMap<>();
-
 		private final Map<UUID, String> setNewNameClickMap = new HashMap<>();
 		private final Map<UUID, String> removeStatusClickMap = new HashMap<>();
 		private final Map<UUID, String> renameStatusClickMap = new HashMap<>();
@@ -255,9 +255,12 @@ public class BugReportSettings {
 		private static void setLanguage(String languageCode, String languageName, @NotNull Player player) {
 			player.closeInventory();
 			if (checkForKey("useTitleInsteadOfMessage", true)) {
-				player.sendTitle(pluginColor + pluginTitle, getTextElseDefault(languageCode, "languageSetTo").replace("%language%", languageName), 10, 70, 20);
+				player.sendTitle(pluginColor + pluginTitle,
+						getTextElseDefault(languageCode, "languageSetTo").replace("%language%", languageName), 10, 70, 20);
 			} else {
-				player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) + getTextElseDefault(languageCode, "languageSetTo").replace("%language%", languageName));
+				player.sendMessage(pluginColor + pluginTitle + " "
+						+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN)
+						+ getTextElseDefault(languageCode, "languageSetTo").replace("%language%", languageName));
 			}
 			updateBugReportItems();
 			config.set("language", languageCode);
@@ -277,7 +280,7 @@ public class BugReportSettings {
 				displayName = displayName.substring(13);
 			}
 
-			if (BugReportManager.debugMode) plugin.getLogger().info("Clicked inventory: " + displayName);
+			if (debugMode) plugin.getLogger().info("Clicked inventory: " + displayName);
 
 			String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(displayName);
 
@@ -324,7 +327,9 @@ public class BugReportSettings {
 						BugReportDatabase.updateReportStatus(newReportIDGUI, statusID);
 						player.closeInventory();
 
-						player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "The status of the report has been updated to " + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ".");
+						player.sendMessage(pluginColor + pluginTitle + " "
+								+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW)
+								+ "The status of the report has been updated to " + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ".");
 
 						List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
 						String report = reports.stream().filter(reportString -> reportString.contains("Report ID: " + newReportIDGUI)).findFirst().orElse(null);
@@ -380,14 +385,18 @@ public class BugReportSettings {
 						if (config.getBoolean("useTitleInsteadOfMessage")) {
 							player.sendTitle(pluginColor + pluginTitle, getTextElseDefault(language, "enterMaxReportsPerPlayer"), 10, 70, 20);
 						} else {
-							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + getTextElseDefault(language, "enterMaxReportsPerPlayer"));
+							player.sendMessage(pluginColor + pluginTitle + " "
+									+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW)
+									+ getTextElseDefault(language, "enterMaxReportsPerPlayer"));
 						}
 						setMaxReportsClickMap.put(player.getUniqueId(), String.valueOf(true));
 						setMaxReportsClickMap.put(player.getUniqueId(), customItemDisplayName);
 					}
 					case "Set Report Cooldown" -> {
 						player.closeInventory();
-						player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "Enter the cooldown between reports in seconds. Or type 'cancel' to cancel.");
+						player.sendMessage(pluginColor + pluginTitle + " "
+								+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW)
+								+ "Enter the cooldown between reports in seconds. Or type 'cancel' to cancel.");
 
 						setReportCooldownClickMap.put(player.getUniqueId(), String.valueOf(true));
 						setReportCooldownClickMap.put(player.getUniqueId(), customItemDisplayName);
@@ -398,7 +407,7 @@ public class BugReportSettings {
 					}
 					case "View Status" -> {
 						playButtonClickSound(player);
-						player.openInventory(getViewStatusGUI());
+						player.openInventory(getViewStatusGUI(player));
 					}
 				}
 			}
@@ -547,28 +556,30 @@ public class BugReportSettings {
 				String itemDisplayName = itemMeta.getDisplayName();
 				String customItemDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(itemDisplayName);
 
-				if (customItemDisplayName.equals("Back")) {
-					playButtonClickSound(player);
-					player.openInventory(getViewStatusGUI());
-					return;
-				}
+				switch (customItemDisplayName) {
+					case "Back" -> {
+						playButtonClickSound(player);
+						player.openInventory(getViewStatusGUI(player));
+						return;
+					}
+					case " " -> {
+						return;
+					}
+					case "Delete" -> {
+						List<Map<?, ?>> statuses = config.getMapList("statuses");
+						for (Map<?, ?> statusMap : statuses) {
+							String statusName = (String) statusMap.get("name");
+							if (statusMap.get("id").equals(savedStatusID)) {
+								playButtonClickSound(player);
 
-				if (customItemDisplayName.equals(" ")) {
-					return;
-				}
+								player.closeInventory();
+								player.sendMessage(pluginColor + pluginTitle + " "
+										+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW)
+										+ "Type 'confirm' to delete the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
 
-				if (customItemDisplayName.equals("Delete")) {
-					List<Map<?, ?>> statuses = config.getMapList("statuses");
-					for (Map<?, ?> statusMap : statuses) {
-						String statusName = (String) statusMap.get("name");
-						if (statusMap.get("id").equals(savedStatusID)) {
-							playButtonClickSound(player);
-
-							player.closeInventory();
-							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "Type 'confirm' to delete the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
-
-							removeStatusClickMap.put(player.getUniqueId(), String.valueOf(true));
-							removeStatusClickMap.put(player.getUniqueId(), statusName);
+								removeStatusClickMap.put(player.getUniqueId(), String.valueOf(true));
+								removeStatusClickMap.put(player.getUniqueId(), statusName);
+							}
 						}
 					}
 				}
@@ -581,7 +592,9 @@ public class BugReportSettings {
 							playButtonClickSound(player);
 
 							player.closeInventory();
-							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "Type the new name for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
+							player.sendMessage(pluginColor + pluginTitle + " "
+									+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW)
+									+ "Type the new name for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
 
 							renameStatusClickMap.put(player.getUniqueId(), String.valueOf(true));
 							renameStatusClickMap.put(player.getUniqueId(), statusName);
@@ -597,7 +610,9 @@ public class BugReportSettings {
 							playButtonClickSound(player);
 							player.closeInventory();
 
-							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "Type the new material for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
+							player.sendMessage(pluginColor + pluginTitle + " "
+									+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW)
+									+ "Type the new material for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
 							setNewMaterialStatusClickMap.put(player.getUniqueId(), String.valueOf(true));
 							setNewMaterialStatusClickMap.put(player.getUniqueId(), statusName);
 						}
@@ -612,7 +627,9 @@ public class BugReportSettings {
 							playButtonClickSound(player);
 
 							player.closeInventory();
-							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "Type the new color for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
+							player.sendMessage(pluginColor + pluginTitle + " "
+									+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW)
+									+ "Type the new color for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
 
 							setNewColorStatusClickMap.put(player.getUniqueId(), String.valueOf(true));
 							setNewColorStatusClickMap.put(player.getUniqueId(), statusName);
@@ -629,7 +646,9 @@ public class BugReportSettings {
 							playButtonClickSound(player);
 
 							player.closeInventory();
-							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "Type the new description for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
+							player.sendMessage(pluginColor + pluginTitle + " "
+									+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW)
+									+ "Type the new description for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
 
 							setNewDescriptionStatusClickMap.put(player.getUniqueId(), String.valueOf(true));
 							setNewDescriptionStatusClickMap.put(player.getUniqueId(), statusName);
@@ -639,8 +658,10 @@ public class BugReportSettings {
 			}
 		}
 
-		private @NotNull Inventory getViewStatusGUI() {
-			Inventory gui = Bukkit.createInventory(null, 45, Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "Bug Report - " + BugReportLanguage.getTitleFromLanguage("viewStatus"));
+		private @NotNull Inventory getViewStatusGUI(Player player) {
+			Inventory gui = Bukkit.createInventory(null, 45,
+					Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW)
+							+ "Bug Report - " + BugReportLanguage.getTitleFromLanguage("viewStatus"));
 
 			setBorder(gui, Material.GRAY_STAINED_GLASS_PANE);
 
@@ -653,8 +674,11 @@ public class BugReportSettings {
 						Map<?, ?> statusMap = statuses.get(statusIndex);
 						String statusName = (String) statusMap.get("name");
 
-						ChatColor statusColor = ChatColor.valueOf((String) statusMap.get("color")) != null ? ChatColor.valueOf((String) statusMap.get("color")) : ChatColor.WHITE;
-						Material statusIcon = Material.matchMaterial((String) statusMap.get("icon")) != null ? Material.matchMaterial((String) statusMap.get("icon")) : Material.BARRIER;
+						String statusColorString = ((String) statusMap.get("color")).toUpperCase();
+						ChatColor statusColor = ChatColor.valueOf(statusColorString);
+						Material statusIcon = Material.matchMaterial((String) statusMap.get("icon")) != null
+								? Material.matchMaterial((String) statusMap.get("icon"))
+								: Material.BARRIER;
 
 						ItemStack statusItem = createButton(statusIcon, statusColor + statusName);
 						ItemMeta statusMeta = statusItem.getItemMeta();
@@ -667,12 +691,10 @@ public class BugReportSettings {
 						gui.setItem(i, statusItem);
 						statusIndex++;
 					}
-
 				}
 			}
 
 			gui.setItem(40, createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("back")));
-			// gui.setItem(42, createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzQzOGQwOGJkMDQwNWMwNWY0N2VhODZkNjY2NDM0MzRmZGQyZThjNDZmZjFlNmY4ODJiYjliZjg5MWM3ZDNhNSJ9fX0=", BugReportLanguage.getTitleFromLanguage("addStatus"), 1));
 
 			return gui;
 		}
@@ -774,7 +796,10 @@ public class BugReportSettings {
 			config.set("useTitleInsteadOfMessage", !toggle);
 			saveConfig();
 			if (debugMode) plugin.getLogger().info("Title message set to " + !toggle);
-			player.getOpenInventory().setItem(19, getTitleMessage() ? createButton(Material.LIME_DYE, ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage("true")) : createButton(Material.GRAY_DYE, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("false")));
+			player.getOpenInventory().setItem(19,
+					getTitleMessage()
+							? createButton(Material.LIME_DYE, ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage("true"))
+							: createButton(Material.GRAY_DYE, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("false")));
 		}
 
 		private boolean getPlayerHead() {
@@ -788,7 +813,9 @@ public class BugReportSettings {
 			config.set("enablePlayerHeads", !toggle);
 			saveConfig();
 			if (debugMode) plugin.getLogger().info("Player heads set to " + !toggle);
-			player.getOpenInventory().setItem(20, getPlayerHead() ? createButton(Material.LIME_DYE, ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage("true")) : createButton(Material.GRAY_DYE, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("false")));
+			player.getOpenInventory().setItem(20, getPlayerHead()
+					? createButton(Material.LIME_DYE, ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage("true"))
+					: createButton(Material.GRAY_DYE, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("false")));
 		}
 
 		private boolean getReportBook() {
@@ -802,7 +829,9 @@ public class BugReportSettings {
 			config.set("enablePluginReportBook", !toggle);
 			saveConfig();
 			if (debugMode) plugin.getLogger().info("Report book set to " + !toggle);
-			player.getOpenInventory().setItem(21, getReportBook() ? createButton(Material.LIME_DYE, ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage("true")) : createButton(Material.GRAY_DYE, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("false")));
+			player.getOpenInventory().setItem(21, getReportBook()
+					? createButton(Material.LIME_DYE, ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage("true"))
+					: createButton(Material.GRAY_DYE, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("false")));
 		}
 
 		private void handleCancel(Player player, @NotNull Map<UUID, String> clickMap) {
@@ -825,7 +854,6 @@ public class BugReportSettings {
 				player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) + message);
 			}
 		}
-
 
 		private @NotNull List<Map<String, Object>> getTypedStatusList() {
 			List<Map<?, ?>> originalStatuses = config.getMapList("statuses");
@@ -864,29 +892,42 @@ public class BugReportSettings {
 							maxReports = Integer.parseInt(value);
 						} catch (NumberFormatException e) {
 							if (checkForKey("useTitleInsteadOfMessage", true)) {
-								player.sendTitle(pluginColor + pluginTitle, getTextElseDefault(config.getString("language"), "enterValidNumber"), 10, 70, 20);
+								player.sendTitle(pluginColor + pluginTitle,
+										getTextElseDefault(config.getString("language"), "enterValidNumber"), 10, 70, 20);
 							} else {
-								player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + getTextElseDefault(config.getString("language"), "enterValidNumber"));
+								player.sendMessage(pluginColor + pluginTitle + " "
+										+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
+										+ getTextElseDefault(config.getString("language"), "enterValidNumber"));
 							}
 							return;
 						}
 						config.set("max-reports-per-player", maxReports);
 						saveConfig();
 						if (checkForKey("useTitleInsteadOfMessage", true)) {
-							player.sendTitle(pluginColor + pluginTitle, getTextElseDefault(config.getString("language"), "maxReportsPerPlayerSuccessMessage").replace("%amount%", String.valueOf(maxReports)), 10, 70, 20);
+							player.sendTitle(pluginColor + pluginTitle,
+									getTextElseDefault(config.getString("language"), "maxReportsPerPlayerSuccessMessage")
+											.replace("%amount%", String.valueOf(maxReports)), 10, 70, 20);
 						} else {
-							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) + getTextElseDefault(config.getString("language"), "maxReportsPerPlayerSuccessMessage").replace("%amount%", String.valueOf(maxReports)));
+							player.sendMessage(pluginColor + pluginTitle + " "
+									+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN)
+									+ getTextElseDefault(config.getString("language"), "maxReportsPerPlayerSuccessMessage")
+									.replace("%amount%", String.valueOf(maxReports)));
 						}
 					} else {
 						value = value.substring(0, 1).toUpperCase() + value.substring(1).toLowerCase();
 						String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(value);
 						if (customDisplayName.contains("Cancel")) {
-							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) + BugReportLanguage.getTitleFromLanguage("cancelled"));
+							player.sendMessage(pluginColor + pluginTitle + " "
+									+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN)
+									+ BugReportLanguage.getTitleFromLanguage("cancelled"));
 						} else {
 							if (checkForKey("useTitleInsteadOfMessage", true)) {
-								player.sendTitle(pluginColor + pluginTitle, getTextElseDefault(config.getString("language"), "enterValidNumber"), 10, 70, 20);
+								player.sendTitle(pluginColor + pluginTitle,
+										getTextElseDefault(config.getString("language"), "enterValidNumber"), 10, 70, 20);
 							} else {
-								player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + getTextElseDefault(config.getString("language"), "enterValidNumber"));
+								player.sendMessage(pluginColor + pluginTitle + " "
+										+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
+										+ getTextElseDefault(config.getString("language"), "enterValidNumber"));
 							}
 						}
 					}
@@ -900,9 +941,12 @@ public class BugReportSettings {
 						reportCooldown = Integer.parseInt(value);
 					} catch (NumberFormatException e) {
 						if (checkForKey("useTitleInsteadOfMessage", true)) {
-							player.sendTitle(pluginColor + pluginTitle, getTextElseDefault(config.getString("language"), "enterValidNumber"), 10, 70, 20);
+							player.sendTitle(pluginColor + pluginTitle,
+									getTextElseDefault(config.getString("language"), "enterValidNumber"), 10, 70, 20);
 						} else {
-							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + getTextElseDefault(config.getString("language"), "enterValidNumber"));
+							player.sendMessage(pluginColor + pluginTitle + " "
+									+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
+									+ getTextElseDefault(config.getString("language"), "enterValidNumber"));
 						}
 						return;
 					}
@@ -910,9 +954,14 @@ public class BugReportSettings {
 					config.set("report-cooldown", reportCooldown);
 					saveConfig();
 					if (checkForKey("useTitleInsteadOfMessage", true)) {
-						player.sendTitle(pluginColor + pluginTitle, getTextElseDefault(config.getString("language"), "reportCooldownSuccessMessage").replace("%time%", String.valueOf(reportCooldown)), 10, 70, 20);
+						player.sendTitle(pluginColor + pluginTitle,
+								getTextElseDefault(config.getString("language"), "reportCooldownSuccessMessage")
+										.replace("%time%", String.valueOf(reportCooldown)), 10, 70, 20);
 					} else {
-						player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) + getTextElseDefault(config.getString("language"), "reportCooldownSuccessMessage").replace("%time%", String.valueOf(reportCooldown)));
+						player.sendMessage(pluginColor + pluginTitle + " "
+								+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN)
+								+ getTextElseDefault(config.getString("language"), "reportCooldownSuccessMessage")
+								.replace("%time%", String.valueOf(reportCooldown)));
 					}
 				});
 			}
@@ -987,6 +1036,19 @@ public class BugReportSettings {
 						handleCancel(player, setNewColorStatusClickMap);
 						return;
 					}
+
+					if (!checkIfChatColorIsValid(value)) {
+						if (checkForKey("useTitleInsteadOfMessage", true)) {
+							player.sendTitle(pluginColor + pluginTitle,
+									getTextElseDefault(config.getString("language"), "invalidColor"), 10, 70, 20);
+						} else {
+							player.sendMessage(pluginColor + pluginTitle + " "
+									+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
+									+ getTextElseDefault(config.getString("language"), "invalidColor"));
+						}
+						return;
+					}
+
 					List<Map<String, Object>> statuses = getTypedStatusList();
 					updateStatus(statuses, player, setNewColorStatusClickMap, "color", value);
 
@@ -1012,7 +1074,13 @@ public class BugReportSettings {
 			}
 		}
 
-		private void handleSettingUpdate(AsyncPlayerChatEvent event, @NotNull Player player, @NotNull Map<UUID, String> settingClickMap, String displayName, String ignoredConfigKey, Consumer<String> updateLogic) {
+		private void handleSettingUpdate(AsyncPlayerChatEvent event,
+		                                 @NotNull Player player,
+		                                 @NotNull Map<UUID, String> settingClickMap,
+		                                 String displayName,
+		                                 String ignoredConfigKey,
+		                                 Consumer<String> updateLogic
+		) {
 			String clickDisplayName = settingClickMap.get(player.getUniqueId());
 			String displayNameDefault = BugReportLanguage.getEnglishVersionFromLanguage(displayName);
 

@@ -65,31 +65,39 @@ public class BugReportCommand implements CommandExecutor, Listener {
 		};
 	}
 
+	public static @NotNull Boolean checkIfChatColorIsValid(@NotNull String chatColor) {
+		return switch (chatColor.toUpperCase()) {
+			case "AQUA", "BLACK", "BLUE", "DARK_AQUA", "DARK_BLUE", "DARK_GRAY", "DARK_GREEN", "DARK_PURPLE",
+			     "DARK_RED", "GOLD", "GRAY", "GREEN", "LIGHT_PURPLE", "RED", "WHITE", "YELLOW" -> true;
+			default -> false;
+		};
+	}
+
 	@Contract(pure = true)
 	public static ChatColor getChatColorByCode(@NotNull String colorCode) {
 		return switch (colorCode) {
-			case "§b" -> ChatColor.AQUA;
 			case "§0" -> ChatColor.BLACK;
-			case "§9" -> ChatColor.BLUE;
-			case "§l" -> ChatColor.BOLD;
-			case "§3" -> ChatColor.DARK_AQUA;
 			case "§1" -> ChatColor.DARK_BLUE;
-			case "§8" -> ChatColor.DARK_GRAY;
 			case "§2" -> ChatColor.DARK_GREEN;
-			case "§5" -> ChatColor.DARK_PURPLE;
+			case "§3" -> ChatColor.DARK_AQUA;
 			case "§4" -> ChatColor.DARK_RED;
+			case "§5" -> ChatColor.DARK_PURPLE;
 			case "§6" -> ChatColor.GOLD;
 			case "§7" -> ChatColor.GRAY;
+			case "§8" -> ChatColor.DARK_GRAY;
+			case "§9" -> ChatColor.BLUE;
 			case "§a" -> ChatColor.GREEN;
-			case "§o" -> ChatColor.ITALIC;
-			case "§d" -> ChatColor.LIGHT_PURPLE;
-			case "§k" -> ChatColor.MAGIC;
+			case "§b" -> ChatColor.AQUA;
 			case "§c" -> ChatColor.RED;
-			case "§r" -> ChatColor.RESET;
+			case "§d" -> ChatColor.LIGHT_PURPLE;
+			case "§e" -> ChatColor.YELLOW;
+			case "§f" -> ChatColor.WHITE;
+			case "§k" -> ChatColor.MAGIC;
+			case "§l" -> ChatColor.BOLD;
 			case "§m" -> ChatColor.STRIKETHROUGH;
 			case "§n" -> ChatColor.UNDERLINE;
-			case "§f" -> ChatColor.WHITE;
-			case "§e" -> ChatColor.YELLOW;
+			case "§o" -> ChatColor.ITALIC;
+			case "§r" -> ChatColor.RESET;
 			default -> throw new IllegalArgumentException("Invalid color code: " + colorCode);
 		};
 	}

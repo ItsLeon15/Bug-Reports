@@ -57,7 +57,9 @@ public class BugReportConfirmationGUI {
 	public void archiveReport(@NotNull Player player, @NotNull Integer reportIDGUI, @NotNull Boolean isArchivedDetails) {
 		BugReportDatabase.updateBugReportArchive(reportIDGUI, 1);
 		player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
-		player.sendMessage(pluginColor + pluginTitle + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + " Bug Report #" + reportIDGUI + " has been archived.");
+		player.sendMessage(pluginColor + pluginTitle
+				+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
+				+ " Bug Report #" + reportIDGUI + " has been archived.");
 	}
 
 	public void deleteReport(@NotNull Player player, @NotNull Integer reportIDGUI, @NotNull Boolean isArchivedDetails) {
@@ -69,7 +71,9 @@ public class BugReportConfirmationGUI {
 		bugReports.put(playerId, reports);
 
 		player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
-		player.sendMessage(pluginColor + pluginTitle + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + " Bug Report #" + reportIDGUI + " has been deleted.");
+		player.sendMessage(pluginColor + pluginTitle
+				+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
+				+ " Bug Report #" + reportIDGUI + " has been deleted.");
 	}
 
 	public record BugReportConfirmationListener(Inventory gui, Integer reportIDGUI,
@@ -123,7 +127,7 @@ public class BugReportConfirmationGUI {
 						if (BugReportManager.debugMode) plugin.getLogger().info("Archiving report: " + reportIDGUI);
 						new BugReportConfirmationGUI().archiveReport(player, reportIDGUI, true);
 
-						player.closeInventory();
+						player.openInventory(fromArchivedGUI ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
 
 						HandlerList.unregisterAll(this);
 					}
@@ -145,7 +149,7 @@ public class BugReportConfirmationGUI {
 						if (BugReportManager.debugMode) plugin.getLogger().info("Deleting report: " + reportIDGUI);
 						new BugReportConfirmationGUI().deleteReport(player, reportIDGUI, isArchivedDetails);
 
-						player.closeInventory();
+						player.openInventory(fromArchivedGUI ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
 
 						HandlerList.unregisterAll(this);
 					}

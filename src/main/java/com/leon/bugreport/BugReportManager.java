@@ -144,7 +144,7 @@ public class BugReportManager implements Listener {
 				put("enableBugReportNotifications", true);
 				put("discordEmbedTitle", "New Bug Report");
 				put("discordEmbedColor", "Yellow");
-				put("discordEmbedFooter", "Bug Report V0.11.2");
+				put("discordEmbedFooter", "Bug Report V0.11.3");
 				put("discordEmbedThumbnail", "https://www.spigotmc.org/data/resource_icons/110/110732.jpg");
 				put("discordEnableThumbnail", true);
 				put("discordEnableUserAuthor", true);
@@ -477,6 +477,7 @@ public class BugReportManager implements Listener {
 		String playerUUID = playerId.toString();
 		String worldName = player.getWorld().getName();
 		String gamemode = player.getGameMode().toString();
+		String serverName = config.getString("serverName", "Unknown Server");
 		String location = player.getWorld().getName() + ", " + player.getLocation().getBlockX() + ", " + player.getLocation().getBlockY() + ", " + player.getLocation().getBlockZ();
 		String reportID = reports.stream().filter(report -> report.contains("Report ID: ")).reduce((first, second) -> second).map(report -> Arrays.stream(report.split("\n")).filter(line -> line.contains("Report ID:")).findFirst().orElse("Report ID: 0")).map(reportIDLine -> reportIDLine.split(": ")[1].trim()).orElse("0");
 		String reportIDInt = String.valueOf(Integer.parseInt(reportID) + 1);
@@ -491,7 +492,7 @@ public class BugReportManager implements Listener {
 		}
 
 		if (BugReportManager.debugMode) plugin.getLogger().info("Adding bug report to database...");
-		database.addBugReport(playerName, playerId, worldName, header, message, location, gamemode);
+		database.addBugReport(playerName, playerId, worldName, header, message, location, gamemode, serverName);
 
 		if (config.getBoolean("enableBugReportNotifications", true)) {
 			if (BugReportManager.debugMode)
@@ -513,7 +514,7 @@ public class BugReportManager implements Listener {
 			}
 
 			try {
-				discord.sendBugReport(message, worldName, playerName, location, gamemode, categoryId);
+				discord.sendBugReport(message, worldName, playerName, location, gamemode, categoryId, serverName);
 				if (BugReportManager.debugMode) plugin.getLogger().info("Bug report sent to Discord.");
 			} catch (Exception e) {
 				plugin.getLogger().warning("Error sending bug report to Discord: " + e.getMessage());

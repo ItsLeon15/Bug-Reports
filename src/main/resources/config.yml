@@ -12,11 +12,13 @@ enableBugReportNotifications: true
 # Gold, Gray, Green, Light_Purple, Red, White, Yellow
 discordEmbedColor: Green
 discordEmbedTitle: New Bug Report
-discordEmbedFooter: Bug Report v0.11.2
+discordEmbedFooter: Bug Report v0.11.3
 discordEmbedThumbnail: https://www.spigotmc.org/data/resource_icons/110/110732.jpg
 discordEnableThumbnail: true
 discordEnableUserAuthor: true
 discordIncludeDate: true
+
+serverName: ""
 
 discordEmbedFields:
   - name: "Username"
@@ -47,8 +49,12 @@ discordEmbedFields:
     id: 7
     value: "%report_category%"
     inline: true
-  - name: "Full Message"
+  - name: "Sever Name"
     id: 8
+    value: "%report_server_name%"
+    inline: true
+  - name: "Full Message"
+    id: 9
     value: "%report_full_message%"
     inline: false
 

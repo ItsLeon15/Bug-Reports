@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.leon.bugreport</groupId>
   <artifactId>BugReports</artifactId>
-  <version>0.11.2</version>
+  <version>0.11.3</version>
   <build>
     <plugins>
       <plugin>
