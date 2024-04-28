@@ -3,6 +3,7 @@ package com.leon.bugreport.gui;
 import com.leon.bugreport.BugReportDatabase;
 import com.leon.bugreport.BugReportLanguage;
 import com.leon.bugreport.BugReportManager;
+import com.leon.bugreport.keys.guiTextures;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -19,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
+import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
 import static com.leon.bugreport.BugReportDatabase.getStaticUUID;
 import static com.leon.bugreport.BugReportManager.*;
 import static com.leon.bugreport.BugReportSettings.createCustomPlayerHead;
@@ -44,10 +46,10 @@ public class BugReportConfirmationGUI {
 		gui.setItem(15, backButton);
 
 		if (isArchived) {
-			ItemStack archiveButton = createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvY2Y5YjY3YmI5Y2MxYzg4NDg2NzYwYjE3MjY1MDU0MzEyZDY1OWRmMmNjNjc1NTc1MDA0NWJkNzFjZmZiNGU2MCJ9fX0=", ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("archive"), 16);
+			ItemStack archiveButton = createCustomPlayerHead(guiTextures.archiveTexture, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("archive"), 16);
 			gui.setItem(11, archiveButton);
 		} else {
-			ItemStack deleteButton = createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmUwZmQxMDE5OWU4ZTRmY2RhYmNhZTRmODVjODU5MTgxMjdhN2M1NTUzYWQyMzVmMDFjNTZkMThiYjk0NzBkMyJ9fX0=", ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("delete"), 18);
+			ItemStack deleteButton = createCustomPlayerHead(guiTextures.deleteTexture, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("delete"), 18);
 			gui.setItem(11, deleteButton);
 		}
 
@@ -77,7 +79,7 @@ public class BugReportConfirmationGUI {
 	}
 
 	public record BugReportConfirmationListener(Inventory gui, Integer reportIDGUI,
-	                                            Boolean fromArchivedGUI) implements Listener {
+												Boolean fromArchivedGUI) implements Listener {
 		@EventHandler(priority = EventPriority.NORMAL)
 		public void onInventoryClick(@NotNull InventoryClickEvent event) {
 			String displayName = ChatColor.stripColor(event.getView().getTitle());
@@ -85,13 +87,13 @@ public class BugReportConfirmationGUI {
 			if (BugReportManager.debugMode) plugin.getLogger().info("Clicked inventory: " + displayName);
 
 			String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(displayName);
-
 			boolean isArchivedDetails = customDisplayName.startsWith("Archive Bug Report");
 			boolean isDeletedDetails = customDisplayName.startsWith("Delete Bug Report");
 
 			if (!isArchivedDetails && !isDeletedDetails) {
 				plugin.getLogger().warning("Something went wrong with the languages.yml file. Please remove the file and restart the server.");
 				plugin.getLogger().warning("If the issue persists, please contact the developer.");
+				logErrorMessage("Something went wrong with the languages.yml file.");
 				return;
 			}
 

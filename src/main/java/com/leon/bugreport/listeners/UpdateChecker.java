@@ -9,6 +9,8 @@ import java.net.URL;
 import java.util.Scanner;
 import java.util.function.Consumer;
 
+import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
+
 public class UpdateChecker {
 	private final JavaPlugin plugin;
 	private final int resourceId;
@@ -27,9 +29,9 @@ public class UpdateChecker {
 					}
 				}
 			} catch (IOException e) {
-				plugin.getLogger().info("Unable to check for updates: " + e.getMessage());
+				plugin.getLogger().warning("Unable to check for updates: " + e.getMessage());
+				logErrorMessage("Unable to check for updates: " + e.getMessage());
 			}
 		});
 	}
 }
- 

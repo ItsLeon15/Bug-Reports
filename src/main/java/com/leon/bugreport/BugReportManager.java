@@ -32,6 +32,7 @@ import java.io.Serial;
 import java.util.*;
 
 import static com.leon.bugreport.API.DataSource.getPlayerHead;
+import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
 import static com.leon.bugreport.BugReportDatabase.getStaticUUID;
 import static com.leon.bugreport.BugReportSettings.getSettingsGUI;
 import static com.leon.bugreport.commands.BugReportCommand.getChatColorByCode;
@@ -100,6 +101,7 @@ public class BugReportManager implements Listener {
 	public static boolean checkCategoryConfig() {
 		if (!config.contains("reportCategories")) {
 			plugin.getLogger().warning(DefaultLanguageSelector.getTextElseDefault(language, "missingReportCategoryMessage"));
+			logErrorMessage(DefaultLanguageSelector.getTextElseDefault(language, "missingReportCategoryMessage"));
 			return false;
 		}
 
@@ -111,11 +113,17 @@ public class BugReportManager implements Listener {
 			for (int i = 0; i < keys.length; i++) {
 				if (values[i] == null) {
 					plugin.getLogger().warning(DefaultLanguageSelector.getTextElseDefault(language, "missingValueMessage").replace("%key%", keys[i].toString()));
+					logErrorMessage(DefaultLanguageSelector.getTextElseDefault(language, "missingValueMessage").replace("%key%", keys[i].toString()));
 					return false;
 				}
 			}
 		}
 		return true;
+	}
+
+	public static void reloadConfig() {
+		loadConfig();
+		checkConfig();
 	}
 
 	public static void loadConfig() {
@@ -144,7 +152,7 @@ public class BugReportManager implements Listener {
 				put("enableBugReportNotifications", true);
 				put("discordEmbedTitle", "New Bug Report");
 				put("discordEmbedColor", "Yellow");
-				put("discordEmbedFooter", "Bug Report V0.11.3");
+				put("discordEmbedFooter", "Bug Report V0.11.4");
 				put("discordEmbedThumbnail", "https://www.spigotmc.org/data/resource_icons/110/110732.jpg");
 				put("discordEnableThumbnail", true);
 				put("discordEnableUserAuthor", true);
@@ -176,6 +184,7 @@ public class BugReportManager implements Listener {
 			config.save(configFile);
 		} catch (Exception e) {
 			plugin.getLogger().warning("Error saving config.yml: " + e.getMessage());
+			logErrorMessage("Error saving config.yml: " + e.getMessage());
 		}
 	}
 
@@ -396,12 +405,12 @@ public class BugReportManager implements Listener {
 		return item;
 	}
 
-	public static @NotNull ItemStack createInfoItem(Material material, String name, String value, Boolean @NotNull ... longMessage) {
+	public static @NotNull ItemStack createInfoItem(Material material, String name, String value, @NotNull Boolean longMessage) {
 		ItemStack item = new ItemStack(material);
 		ItemMeta meta = item.getItemMeta();
 		Objects.requireNonNull(meta).setDisplayName(name);
 
-		if (longMessage.length > 0 && longMessage[0]) {
+		if (longMessage) {
 			List<String> lore = new ArrayList<>();
 			String[] words = value.split(" ");
 			StringBuilder currentLine = new StringBuilder();
@@ -452,6 +461,7 @@ public class BugReportManager implements Listener {
 			return categories;
 		} else {
 			plugin.getLogger().warning(DefaultLanguageSelector.getTextElseDefault(language, "wentWrongLoadingCategoriesMessage"));
+			logErrorMessage(DefaultLanguageSelector.getTextElseDefault(language, "wentWrongLoadingCategoriesMessage"));
 			return null;
 		}
 	}
@@ -511,6 +521,7 @@ public class BugReportManager implements Listener {
 			String webhookURL = config.getString("webhookURL", "");
 			if (webhookURL.isEmpty()) {
 				plugin.getLogger().warning(DefaultLanguageSelector.getTextElseDefault(language, "missingDiscordWebhookURLMessage"));
+				logErrorMessage(DefaultLanguageSelector.getTextElseDefault(language, "missingDiscordWebhookURLMessage"));
 			}
 
 			try {
@@ -518,6 +529,7 @@ public class BugReportManager implements Listener {
 				if (BugReportManager.debugMode) plugin.getLogger().info("Bug report sent to Discord.");
 			} catch (Exception e) {
 				plugin.getLogger().warning("Error sending bug report to Discord: " + e.getMessage());
+				logErrorMessage("Error sending bug report to Discord: " + e.getMessage());
 			}
 		}
 		Bukkit.getScheduler().runTask(plugin, () -> {

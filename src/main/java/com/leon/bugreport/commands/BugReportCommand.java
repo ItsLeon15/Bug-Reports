@@ -26,6 +26,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
+import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
 import static com.leon.bugreport.BugReportDatabase.getStaticUUID;
 import static com.leon.bugreport.BugReportManager.*;
 import static org.bukkit.ChatColor.*;
@@ -68,7 +69,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 	public static @NotNull Boolean checkIfChatColorIsValid(@NotNull String chatColor) {
 		return switch (chatColor.toUpperCase()) {
 			case "AQUA", "BLACK", "BLUE", "DARK_AQUA", "DARK_BLUE", "DARK_GRAY", "DARK_GREEN", "DARK_PURPLE",
-			     "DARK_RED", "GOLD", "GRAY", "GREEN", "LIGHT_PURPLE", "RED", "WHITE", "YELLOW" -> true;
+				 "DARK_RED", "GOLD", "GRAY", "GREEN", "LIGHT_PURPLE", "RED", "WHITE", "YELLOW" -> true;
 			default -> false;
 		};
 	}
@@ -153,6 +154,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 							if (meta.hasCustomModelData() && meta.getCustomModelData() == 1889234213 && (item.getType() == Material.WRITTEN_BOOK || item.getType() == Material.WRITABLE_BOOK)) {
 								player.getInventory().remove(item);
 								player.updateInventory();
+								doubleCheckIfBookWasRemoved(player);
 								foundAndRemoved = true;
 								break;
 							}
@@ -160,12 +162,39 @@ public class BugReportCommand implements CommandExecutor, Listener {
 					}
 					if (!foundAndRemoved) {
 						plugin.getLogger().warning("Logging: Failed to find and remove book for player " + player.getName());
+						logErrorMessage("Logging: Failed to find and remove book for player " + player.getName());
 					} else {
 						plugin.getLogger().info("Logging: Removed book for player " + player.getName());
 					}
 				}
 			}.runTaskLater(plugin, 1L);
 		}
+	}
+
+	private void doubleCheckIfBookWasRemoved(Player player) {
+		new BukkitRunnable() {
+			@Override
+			public void run() {
+				boolean foundBook = false;
+				ItemStack[] contents = player.getInventory().getContents();
+				for (ItemStack item : contents) {
+					if (item != null && item.hasItemMeta() && item.getItemMeta() instanceof BookMeta meta) {
+						if (meta.hasCustomModelData() && meta.getCustomModelData() == 1889234213 && (item.getType() == Material.WRITTEN_BOOK || item.getType() == Material.WRITABLE_BOOK)) {
+							foundBook = true;
+							player.getInventory().remove(item);
+							player.updateInventory();
+							break;
+						}
+					}
+				}
+				if (foundBook) {
+					plugin.getLogger().warning("Logging: Failed to remove book for player " + player.getName());
+					logErrorMessage("Logging: Failed to remove book for player " + player.getName());
+				} else {
+					plugin.getLogger().info("Logging: Removed book for player " + player.getName());
+				}
+			}
+		}.runTaskLater(plugin, 20L);
 	}
 
 	@Override
@@ -230,6 +259,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 			reportManager.submitBugReport(player, String.join(" ", args), null);
 		} catch (Exception e) {
 			plugin.getLogger().warning("Failed to submit bug report");
+			logErrorMessage("Failed to submit bug report");
 			throw new RuntimeException(e);
 		}
 		if (checkForKey("useTitleInsteadOfMessage", true)) {
@@ -299,7 +329,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 			categorySelectionMap.put(player.getUniqueId(), selectedCategory.getId());
 			player.closeInventory();
 			if (checkForKey("useTitleInsteadOfMessage", true)) {
-				player.sendTitle(YELLOW + DefaultLanguageSelector.getTextElseDefault(language, "enterBugReportMessageCategory"), "", 10, 70, 120); // TODO: Finish this in all places
+				player.sendTitle(YELLOW + DefaultLanguageSelector.getTextElseDefault(language, "enterBugReportMessageCategory"), "", 10, 70, 120);
 			} else {
 				player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + DefaultLanguageSelector.getTextElseDefault(language, "enterBugReportMessageCategory"));
 			}

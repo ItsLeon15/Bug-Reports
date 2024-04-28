@@ -7,6 +7,7 @@ import com.leon.bugreport.commands.BugReportCommand;
 import com.leon.bugreport.commands.LinkDiscordCommand;
 import com.leon.bugreport.expansions.BugPlaceholders;
 import com.leon.bugreport.extensions.PlanHook;
+import com.leon.bugreport.listeners.ItemDropEvent;
 import com.leon.bugreport.listeners.ReportListener;
 import com.leon.bugreport.listeners.UpdateChecker;
 import org.bstats.bukkit.Metrics;
@@ -23,6 +24,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
+import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
 import static com.leon.bugreport.BugReportDatabase.dataSource;
 import static com.leon.bugreport.BugReportDatabase.getStaticUUID;
 import static com.leon.bugreport.BugReportManager.*;
@@ -72,6 +74,7 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 		if (!getDataFolder().exists()) {
 			if (!getDataFolder().mkdirs()) {
 				plugin.getLogger().warning("Failed to create data folder.");
+				logErrorMessage("Failed to create data folder.");
 			}
 		}
 
@@ -93,6 +96,7 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 			dataSource.close();
 		} catch (Exception e) {
 			plugin.getLogger().warning("Failed to close database connection.");
+			logErrorMessage("Failed to close database connection.");
 		}
 	}
 
@@ -137,7 +141,8 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 				new UpdateChecker(this, 110732).getVersion(spigotVersion -> {
 					String serverVersion = this.getDescription().getVersion();
 					if (compareVersions(serverVersion, spigotVersion) < 0) {
-						onlinePlayer.sendMessage(pluginColor + pluginTitle + " " + "A new version of Bug Report is available: " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + ChatColor.BOLD + spigotVersion);
+						onlinePlayer.sendMessage(pluginColor + pluginTitle + " " + "A new version of Bug Report is available: "
+								+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + ChatColor.BOLD + spigotVersion);
 					}
 				});
 
@@ -154,9 +159,14 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 				List<String> newReports = getNewReports(reports, lastLoginTimestamp);
 
 				if (!newReports.isEmpty()) {
-					player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GRAY) + DefaultLanguageSelector.getTextElseDefault(language, "newReportsMessage").replace("%numReports%", String.valueOf(newReports.size())));
+					player.sendMessage(pluginColor + pluginTitle + " "
+							+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GRAY)
+							+ DefaultLanguageSelector.getTextElseDefault(language, "newReportsMessage")
+							.replace("%numReports%", String.valueOf(newReports.size())));
 				} else {
-					player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GRAY) + DefaultLanguageSelector.getTextElseDefault(language, "noNewReportsMessage"));
+					player.sendMessage(pluginColor + pluginTitle + " "
+							+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GRAY)
+							+ DefaultLanguageSelector.getTextElseDefault(language, "noNewReportsMessage"));
 				}
 			}
 		}
@@ -184,6 +194,7 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 		getServer().getPluginManager().registerEvents(new BugReportSettings.BugReportSettingsListener(), this);
 		getServer().getPluginManager().registerEvents(new BugReportManager.BugReportListener(), this);
 		getServer().getPluginManager().registerEvents(new BugReportCommand(reportManager), this);
+		getServer().getPluginManager().registerEvents(new ItemDropEvent(), this);
 		getServer().getPluginManager().registerEvents(new ReportListener(), this);
 		getServer().getPluginManager().registerEvents(this, this);
 		new CacheCleanupListener();

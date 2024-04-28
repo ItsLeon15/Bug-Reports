@@ -1,5 +1,7 @@
 package com.leon.bugreport.API;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -14,6 +16,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.profile.PlayerProfile;
 import org.bukkit.profile.PlayerTextures;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.lang.reflect.Type;
@@ -21,14 +24,15 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
 
+import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
 import static com.leon.bugreport.BugReportManager.config;
 import static com.leon.bugreport.BugReportManager.plugin;
 
 public class DataSource {
 	private static final File CACHE_DIR = new File("plugins/BugReport/cache");
 	private static final File CACHE_FILE = new File(CACHE_DIR, "playerData.json");
-	private static long CACHE_EXPIRY_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 	private static final Gson GSON = new Gson();
+	private static long CACHE_EXPIRY_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
 	public static long convertTimeToMillis(@NotNull String timeString) {
 		Map<String, Integer> timeUnits = Map.of("m", 60, "h", 3600, "d", 86400, "w", 604800, "mo", 2592000, "y", 31536000);
@@ -41,33 +45,22 @@ public class DataSource {
 		return CACHE_EXPIRY_DURATION;
 	}
 
-	private static class CacheEntry {
-		String data;
-		long timestamp;
-		CacheEntry nestedData;
-
-		CacheEntry(String data, long timestamp) {
-			this.data = data;
-			this.timestamp = timestamp;
-		}
-
-		CacheEntry(String data, long timestamp, CacheEntry nestedData) {
-			this.data = data;
-			this.timestamp = timestamp;
-			this.nestedData = nestedData;
-		}
-	}
-
 	private static Map<String, CacheEntry> loadCache() {
 		ensureCacheDirectoryExists();
 		if (!CACHE_FILE.exists()) {
 			return new HashMap<>();
 		}
 		try (BufferedReader reader = new BufferedReader(new FileReader(CACHE_FILE))) {
-			Type type = new TypeToken<Map<String, CacheEntry>>() {}.getType();
-			return GSON.fromJson(reader, type);
+			Type type = new TypeToken<Map<String, CacheEntry>>() {
+			}.getType();
+			try {
+				return GSON.fromJson(reader, type);
+			} catch (Exception e) {
+				return new HashMap<>();
+			}
 		} catch (IOException e) {
 			plugin.getLogger().warning("Failed to load cache");
+			logErrorMessage("Failed to load cache");
 			return new HashMap<>();
 		}
 	}
@@ -79,6 +72,7 @@ public class DataSource {
 			writer.write(jsonString);
 		} catch (IOException e) {
 			plugin.getLogger().warning("Failed to save cache");
+			logErrorMessage("Failed to save cache");
 		}
 	}
 
@@ -91,6 +85,7 @@ public class DataSource {
 	private static void ensureCacheDirectoryExists() {
 		if (!CACHE_DIR.exists() && !CACHE_DIR.mkdirs()) {
 			plugin.getLogger().warning("Failed to create cache directory");
+			logErrorMessage("Failed to create cache directory");
 		}
 	}
 
@@ -128,12 +123,14 @@ public class DataSource {
 		}
 		String response = fetchFromURL("https://api.mojang.com/users/profiles/minecraft/" + username);
 		UUID uuid = extractUUIDFromResponse(response);
+
 		CacheEntry existingEntry = cache.get(username);
 		if (existingEntry == null) {
 			existingEntry = new CacheEntry(uuid.toString(), System.currentTimeMillis());
 		} else {
 			existingEntry.data = uuid.toString();
 		}
+
 		cache.put(username, existingEntry);
 		saveCache(cache);
 		return uuid;
@@ -142,24 +139,70 @@ public class DataSource {
 	private static @NotNull UUID extractUUIDFromResponse(String response) {
 		JsonObject jsonResponse = JsonParser.parseString(response).getAsJsonObject();
 		String uuidString = jsonResponse.get("id").getAsString();
-		return UUID.fromString(
-			uuidString.substring(0, 8) + "-" +
-			uuidString.substring(8, 12) + "-" +
-			uuidString.substring(12, 16) + "-" +
-			uuidString.substring(16, 20) + "-" +
-			uuidString.substring(20, 32)
-		);
+		return UUID.fromString(uuidString.substring(0, 8) + "-" + uuidString.substring(8, 12) + "-" + uuidString.substring(12, 16) + "-" + uuidString.substring(16, 20) + "-" + uuidString.substring(20, 32));
+	}
+
+	private static @Nullable String returnFalseIfCacheIsInvalid(@NotNull Map<String, CacheEntry> cache) {
+		ObjectMapper mapper = new ObjectMapper();
+
+		for (Map.Entry<String, CacheEntry> entry : cache.entrySet()) {
+			CacheEntry cacheEntry = entry.getValue();
+
+			if (cacheEntry.data == null) return "Cache entry data is null";
+			if (cacheEntry.data.isEmpty()) return "Cache entry data is empty";
+			if (cacheEntry.data.isBlank()) return "Cache entry data is blank";
+			if (cacheEntry.timestamp <= 0) return "Cache entry timestamp is 0";
+			if (cacheEntry.nestedData == null) return "Cache entry nested data is null";
+			if (cacheEntry.nestedData.data.isEmpty()) return "Cache entry nested data is empty";
+			if (cacheEntry.nestedData.data.isBlank()) return "Cache entry nested data is blank";
+			if (cacheEntry.nestedData.timestamp <= 0) return "Cache entry nested data timestamp is 0";
+
+			if (Date.from(new Date().toInstant()).getTime() < cacheEntry.timestamp)
+				return "Cache entry timestamp is not a date";
+			if (Date.from(new Date().toInstant()).getTime() < cacheEntry.nestedData.timestamp)
+				return "Cache entry nested data timestamp is not a date";
+
+			try {
+				UUID.fromString(cacheEntry.data);
+			} catch (IllegalArgumentException ex) {
+				return "Data is not a valid UUID";
+			}
+
+			String decodedJson;
+			try {
+				if (Objects.equals(cacheEntry.nestedData.data, "EMPTY_ON_PURPOSE"))
+					return "Nested data is empty on purpose";
+
+				byte[] decodedBytes = Base64.getDecoder().decode(cacheEntry.nestedData.data);
+				decodedJson = new String(decodedBytes);
+				Map<String, Object> jsonMap = mapper.readValue(decodedJson, new TypeReference<>() {
+				});
+
+				if (!jsonMap.containsKey("profileId") || !jsonMap.containsKey("profileName")) {
+					return "JSON is missing profileId or profileName";
+				}
+			} catch (Exception ex) {
+				return "Nested data is not a valid JSON";
+			}
+		}
+		return null;
 	}
 
 	public static @NotNull ItemStack getPlayerHead(String playerName) {
+		Map<String, CacheEntry> cache = loadCache();
 		cleanOutdatedCache(true);
 		if (playerName == null || playerName.trim().isEmpty()) {
 			return getDefaultPlayerHead();
 		}
 
 		try {
-			Map<String, CacheEntry> cache = loadCache();
 			String base64;
+
+			String cacheInvalidReason = returnFalseIfCacheIsInvalid(cache);
+			if (cacheInvalidReason != null) {
+				saveCache(new HashMap<>());
+				cache = loadCache(); // Reset cache if invalid
+			}
 
 			if (checkIfPlayerHeadIsCached(playerName, cache)) {
 				base64 = cache.get(playerName).nestedData.data;
@@ -172,16 +215,17 @@ public class DataSource {
 			return base64 != null && !base64.isEmpty() ? createSkullItem(base64, playerName) : getDefaultPlayerHead();
 		} catch (Exception e) {
 			plugin.getLogger().warning("Failed to get player head for " + playerName + ": " + e.getMessage());
+			logErrorMessage("Failed to get player head for " + playerName + ": " + e.getMessage());
 			return getDefaultPlayerHead();
 		}
 	}
 
 	private static @NotNull ItemStack getDefaultPlayerHead() {
-		ItemStack defaultHead = new ItemStack (Material.PLAYER_HEAD);
-		SkullMeta meta = (SkullMeta) defaultHead.getItemMeta ();
+		ItemStack defaultHead = new ItemStack(Material.PLAYER_HEAD);
+		SkullMeta meta = (SkullMeta) defaultHead.getItemMeta();
 		if (meta != null) {
-			meta.setDisplayName ("Default Player");
-			defaultHead.setItemMeta (meta);
+			meta.setDisplayName("Default Player");
+			defaultHead.setItemMeta(meta);
 		}
 		return defaultHead;
 	}
@@ -203,14 +247,12 @@ public class DataSource {
 			try {
 				String decodedValue = new String(Base64.getDecoder().decode(textureValue));
 				JsonObject textureJson = JsonParser.parseString(decodedValue).getAsJsonObject();
-				String textureUrl = textureJson.getAsJsonObject("textures")
-						.getAsJsonObject("SKIN")
-						.get("url").getAsString();
+				String textureUrl = textureJson.getAsJsonObject("textures").getAsJsonObject("SKIN").get("url").getAsString();
 
 				PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
 				PlayerTextures textures = profile.getTextures();
 
-				textures.setSkin (new URL (textureUrl));
+				textures.setSkin(new URL(textureUrl));
 				profile.setTextures(textures);
 				skullMeta.setOwnerProfile(profile);
 
@@ -218,6 +260,7 @@ public class DataSource {
 				playerHead.setItemMeta(skullMeta);
 			} catch (Exception e) {
 				plugin.getLogger().warning("Failed to set custom player head texture: " + e.getMessage());
+				logErrorMessage("Failed to set custom player head texture: " + e.getMessage());
 				return new ItemStack(Material.PLAYER_HEAD); // Fallback to default head on failure
 			}
 		}
@@ -249,6 +292,7 @@ public class DataSource {
 			}
 		} catch (Exception e) {
 			plugin.getLogger().warning("Failed to get cached player head for " + playerName);
+			logErrorMessage("Failed to get cached player head for " + playerName);
 		}
 		head.setItemMeta(skullMeta);
 		return head;
@@ -283,6 +327,7 @@ public class DataSource {
 	private static void setSkullWithBase64(@NotNull SkullMeta skullMeta, String base64) {
 		if (base64 == null || base64.isEmpty()) {
 			plugin.getLogger().warning("Base64 string is empty. Cannot set custom player head texture.");
+			logErrorMessage("Base64 string is empty. Cannot set custom player head texture.");
 			return;
 		}
 
@@ -292,6 +337,7 @@ public class DataSource {
 			profileField.set(skullMeta, createGameProfile(base64));
 		} catch (NoSuchFieldException | IllegalAccessException e) {
 			plugin.getLogger().warning("Failed to set custom player head texture: " + e.getMessage());
+			logErrorMessage("Failed to set custom player head texture: " + e.getMessage());
 		}
 	}
 
@@ -299,5 +345,22 @@ public class DataSource {
 		GameProfile profile = new GameProfile(UUID.randomUUID(), "GameProfile");
 		profile.getProperties().put("textures", new Property("textures", textureValue));
 		return profile;
+	}
+
+	private static class CacheEntry {
+		String data;
+		long timestamp;
+		CacheEntry nestedData;
+
+		CacheEntry(String data, long timestamp) {
+			this.data = data;
+			this.timestamp = timestamp;
+		}
+
+		CacheEntry(String data, long timestamp, CacheEntry nestedData) {
+			this.data = data;
+			this.timestamp = timestamp;
+			this.nestedData = nestedData;
+		}
 	}
 }

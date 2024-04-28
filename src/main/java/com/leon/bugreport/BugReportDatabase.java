@@ -17,6 +17,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
+import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
 import static com.leon.bugreport.BugReportManager.*;
 
 public class BugReportDatabase {
@@ -59,6 +60,7 @@ public class BugReportDatabase {
 		} catch (Exception e) {
 			plugin.getLogger().severe("Failed to add missing columns.");
 			plugin.getLogger().severe(e.getMessage());
+			logErrorMessage("Failed to add missing columns." + e.getMessage());
 		}
 	}
 
@@ -80,6 +82,7 @@ public class BugReportDatabase {
 		} catch (Exception e) {
 			plugin.getLogger().severe("Failed to set player last login timestamp.");
 			plugin.getLogger().severe(e.getMessage());
+			logErrorMessage("Failed to set player last login timestamp." + e.getMessage());
 		}
 	}
 
@@ -95,6 +98,7 @@ public class BugReportDatabase {
 		} catch (Exception e) {
 			plugin.getLogger().severe("Failed to get player last login timestamp.");
 			plugin.getLogger().severe(e.getMessage());
+			logErrorMessage("Failed to get player last login timestamp." + e.getMessage());
 		}
 		return 0;
 	}
@@ -120,6 +124,7 @@ public class BugReportDatabase {
 		} catch (Exception e) {
 			plugin.getLogger().severe("Failed to get bug report location.");
 			plugin.getLogger().severe(e.getMessage());
+			logErrorMessage("Failed to get bug report location." + e.getMessage());
 		}
 		return null;
 	}
@@ -135,6 +140,7 @@ public class BugReportDatabase {
 		} catch (Exception e) {
 			plugin.getLogger().severe("Failed to add missing columns.");
 			plugin.getLogger().severe(e.getMessage());
+			logErrorMessage("Failed to add missing columns." + e.getMessage());
 		}
 	}
 
@@ -158,6 +164,7 @@ public class BugReportDatabase {
 			connectRemote(host, port, database, username, password);
 		} else {
 			plugin.getLogger().warning("Invalid database type. Please use 'local' or 'mysql'.");
+			logErrorMessage("Invalid database type. Please use 'local' or 'mysql'.");
 		}
 	}
 
@@ -175,6 +182,7 @@ public class BugReportDatabase {
 			statement.close();
 		} catch (SQLException e) {
 			plugin.getLogger().severe(e.getMessage());
+			logErrorMessage(e.getMessage());
 		}
 
 		return count;
@@ -194,6 +202,7 @@ public class BugReportDatabase {
 			statement.close();
 		} catch (SQLException e) {
 			plugin.getLogger().severe(e.getMessage());
+			logErrorMessage(e.getMessage());
 		}
 
 		return count;
@@ -213,6 +222,7 @@ public class BugReportDatabase {
 			statement.close();
 		} catch (SQLException e) {
 			plugin.getLogger().severe(e.getMessage());
+			logErrorMessage(e.getMessage());
 		}
 
 		return count;
@@ -231,6 +241,7 @@ public class BugReportDatabase {
 			statement.close();
 		} catch (SQLException e) {
 			plugin.getLogger().severe(e.getMessage());
+			logErrorMessage(e.getMessage());
 		}
 
 		return count;
@@ -241,7 +252,7 @@ public class BugReportDatabase {
 		try (Connection connection = dataSource.getConnection()) {
 			String sql = "SELECT username, message FROM bug_reports";
 			try (PreparedStatement statement = connection.prepareStatement(sql);
-			     ResultSet resultSet = statement.executeQuery()) {
+				 ResultSet resultSet = statement.executeQuery()) {
 				while (resultSet.next()) {
 					String username = resultSet.getString("username");
 					String message = resultSet.getString("message");
@@ -250,6 +261,7 @@ public class BugReportDatabase {
 			}
 		} catch (SQLException e) {
 			plugin.getLogger().severe(e.getMessage());
+			logErrorMessage(e.getMessage());
 		}
 		return reports;
 	}
@@ -269,6 +281,7 @@ public class BugReportDatabase {
 			}
 		} catch (SQLException e) {
 			plugin.getLogger().severe(e.getMessage());
+			logErrorMessage(e.getMessage());
 		}
 		return reports;
 	}
@@ -286,6 +299,7 @@ public class BugReportDatabase {
 			}
 		} catch (SQLException e) {
 			plugin.getLogger().severe(e.getMessage());
+			logErrorMessage(e.getMessage());
 		}
 
 		return count;
@@ -304,6 +318,7 @@ public class BugReportDatabase {
 			}
 		} catch (SQLException e) {
 			plugin.getLogger().severe(e.getMessage());
+			logErrorMessage(e.getMessage());
 		}
 
 		return count;
@@ -360,6 +375,7 @@ public class BugReportDatabase {
 			statement.close();
 		} catch (SQLException e) {
 			plugin.getLogger().severe("Failed to load bug reports.");
+			logErrorMessage("Failed to load bug reports.");
 			if (e.getMessage().startsWith("[SQLITE_CORRUPT]")) {
 				plugin.getLogger().severe("Your database is corrupted. Please delete the database file and restart the server.");
 				plugin.getLogger().severe("File path: plugins/BugReport/bugreports.db");

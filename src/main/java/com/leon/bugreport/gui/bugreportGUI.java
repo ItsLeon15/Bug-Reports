@@ -1,7 +1,7 @@
 package com.leon.bugreport.gui;
 
 import com.leon.bugreport.BugReportLanguage;
-import com.leon.bugreport.BugReportManager;
+import com.leon.bugreport.keys.guiTextures;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -19,6 +19,7 @@ import java.io.Serial;
 import java.util.*;
 
 import static com.leon.bugreport.API.DataSource.getPlayerHead;
+import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
 import static com.leon.bugreport.BugReportManager.*;
 import static com.leon.bugreport.BugReportSettings.createCustomPlayerHead;
 
@@ -98,7 +99,8 @@ public class bugreportGUI {
 
 	private static void setupGUIFromConfig(Inventory gui, Player player, @NotNull YamlConfiguration guiConfig, String report, Integer reportIDGUI, Boolean isArchivedGUI) {
 		if (!validateGUIConfig(guiConfig)) {
-			Bukkit.getLogger().severe("The layout of the customGUI.yml file is incorrect. Falling back to the default layout.");
+			plugin.getLogger().severe("The layout of the customGUI.yml file is incorrect. Falling back to the default layout.");
+			logErrorMessage("The layout of the customGUI.yml file is incorrect. Falling back to the default layout");
 			setupDefaultGUI(gui, player, report, reportIDGUI, isArchivedGUI);
 			return;
 		}
@@ -111,6 +113,7 @@ public class bugreportGUI {
 					String bugReportItem = itemMap.get("bugReportItem").toString();
 					String materialKey = itemMap.get("material").toString();
 					Material material;
+					ItemStack itemStack;
 
 					if ((isArchivedGUI && bugReportItem.equals("BugReportArchive")) || (!isArchivedGUI && bugReportItem.equals("BugReportUnArchive"))) {
 						continue;
@@ -127,9 +130,38 @@ public class bugreportGUI {
 					String texture = textureObj != null ? textureObj.toString() : "";
 
 					Map<String, String> reportDetails = parseReportDetails(report);
+					if (Objects.equals(bugReportItem, "BugReportMessage")) {
+						ItemStack messageItem = createItemForReportDetail(bugReportItem, material, texture, reportDetails, isArchivedGUI);
+						ItemMeta meta = messageItem.getItemMeta();
+						Objects.requireNonNull(meta).setDisplayName(meta.getDisplayName());
 
-					ItemStack itemStack = createItemForReportDetail(bugReportItem, material, texture, reportDetails, isArchivedGUI);
-					gui.setItem(slot, itemStack);
+						String fullMessage = reportDetails.getOrDefault("Full Message", "N/A");
+						if (fullMessage.length() > 32) {
+							List<String> lore = new ArrayList<>();
+							String[] words = fullMessage.split(" ");
+							StringBuilder currentLine = new StringBuilder();
+							for (String word : words) {
+								if (currentLine.length() + word.length() > 30) {
+									lore.add(currentLine.toString());
+									currentLine = new StringBuilder();
+								}
+
+								currentLine.append(word).append(" ");
+							}
+
+							if (!currentLine.isEmpty()) lore.add(currentLine.toString());
+							meta.setLore(lore);
+						} else {
+							meta.setLore(Collections.singletonList(ChatColor.WHITE + fullMessage));
+						}
+
+						messageItem.setItemMeta(meta);
+						itemStack = messageItem;
+						gui.setItem(slot, itemStack);
+					} else {
+						itemStack = createItemForReportDetail(bugReportItem, material, texture, reportDetails, isArchivedGUI);
+						gui.setItem(slot, itemStack);
+					}
 				} catch (IllegalArgumentException e) {
 					Bukkit.getLogger().warning("Error parsing material or slot number: " + e.getMessage());
 				}
@@ -211,7 +243,7 @@ public class bugreportGUI {
 			case "BugReporter" -> {
 				String username = reportDetails.get("Username");
 
-				if (BugReportManager.config.getBoolean("enablePlayerHeads")) {
+				if (config.getBoolean("enablePlayerHeads")) {
 					item = getPlayerHead(username);
 				} else {
 					item = createInfoItem(Material.PLAYER_HEAD, ChatColor.GOLD + "Username", ChatColor.WHITE + username, false);
@@ -243,7 +275,8 @@ public class bugreportGUI {
 						String statusName = statusMap.get("name").toString();
 						String statusDescription = statusMap.get("description").toString();
 
-						ChatColor statusColor = ChatColor.valueOf((String) statusMap.get("color")) != null ? ChatColor.valueOf((String) statusMap.get("color")) : ChatColor.WHITE;
+						ChatColor.valueOf(statusMap.get("color").toString().toUpperCase());
+						ChatColor statusColor = ChatColor.valueOf(statusMap.get("color").toString().toUpperCase());
 
 						Material statusIcon = Material.matchMaterial((String) statusMap.get("icon")) != null ? Material.matchMaterial((String) statusMap.get("icon")) : Material.BARRIER;
 						statusItem = createInfoItem(statusIcon, statusColor + statusName + " (Click to change)", statusColor + statusDescription, false);
@@ -342,9 +375,7 @@ public class bugreportGUI {
 		ItemStack emptyItem = createEmptyItem();
 		String locationTitle;
 
-		if (location == null || location.equals("null")) {
-			location = "Not found";
-		}
+		if (location == null || location.equals("null")) location = "Not found";
 
 		if (location.length() - location.replace(",", "").length() != 3) {
 			location = "Not found";
@@ -353,45 +384,89 @@ public class bugreportGUI {
 			locationTitle = "Location " + ChatColor.BOLD + "(Click to teleport)";
 		}
 
-		if (gamemode == null || gamemode.equals("null")) {
-			gamemode = "Unknown";
-		}
+		if (gamemode == null || gamemode.equals("null")) gamemode = "Unknown";
 
 		ItemStack usernameItem;
-		if (BugReportManager.config.getBoolean("enablePlayerHeads")) {
+		if (config.getBoolean("enablePlayerHeads")) {
 			usernameItem = getPlayerHead(username);
 		} else {
 			usernameItem = createInfoItem(Material.PLAYER_HEAD, ChatColor.GOLD + "Username", ChatColor.WHITE + username, false);
 		}
 
+		boolean isLongMessage = fullMessage.length() > 32;
+
 		String timestampToDate = translateTimestampToDate(Long.parseLong(getReportByKey(report, "Timestamp")));
-		ItemStack uuidItem = createInfoItem(Material.NAME_TAG, ChatColor.GOLD + "UUID", ChatColor.WHITE + uuid);
-		ItemStack worldItem = createInfoItem(Material.GRASS_BLOCK, ChatColor.GOLD + "World", ChatColor.WHITE + world);
-		ItemStack messageItem = createInfoItem(Material.PAPER, ChatColor.GOLD + "Full Message", ChatColor.WHITE + fullMessage, fullMessage.length() > 32);
+		ItemStack uuidItem = createInfoItem(Material.NAME_TAG, ChatColor.GOLD + "UUID", ChatColor.WHITE + uuid, false);
+		ItemStack worldItem = createInfoItem(Material.GRASS_BLOCK, ChatColor.GOLD + "World", ChatColor.WHITE + world, false);
+		ItemStack messageItem = createInfoItem(Material.PAPER, ChatColor.GOLD + "Full Message", ChatColor.WHITE + fullMessage, isLongMessage);
 		ItemStack serverNameItem = createInfoItem(Material.COMPASS, ChatColor.GOLD + "Server Name", ChatColor.WHITE + serverName, false);
 		ItemStack statusItem = null;
 
-		if (status != null) {
+		if (status == null) {
+			statusItem = createInfoItem(
+					isArchivedGUI ? Material.RED_DYE : Material.LIME_DYE,
+					ChatColor.GOLD + "Status (Click to change)",
+					ChatColor.WHITE + (isArchivedGUI ? "Archived" : "Open"),
+					false
+			);
+		} else {
 			List<Map<?, ?>> statuses = config.getMapList("statuses");
+			boolean statusFound = false;
+
 			for (Map<?, ?> statusMap : statuses) {
+				if (status.equals("0")) {
+					status = isArchivedGUI ? "Archived" : "Active";
+					Material stautsMaterial = isArchivedGUI ? Material.RED_DYE : Material.LIME_DYE;
+					ChatColor statusChatColor = isArchivedGUI ? ChatColor.RED : ChatColor.GREEN;
+
+					statusItem = createInfoItem(
+							stautsMaterial,
+							statusChatColor + "Status (Click to change)",
+							statusChatColor + status,
+							false
+					);
+					statusFound = true;
+					break;
+				}
+
 				if (statusMap.get("id").toString().equals(status)) {
 					String statusName = statusMap.get("name").toString();
 					String statusColor = statusMap.get("color").toString();
-					String statusMaterial = statusMap.get("material").toString();
-					statusItem = createInfoItem(Material.valueOf(statusMaterial), statusColor + "Status", ChatColor.WHITE + statusName, false);
+					ChatColor statusChatColor = ChatColor.valueOf(statusColor.toUpperCase());
+					String statusMaterial = statusMap.get("icon").toString().toUpperCase();
+
+					if (statusMaterial.contains("MINECRAFT:")) {
+						statusMaterial = statusMaterial.replace("MINECRAFT:", "");
+					}
+
+					statusItem = createInfoItem(
+							Material.valueOf(statusMaterial),
+							statusChatColor + "Status (Click to change)",
+							statusChatColor + statusName,
+							false
+					);
+					statusFound = true;
+					break;
 				}
 			}
-		} else {
-			statusItem = createInfoItem((isArchivedGUI ? Material.RED_DYE : Material.LIME_DYE), ChatColor.GOLD + "Status", ChatColor.WHITE + (isArchivedGUI ? "Archived" : "Open"), false);
+
+			if (!statusFound) {
+				statusItem = createInfoItem(
+						Material.BARRIER,
+						ChatColor.GOLD + "Status (Click to change)",
+						ChatColor.GOLD + "Unknown",
+						false
+				);
+			}
 		}
 
 		ItemStack timestampItem = createInfoItem(Material.CLOCK, ChatColor.GOLD + "Timestamp", ChatColor.WHITE + timestampToDate, false);
 		ItemStack locationItem = createInfoItem(Material.COMPASS, ChatColor.GOLD + locationTitle, ChatColor.WHITE + location, false);
 		ItemStack gamemodeItem = createInfoItem(Material.DIAMOND_SWORD, ChatColor.GOLD + "Gamemode", ChatColor.WHITE + gamemode, false);
 		ItemStack backButton = createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("back"));
-		ItemStack archiveButton = createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvY2Y5YjY3YmI5Y2MxYzg4NDg2NzYwYjE3MjY1MDU0MzEyZDY1OWRmMmNjNjc1NTc1MDA0NWJkNzFjZmZiNGU2MCJ9fX0=", ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("archive"), 16);
-		ItemStack unarchiveButton = createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDVjNTg4YjllYzBhMDhhMzdlMDFhODA5ZWQwOTAzY2MzNGMzZTNmMTc2ZGM5MjIzMDQxN2RhOTNiOTQ4ZjE0OCJ9fX0=", ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("unarchive"), 17);
-		ItemStack deleteButton = createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmUwZmQxMDE5OWU4ZTRmY2RhYmNhZTRmODVjODU5MTgxMjdhN2M1NTUzYWQyMzVmMDFjNTZkMThiYjk0NzBkMyJ9fX0=", ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("delete"), 18);
+		ItemStack archiveButton = createCustomPlayerHead(guiTextures.archiveTexture, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("archive"), 16);
+		ItemStack unarchiveButton = createCustomPlayerHead(guiTextures.unarchiveTexture, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("unarchive"), 17);
+		ItemStack deleteButton = createCustomPlayerHead(guiTextures.deleteTexture, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("delete"), 18);
 
 		for (int i = 0; i < gui.getSize(); i++) {
 			gui.setItem(i, emptyItem);
@@ -428,6 +503,6 @@ public class bugreportGUI {
 		}
 
 		player.openInventory(gui);
-		Bukkit.getPluginManager().registerEvents(new BugReportManager.BugReportDetailsListener(gui, reportIDGUI), plugin);
+		Bukkit.getPluginManager().registerEvents(new BugReportDetailsListener(gui, reportIDGUI), plugin);
 	}
 }

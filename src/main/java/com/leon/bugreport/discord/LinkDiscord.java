@@ -11,6 +11,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.*;
 
+import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
 import static com.leon.bugreport.BugReportManager.config;
 import static com.leon.bugreport.BugReportManager.plugin;
 import static com.leon.bugreport.commands.BugReportCommand.chatColorToColor;
@@ -18,7 +19,7 @@ import static com.leon.bugreport.commands.BugReportCommand.stringColorToColorCod
 
 public class LinkDiscord {
 	private static final String EMBED_TITLE = "New Bug Report";
-	private static final String EMBED_FOOTER_TEXT = "Bug Report V0.11.3";
+	private static final String EMBED_FOOTER_TEXT = "Bug Report V0.11.4";
 	private static final String EMBED_THUMBNAIL = "https://www.spigotmc.org/data/resource_icons/110/110732.jpg";
 	private static final Color EMBED_COLOR = Color.YELLOW;
 	private String webhookURL;
@@ -77,11 +78,13 @@ public class LinkDiscord {
 
 		if (!config.contains("discordEmbedFields")) {
 			plugin.getLogger().warning("discordEmbedFields key is not present in the config. Sending an empty embed.");
+			logErrorMessage("discordEmbedFields key is not present in the config. Sending an empty embed.");
 		}
 
 		List<Map<?, ?>> discordEmbedFields = config.getMapList("discordEmbedFields");
 		if (discordEmbedFields.isEmpty()) {
 			plugin.getLogger().warning("discordEmbedFields is empty in the config. Bug report not sent to Discord.");
+			logErrorMessage("discordEmbedFields is empty in the config. Bug report not sent to Discord.");
 			sendEmptyEmbedOrDefault(username);
 			return;
 		}
@@ -115,6 +118,7 @@ public class LinkDiscord {
 				embedObject.addField(name, value, inline);
 			} else {
 				plugin.getLogger().warning("Invalid placeholder value: " + detailValue + ". Skipping this field.");
+				logErrorMessage("Invalid placeholder value: " + detailValue + ". Skipping this field.");
 			}
 		}
 
@@ -125,8 +129,7 @@ public class LinkDiscord {
 	private boolean checkIfValueIsValid(@NotNull String placeholderValue) {
 		return switch (placeholderValue) {
 			case "%report_username%", "%report_full_message%", "%report_category%", "%report_status%",
-			     "%report_gamemode%", "%report_location%", "%report_world%", "%report_uuid%", "%report_server_name%" ->
-					true;
+			     "%report_gamemode%", "%report_location%", "%report_world%", "%report_uuid%", "%report_server_name%" -> true;
 			default -> false;
 		};
 	}
@@ -158,6 +161,7 @@ public class LinkDiscord {
 			webhook.execute();
 		} catch (Exception e) {
 			plugin.getLogger().warning("Error sending bug report to Discord: " + e.getMessage());
+			logErrorMessage("Error sending bug report to Discord: " + e.getMessage());
 		}
 	}
 
@@ -181,7 +185,7 @@ public class LinkDiscord {
 
 			connection.setRequestMethod("GET");
 			connection.setRequestProperty("Content-Type", "application/json");
-			connection.setRequestProperty("User-Agent", "BugReport/0.11.3");
+			connection.setRequestProperty("User-Agent", "BugReport/0.11.4");
 			connection.setConnectTimeout(5000);
 			connection.setReadTimeout(5000);
 			connection.setDoOutput(true);
@@ -195,6 +199,7 @@ public class LinkDiscord {
 			connection.disconnect();
 		} catch (Exception e) {
 			plugin.getLogger().warning("Error getting UUID from API: " + e.getMessage());
+			logErrorMessage("Error getting UUID from API: " + e.getMessage());
 			return "Unknown UUID";
 		}
 

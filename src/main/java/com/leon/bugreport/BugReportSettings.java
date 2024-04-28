@@ -2,6 +2,7 @@ package com.leon.bugreport;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.leon.bugreport.keys.guiTextures;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -25,7 +26,9 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
+import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
 import static com.leon.bugreport.BugReportDatabase.getStaticUUID;
+import static com.leon.bugreport.BugReportLanguage.getTitleFromLanguage;
 import static com.leon.bugreport.BugReportManager.*;
 import static com.leon.bugreport.DefaultLanguageSelector.getTextElseDefault;
 import static com.leon.bugreport.commands.BugReportCommand.checkIfChatColorIsValid;
@@ -45,18 +48,18 @@ public class BugReportSettings {
 	}
 
 	public static @NotNull Inventory getSettingsGUI() {
-		Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Report - " + BugReportLanguage.getTitleFromLanguage("settings"));
+		Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Report - " + getTitleFromLanguage("settings"));
 
-		ItemStack setDiscordWebhook = createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGQ0MjMzN2JlMGJkY2EyMTI4MDk3ZjFjNWJiMTEwOWU1YzYzM2MxNzkyNmFmNWZiNmZjMjAwMDAwMTFhZWI1MyJ9fX0=", BugReportLanguage.getTitleFromLanguage("enableDiscordWebhook"), 1);
-		ItemStack setLanguage = createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODc5ZTU0Y2JlODc4NjdkMTRiMmZiZGYzZjE4NzA4OTQzNTIwNDhkZmVjZDk2Mjg0NmRlYTg5M2IyMTU0Yzg1In19fQ==", BugReportLanguage.getTitleFromLanguage("setLanguage"), 2);
+		ItemStack setDiscordWebhook = createCustomPlayerHead(guiTextures.setDiscordWebhookTexture, getTitleFromLanguage("enableDiscordWebhook"), 1);
+		ItemStack setLanguage = createCustomPlayerHead(guiTextures.setLanguageTexture, getTitleFromLanguage("setLanguage"), 2);
 
-		ItemStack maxReportsPerPlayer = createButton(Material.PAPER, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("setMaxReportsPerPlayer"));
-		ItemStack toggleCategorySelection = createButton(Material.CHEST, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("enableCategorySelection"));
-		ItemStack setBugReportNotifications = createButton(Material.BELL, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("enableBugReportNotifications"));
-		ItemStack onIcon = createButton(Material.LIME_DYE, ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage("true"));
-		ItemStack offIcon = createButton(Material.GRAY_DYE, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("false"));
-		ItemStack otherSettings = createButton(Material.BOOK, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("otherSettings"));
-		ItemStack viewAllStatus = createButton(Material.BOOKSHELF, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("viewStatus"));
+		ItemStack maxReportsPerPlayer = createButton(Material.PAPER, ChatColor.YELLOW + getTitleFromLanguage("setMaxReportsPerPlayer"));
+		ItemStack toggleCategorySelection = createButton(Material.CHEST, ChatColor.YELLOW + getTitleFromLanguage("enableCategorySelection"));
+		ItemStack setBugReportNotifications = createButton(Material.BELL, ChatColor.YELLOW + getTitleFromLanguage("enableBugReportNotifications"));
+		ItemStack onIcon = createButton(Material.LIME_DYE, ChatColor.GREEN + getTitleFromLanguage("true"));
+		ItemStack offIcon = createButton(Material.GRAY_DYE, ChatColor.RED + getTitleFromLanguage("false"));
+		ItemStack otherSettings = createButton(Material.BOOK, ChatColor.YELLOW + getTitleFromLanguage("otherSettings"));
+		ItemStack viewAllStatus = createButton(Material.BOOKSHELF, ChatColor.YELLOW + getTitleFromLanguage("viewStatus"));
 
 		setBorder(gui, Material.GRAY_STAINED_GLASS_PANE);
 
@@ -72,7 +75,7 @@ public class BugReportSettings {
 		gui.setItem(20, getBugReportNotificationsToggle() ? onIcon : offIcon);
 		gui.setItem(21, getCategorySelectionToggle() ? onIcon : offIcon);
 
-		gui.setItem(40, createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("close")));
+		gui.setItem(40, createButton(Material.BARRIER, ChatColor.RED + getTitleFromLanguage("close")));
 
 		return gui;
 	}
@@ -84,12 +87,11 @@ public class BugReportSettings {
 	private static void setDiscordWebhookToggle(@NotNull Player player) {
 		playButtonClickSound(player);
 
-		if (debugMode)
-			plugin.getLogger().info("Discord Webhook toggle clicked by " + player.getName());
+		if (debugMode) plugin.getLogger().info("Discord Webhook toggle clicked by " + player.getName());
 		boolean toggle = getDiscordWebhookToggle();
 		config.set("enableDiscordWebhook", !toggle);
 		saveConfig();
-		player.getOpenInventory().setItem(19, getDiscordWebhookToggle() ? createButton(Material.LIME_DYE, ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage("true")) : createButton(Material.GRAY_DYE, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("false")));
+		player.getOpenInventory().setItem(19, getDiscordWebhookToggle() ? createButton(Material.LIME_DYE, ChatColor.GREEN + getTitleFromLanguage("true")) : createButton(Material.GRAY_DYE, ChatColor.RED + getTitleFromLanguage("false")));
 	}
 
 	private static boolean getBugReportNotificationsToggle() {
@@ -99,12 +101,11 @@ public class BugReportSettings {
 	private static void setBugReportNotificationsToggle(@NotNull Player player) {
 		playButtonClickSound(player);
 
-		if (debugMode)
-			plugin.getLogger().info("Bug Report Notifications toggle clicked by " + player.getName());
+		if (debugMode) plugin.getLogger().info("Bug Report Notifications toggle clicked by " + player.getName());
 		boolean toggle = getBugReportNotificationsToggle();
 		config.set("enableBugReportNotifications", !toggle);
 		saveConfig();
-		player.getOpenInventory().setItem(20, toggle ? createButton(Material.GRAY_DYE, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("false")) : createButton(Material.LIME_DYE, ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage("true")));
+		player.getOpenInventory().setItem(20, toggle ? createButton(Material.GRAY_DYE, ChatColor.RED + getTitleFromLanguage("false")) : createButton(Material.LIME_DYE, ChatColor.GREEN + getTitleFromLanguage("true")));
 	}
 
 	private static boolean getCategorySelectionToggle() {
@@ -114,12 +115,11 @@ public class BugReportSettings {
 	private static void setCategorySelectionToggle(@NotNull Player player) {
 		playButtonClickSound(player);
 
-		if (debugMode)
-			plugin.getLogger().info("Category Selection toggle clicked by " + player.getName());
+		if (debugMode) plugin.getLogger().info("Category Selection toggle clicked by " + player.getName());
 		boolean toggle = getCategorySelectionToggle();
 		config.set("enablePluginReportCategories", !toggle);
 		saveConfig();
-		player.getOpenInventory().setItem(21, toggle ? createButton(Material.GRAY_DYE, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("false")) : createButton(Material.LIME_DYE, ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage("true")));
+		player.getOpenInventory().setItem(21, toggle ? createButton(Material.GRAY_DYE, ChatColor.RED + getTitleFromLanguage("false")) : createButton(Material.LIME_DYE, ChatColor.GREEN + getTitleFromLanguage("true")));
 	}
 
 	private static void setLanguageToggle(@NotNull Player player) {
@@ -130,49 +130,41 @@ public class BugReportSettings {
 	}
 
 	private static @NotNull Inventory openLanguageGUI() {
-		Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Report - " + BugReportLanguage.getTitleFromLanguage("language"));
+		Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Report - " + getTitleFromLanguage("language"));
 
 		setBorder(gui, Material.GRAY_STAINED_GLASS_PANE);
 
-		gui.setItem(10, createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODgzMWM3M2Y1NDY4ZTg4OGMzMDE5ZTI4NDdlNDQyZGZhYTg4ODk4ZDUwY2NmMDFmZDJmOTE0YWY1NDRkNTM2OCJ9fX0=", "English", 11));
-		gui.setItem(11, createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNTEyNjlhMDY3ZWUzN2U2MzYzNWNhMWU3MjNiNjc2ZjEzOWRjMmRiZGRmZjk2YmJmZWY5OWQ4YjM1Yzk5NmJjIn19fQ==", "French", 12));
-		gui.setItem(12, createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNWU3ODk5YjQ4MDY4NTg2OTdlMjgzZjA4NGQ5MTczZmU0ODc4ODY0NTM3NzQ2MjZiMjRiZDhjZmVjYzc3YjNmIn19fQ==", "German", 13));
-		gui.setItem(13, createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzJkNzMwYjZkZGExNmI1ODQ3ODNiNjNkMDgyYTgwMDQ5YjVmYTcwMjI4YWJhNGFlODg0YzJjMWZjMGMzYThiYyJ9fX0=", "Spanish", 14));
-		gui.setItem(14, createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODVjZTg5MjIzZmE0MmZlMDZhZDY1ZDhkNDRjYTQxMmFlODk5YzgzMTMwOWQ2ODkyNGRmZTBkMTQyZmRiZWVhNCJ9fX0=", "Italian", 15));
-		gui.setItem(15, createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvN2Y5YmMwMzVjZGM4MGYxYWI1ZTExOThmMjlmM2FkM2ZkZDJiNDJkOWE2OWFlYjY0ZGU5OTA2ODE4MDBiOThkYyJ9fX0=", "Simplified Chinese", 16));
-		gui.setItem(16, createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTZlYWZlZjk4MGQ2MTE3ZGFiZTg5ODJhYzRiNDUwOTg4N2UyYzQ2MjFmNmE4ZmU1YzliNzM1YTgzZDc3NWFkIn19fQ==", "Russian", 17));
+		gui.setItem(10, createCustomPlayerHead(guiTextures.EnglishTexture, "English", 11));
+		gui.setItem(11, createCustomPlayerHead(guiTextures.FrenchTexture, "French", 12));
+		gui.setItem(12, createCustomPlayerHead(guiTextures.GermanTexture, "German", 13));
+		gui.setItem(13, createCustomPlayerHead(guiTextures.SpanishTexture, "Spanish", 14));
+		gui.setItem(14, createCustomPlayerHead(guiTextures.ItalianTexture, "Italian", 15));
+		gui.setItem(15, createCustomPlayerHead(guiTextures.SimplifiedChineseTexture, "Simplified Chinese", 16));
+		gui.setItem(16, createCustomPlayerHead(guiTextures.RussianTexture, "Russian", 17));
 
 		String language = config.getString("language");
 
 		for (int i = 19; i < 26; i++) {
-			gui.setItem(i, createButton(Material.GRAY_DYE, BugReportLanguage.getTitleFromLanguage("false")));
+			gui.setItem(i, createButton(Material.GRAY_DYE, getTitleFromLanguage("false")));
 		}
 
 		switch (Objects.requireNonNull(language)) {
-			case "en" ->
-					gui.setItem(28 - 9, createButton(Material.LIME_DYE, BugReportLanguage.getTitleFromLanguage("true")));
-			case "fr" ->
-					gui.setItem(29 - 9, createButton(Material.LIME_DYE, BugReportLanguage.getTitleFromLanguage("true")));
-			case "de" ->
-					gui.setItem(30 - 9, createButton(Material.LIME_DYE, BugReportLanguage.getTitleFromLanguage("true")));
-			case "es" ->
-					gui.setItem(31 - 9, createButton(Material.LIME_DYE, BugReportLanguage.getTitleFromLanguage("true")));
-			case "it" ->
-					gui.setItem(32 - 9, createButton(Material.LIME_DYE, BugReportLanguage.getTitleFromLanguage("true")));
-			case "zh" ->
-					gui.setItem(33 - 9, createButton(Material.LIME_DYE, BugReportLanguage.getTitleFromLanguage("true")));
-			case "ru" ->
-					gui.setItem(34 - 9, createButton(Material.LIME_DYE, BugReportLanguage.getTitleFromLanguage("true")));
+			case "en" -> gui.setItem(28 - 9, createButton(Material.LIME_DYE, getTitleFromLanguage("true")));
+			case "fr" -> gui.setItem(29 - 9, createButton(Material.LIME_DYE, getTitleFromLanguage("true")));
+			case "de" -> gui.setItem(30 - 9, createButton(Material.LIME_DYE, getTitleFromLanguage("true")));
+			case "es" -> gui.setItem(31 - 9, createButton(Material.LIME_DYE, getTitleFromLanguage("true")));
+			case "it" -> gui.setItem(32 - 9, createButton(Material.LIME_DYE, getTitleFromLanguage("true")));
+			case "zh" -> gui.setItem(33 - 9, createButton(Material.LIME_DYE, getTitleFromLanguage("true")));
+			case "ru" -> gui.setItem(34 - 9, createButton(Material.LIME_DYE, getTitleFromLanguage("true")));
 		}
 
-		gui.setItem(40, createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("back")));
+		gui.setItem(40, createButton(Material.BARRIER, ChatColor.RED + getTitleFromLanguage("back")));
 
 		return gui;
 	}
 
 	public static @NotNull ItemStack createCustomPlayerHead(String texture, String name, int modelData) {
-		if (debugMode)
-			plugin.getLogger().info("Creating custom player head with texture: " + texture + ", name: " + name + ", modelData: " + modelData);
+		if (debugMode) plugin.getLogger().info("Creating custom player head with texture: " + texture + ", name: " + name + ", modelData: " + modelData);
 		return createCustomPlayerHead(texture, name, modelData, null);
 	}
 
@@ -203,6 +195,7 @@ public class BugReportSettings {
 				if (debugMode) plugin.getLogger().info("Custom player head created successfully.");
 			} catch (Exception e) {
 				plugin.getLogger().warning("Failed to create custom player head: " + e.getMessage());
+				logErrorMessage("Failed to create custom player head: " + e.getMessage());
 				return new ItemStack(Material.PLAYER_HEAD);
 			}
 		}
@@ -212,7 +205,7 @@ public class BugReportSettings {
 
 	public static @NotNull Inventory getStatusSelectionGUI(Integer reportIDGUI) {
 		newReportIDGUI = reportIDGUI;
-		Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Report - " + BugReportLanguage.getTitleFromLanguage("statusSelection"));
+		Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Report - " + getTitleFromLanguage("statusSelection"));
 
 		setBorder(gui, Material.GRAY_STAINED_GLASS_PANE);
 
@@ -221,7 +214,9 @@ public class BugReportSettings {
 			String statusName = (String) statusMap.get("name");
 			String statusDescription = (String) statusMap.get("description");
 
-			ChatColor newStatusColor = ChatColor.valueOf((String) statusMap.get("color")) != null ? ChatColor.valueOf((String) statusMap.get("color")) : ChatColor.WHITE;
+			ChatColor.valueOf(statusMap.get("color").toString().toUpperCase());
+			ChatColor newStatusColor = ChatColor.valueOf(((String) statusMap.get("color")).toUpperCase());
+
 			Material newStatusIcon = Material.matchMaterial((String) statusMap.get("icon")) != null ? Material.matchMaterial((String) statusMap.get("icon")) : Material.BARRIER;
 
 			ItemStack statusItem = createButton(newStatusIcon, newStatusColor + statusName);
@@ -234,7 +229,7 @@ public class BugReportSettings {
 			gui.addItem(statusItem);
 		}
 
-		gui.setItem(40, createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("back")));
+		gui.setItem(40, createButton(Material.BARRIER, ChatColor.RED + getTitleFromLanguage("back")));
 
 		return gui;
 	}
@@ -255,12 +250,9 @@ public class BugReportSettings {
 		private static void setLanguage(String languageCode, String languageName, @NotNull Player player) {
 			player.closeInventory();
 			if (checkForKey("useTitleInsteadOfMessage", true)) {
-				player.sendTitle(pluginColor + pluginTitle,
-						getTextElseDefault(languageCode, "languageSetTo").replace("%language%", languageName), 10, 70, 20);
+				player.sendTitle(pluginColor + pluginTitle, getTextElseDefault(languageCode, "languageSetTo").replace("%language%", languageName), 10, 70, 20);
 			} else {
-				player.sendMessage(pluginColor + pluginTitle + " "
-						+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN)
-						+ getTextElseDefault(languageCode, "languageSetTo").replace("%language%", languageName));
+				player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) + getTextElseDefault(languageCode, "languageSetTo").replace("%language%", languageName));
 			}
 			updateBugReportItems();
 			config.set("language", languageCode);
@@ -325,17 +317,9 @@ public class BugReportSettings {
 
 						Integer statusID = (Integer) statusMap.get("id");
 						BugReportDatabase.updateReportStatus(newReportIDGUI, statusID);
+
+						player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "The status of the report has been updated to " + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ".");
 						player.closeInventory();
-
-						player.sendMessage(pluginColor + pluginTitle + " "
-								+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW)
-								+ "The status of the report has been updated to " + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ".");
-
-						List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
-						String report = reports.stream().filter(reportString -> reportString.contains("Report ID: " + newReportIDGUI)).findFirst().orElse(null);
-						Boolean fromArchivedGUI = report != null && report.contains("Archived") && report.contains("Archived: 1");
-
-						openBugReportDetailsGUI(player, report, newReportIDGUI, fromArchivedGUI);
 					}
 				}
 			}
@@ -385,18 +369,14 @@ public class BugReportSettings {
 						if (config.getBoolean("useTitleInsteadOfMessage")) {
 							player.sendTitle(pluginColor + pluginTitle, getTextElseDefault(language, "enterMaxReportsPerPlayer"), 10, 70, 20);
 						} else {
-							player.sendMessage(pluginColor + pluginTitle + " "
-									+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW)
-									+ getTextElseDefault(language, "enterMaxReportsPerPlayer"));
+							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + getTextElseDefault(language, "enterMaxReportsPerPlayer"));
 						}
 						setMaxReportsClickMap.put(player.getUniqueId(), String.valueOf(true));
 						setMaxReportsClickMap.put(player.getUniqueId(), customItemDisplayName);
 					}
 					case "Set Report Cooldown" -> {
 						player.closeInventory();
-						player.sendMessage(pluginColor + pluginTitle + " "
-								+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW)
-								+ "Enter the cooldown between reports in seconds. Or type 'cancel' to cancel.");
+						player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "Enter the cooldown between reports in seconds. Or type 'cancel' to cancel.");
 
 						setReportCooldownClickMap.put(player.getUniqueId(), String.valueOf(true));
 						setReportCooldownClickMap.put(player.getUniqueId(), customItemDisplayName);
@@ -407,7 +387,7 @@ public class BugReportSettings {
 					}
 					case "View Status" -> {
 						playButtonClickSound(player);
-						player.openInventory(getViewStatusGUI(player));
+						player.openInventory(getViewStatusGUI());
 					}
 				}
 			}
@@ -417,21 +397,19 @@ public class BugReportSettings {
 
 				Player player = (Player) event.getWhoClicked();
 				Inventory clickedInventory = event.getClickedInventory();
-				ItemStack clickedItem = event.getCurrentItem();
 
+				ItemStack clickedItem = event.getCurrentItem();
 				if (clickedInventory == null || clickedItem == null || clickedItem.getType() == Material.AIR) {
 					return;
 				}
 
 				ItemMeta itemMeta = clickedItem.getItemMeta();
-
 				if (itemMeta == null || !itemMeta.hasDisplayName()) {
 					return;
 				}
 
 				String itemDisplayName = itemMeta.getDisplayName();
 				String customItemDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(itemDisplayName);
-
 				if (customItemDisplayName.equals("Back")) {
 					playButtonClickSound(player);
 
@@ -559,7 +537,7 @@ public class BugReportSettings {
 				switch (customItemDisplayName) {
 					case "Back" -> {
 						playButtonClickSound(player);
-						player.openInventory(getViewStatusGUI(player));
+						player.openInventory(getViewStatusGUI());
 						return;
 					}
 					case " " -> {
@@ -573,9 +551,7 @@ public class BugReportSettings {
 								playButtonClickSound(player);
 
 								player.closeInventory();
-								player.sendMessage(pluginColor + pluginTitle + " "
-										+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW)
-										+ "Type 'confirm' to delete the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
+								player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "Type 'confirm' to delete the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
 
 								removeStatusClickMap.put(player.getUniqueId(), String.valueOf(true));
 								removeStatusClickMap.put(player.getUniqueId(), statusName);
@@ -592,9 +568,7 @@ public class BugReportSettings {
 							playButtonClickSound(player);
 
 							player.closeInventory();
-							player.sendMessage(pluginColor + pluginTitle + " "
-									+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW)
-									+ "Type the new name for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
+							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "Type the new name for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
 
 							renameStatusClickMap.put(player.getUniqueId(), String.valueOf(true));
 							renameStatusClickMap.put(player.getUniqueId(), statusName);
@@ -610,9 +584,7 @@ public class BugReportSettings {
 							playButtonClickSound(player);
 							player.closeInventory();
 
-							player.sendMessage(pluginColor + pluginTitle + " "
-									+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW)
-									+ "Type the new material for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
+							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "Type the new material for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
 							setNewMaterialStatusClickMap.put(player.getUniqueId(), String.valueOf(true));
 							setNewMaterialStatusClickMap.put(player.getUniqueId(), statusName);
 						}
@@ -627,9 +599,7 @@ public class BugReportSettings {
 							playButtonClickSound(player);
 
 							player.closeInventory();
-							player.sendMessage(pluginColor + pluginTitle + " "
-									+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW)
-									+ "Type the new color for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
+							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "Type the new color for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
 
 							setNewColorStatusClickMap.put(player.getUniqueId(), String.valueOf(true));
 							setNewColorStatusClickMap.put(player.getUniqueId(), statusName);
@@ -646,9 +616,7 @@ public class BugReportSettings {
 							playButtonClickSound(player);
 
 							player.closeInventory();
-							player.sendMessage(pluginColor + pluginTitle + " "
-									+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW)
-									+ "Type the new description for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
+							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "Type the new description for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
 
 							setNewDescriptionStatusClickMap.put(player.getUniqueId(), String.valueOf(true));
 							setNewDescriptionStatusClickMap.put(player.getUniqueId(), statusName);
@@ -658,10 +626,8 @@ public class BugReportSettings {
 			}
 		}
 
-		private @NotNull Inventory getViewStatusGUI(Player player) {
-			Inventory gui = Bukkit.createInventory(null, 45,
-					Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW)
-							+ "Bug Report - " + BugReportLanguage.getTitleFromLanguage("viewStatus"));
+		private @NotNull Inventory getViewStatusGUI() {
+			Inventory gui = Bukkit.createInventory(null, 45, Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "Bug Report - " + getTitleFromLanguage("viewStatus"));
 
 			setBorder(gui, Material.GRAY_STAINED_GLASS_PANE);
 
@@ -676,9 +642,7 @@ public class BugReportSettings {
 
 						String statusColorString = ((String) statusMap.get("color")).toUpperCase();
 						ChatColor statusColor = ChatColor.valueOf(statusColorString);
-						Material statusIcon = Material.matchMaterial((String) statusMap.get("icon")) != null
-								? Material.matchMaterial((String) statusMap.get("icon"))
-								: Material.BARRIER;
+						Material statusIcon = Material.matchMaterial((String) statusMap.get("icon")) != null ? Material.matchMaterial((String) statusMap.get("icon")) : Material.BARRIER;
 
 						ItemStack statusItem = createButton(statusIcon, statusColor + statusName);
 						ItemMeta statusMeta = statusItem.getItemMeta();
@@ -694,24 +658,24 @@ public class BugReportSettings {
 				}
 			}
 
-			gui.setItem(40, createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("back")));
+			gui.setItem(40, createButton(Material.BARRIER, ChatColor.RED + getTitleFromLanguage("back")));
 
 			return gui;
 		}
 
 		private @NotNull Inventory getStatusInfoGUI(@NotNull Map<?, ?> statusMap) {
-			Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Report - " + BugReportLanguage.getTitleFromLanguage("editStatus"));
+			Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Report - " + getTitleFromLanguage("editStatus"));
 
 			Material itemStackMaterial = getMaterialFromMap(statusMap, "icon", Material.BARRIER);
 			ChatColor itemStackColor = getChatColorFromMap(statusMap, "color", ChatColor.WHITE);
 
 			setBorder(gui, getStainedGlassPaneColor(statusMap));
 
-			ItemStack statusName = createButton(Material.NAME_TAG, itemStackColor + BugReportLanguage.getTitleFromLanguage("statusName"));
-			ItemStack statusMaterial = createButton(itemStackMaterial, itemStackColor + BugReportLanguage.getTitleFromLanguage("statusMaterial"));
-			ItemStack statusColor = createButton(Material.PAINTING, itemStackColor + BugReportLanguage.getTitleFromLanguage("statusColor"));
-			ItemStack statusDescription = createButton(Material.BOOK, itemStackColor + BugReportLanguage.getTitleFromLanguage("statusDescription"));
-			ItemStack deleteStatus = createCustomPlayerHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmUwZmQxMDE5OWU4ZTRmY2RhYmNhZTRmODVjODU5MTgxMjdhN2M1NTUzYWQyMzVmMDFjNTZkMThiYjk0NzBkMyJ9fX0=", BugReportLanguage.getTitleFromLanguage("delete"), 1);
+			ItemStack statusName = createButton(Material.NAME_TAG, itemStackColor + getTitleFromLanguage("statusName"));
+			ItemStack statusMaterial = createButton(itemStackMaterial, itemStackColor + getTitleFromLanguage("statusMaterial"));
+			ItemStack statusColor = createButton(Material.PAINTING, itemStackColor + getTitleFromLanguage("statusColor"));
+			ItemStack statusDescription = createButton(Material.BOOK, itemStackColor + getTitleFromLanguage("statusDescription"));
+			ItemStack deleteStatus = createCustomPlayerHead(guiTextures.deleteStatusTexture, getTitleFromLanguage("delete"), 1);
 
 			setItemMeta(statusName, statusMap, "name");
 			setItemMeta(statusMaterial, statusMap, "icon");
@@ -722,7 +686,7 @@ public class BugReportSettings {
 			gui.setItem(21, statusColor);
 			gui.setItem(22, statusDescription);
 			gui.setItem(23, statusMaterial);
-			gui.setItem(40, createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("back")));
+			gui.setItem(40, createButton(Material.BARRIER, ChatColor.RED + getTitleFromLanguage("back")));
 			gui.setItem(42, deleteStatus);
 
 			return gui;
@@ -750,7 +714,7 @@ public class BugReportSettings {
 		}
 
 		private @NotNull Inventory getOtherSettingsGUI() {
-			Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Report - " + BugReportLanguage.getTitleFromLanguage("otherSettings"));
+			Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Report - " + getTitleFromLanguage("otherSettings"));
 
 			for (int i = 0; i < 9; i++) {
 				gui.setItem(i, createButton(Material.GRAY_STAINED_GLASS_PANE, " "));
@@ -766,11 +730,11 @@ public class BugReportSettings {
 				}
 			}
 
-			ItemStack enableTitleMessage = createButton(Material.PAPER, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("enableTitleMessage"));
-			ItemStack enablePlayerHeads = createButton(Material.PLAYER_HEAD, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("enablePlayerHeads"));
-			ItemStack enableReportBook = createButton(Material.WRITABLE_BOOK, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("enableReportBook"));
-			ItemStack onIcon = createButton(Material.LIME_DYE, ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage("true"));
-			ItemStack offIcon = createButton(Material.GRAY_DYE, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("false"));
+			ItemStack enableTitleMessage = createButton(Material.PAPER, ChatColor.YELLOW + getTitleFromLanguage("enableTitleMessage"));
+			ItemStack enablePlayerHeads = createButton(Material.PLAYER_HEAD, ChatColor.YELLOW + getTitleFromLanguage("enablePlayerHeads"));
+			ItemStack enableReportBook = createButton(Material.WRITABLE_BOOK, ChatColor.YELLOW + getTitleFromLanguage("enableReportBook"));
+			ItemStack onIcon = createButton(Material.LIME_DYE, ChatColor.GREEN + getTitleFromLanguage("true"));
+			ItemStack offIcon = createButton(Material.GRAY_DYE, ChatColor.RED + getTitleFromLanguage("false"));
 
 			gui.setItem(10, enableTitleMessage);
 			gui.setItem(11, enablePlayerHeads);
@@ -780,7 +744,7 @@ public class BugReportSettings {
 			gui.setItem(20, getPlayerHead() ? onIcon : offIcon);
 			gui.setItem(21, getReportBook() ? onIcon : offIcon);
 
-			gui.setItem(40, createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("back")));
+			gui.setItem(40, createButton(Material.BARRIER, ChatColor.RED + getTitleFromLanguage("back")));
 
 			return gui;
 		}
@@ -796,10 +760,7 @@ public class BugReportSettings {
 			config.set("useTitleInsteadOfMessage", !toggle);
 			saveConfig();
 			if (debugMode) plugin.getLogger().info("Title message set to " + !toggle);
-			player.getOpenInventory().setItem(19,
-					getTitleMessage()
-							? createButton(Material.LIME_DYE, ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage("true"))
-							: createButton(Material.GRAY_DYE, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("false")));
+			player.getOpenInventory().setItem(19, getTitleMessage() ? createButton(Material.LIME_DYE, ChatColor.GREEN + getTitleFromLanguage("true")) : createButton(Material.GRAY_DYE, ChatColor.RED + getTitleFromLanguage("false")));
 		}
 
 		private boolean getPlayerHead() {
@@ -813,9 +774,7 @@ public class BugReportSettings {
 			config.set("enablePlayerHeads", !toggle);
 			saveConfig();
 			if (debugMode) plugin.getLogger().info("Player heads set to " + !toggle);
-			player.getOpenInventory().setItem(20, getPlayerHead()
-					? createButton(Material.LIME_DYE, ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage("true"))
-					: createButton(Material.GRAY_DYE, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("false")));
+			player.getOpenInventory().setItem(20, getPlayerHead() ? createButton(Material.LIME_DYE, ChatColor.GREEN + getTitleFromLanguage("true")) : createButton(Material.GRAY_DYE, ChatColor.RED + getTitleFromLanguage("false")));
 		}
 
 		private boolean getReportBook() {
@@ -829,9 +788,7 @@ public class BugReportSettings {
 			config.set("enablePluginReportBook", !toggle);
 			saveConfig();
 			if (debugMode) plugin.getLogger().info("Report book set to " + !toggle);
-			player.getOpenInventory().setItem(21, getReportBook()
-					? createButton(Material.LIME_DYE, ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage("true"))
-					: createButton(Material.GRAY_DYE, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("false")));
+			player.getOpenInventory().setItem(21, getReportBook() ? createButton(Material.LIME_DYE, ChatColor.GREEN + getTitleFromLanguage("true")) : createButton(Material.GRAY_DYE, ChatColor.RED + getTitleFromLanguage("false")));
 		}
 
 		private void handleCancel(Player player, @NotNull Map<UUID, String> clickMap) {
@@ -885,49 +842,36 @@ public class BugReportSettings {
 			Player player = event.getPlayer();
 
 			if (setMaxReportsClickMap.containsKey(player.getUniqueId())) {
-				handleSettingUpdate(event, player, setMaxReportsClickMap, BugReportLanguage.getTitleFromLanguage("setMaxReportsPerPlayer"), "max-reports-per-player", (value) -> {
+				handleSettingUpdate(event, player, setMaxReportsClickMap, getTitleFromLanguage("setMaxReportsPerPlayer"), "max-reports-per-player", (value) -> {
 					int maxReports;
 					if (value.matches("[0-9]+")) {
 						try {
 							maxReports = Integer.parseInt(value);
 						} catch (NumberFormatException e) {
 							if (checkForKey("useTitleInsteadOfMessage", true)) {
-								player.sendTitle(pluginColor + pluginTitle,
-										getTextElseDefault(config.getString("language"), "enterValidNumber"), 10, 70, 20);
+								player.sendTitle(pluginColor + pluginTitle, getTextElseDefault(config.getString("language"), "enterValidNumber"), 10, 70, 20);
 							} else {
-								player.sendMessage(pluginColor + pluginTitle + " "
-										+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
-										+ getTextElseDefault(config.getString("language"), "enterValidNumber"));
+								player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + getTextElseDefault(config.getString("language"), "enterValidNumber"));
 							}
 							return;
 						}
 						config.set("max-reports-per-player", maxReports);
 						saveConfig();
 						if (checkForKey("useTitleInsteadOfMessage", true)) {
-							player.sendTitle(pluginColor + pluginTitle,
-									getTextElseDefault(config.getString("language"), "maxReportsPerPlayerSuccessMessage")
-											.replace("%amount%", String.valueOf(maxReports)), 10, 70, 20);
+							player.sendTitle(pluginColor + pluginTitle, getTextElseDefault(config.getString("language"), "maxReportsPerPlayerSuccessMessage").replace("%amount%", String.valueOf(maxReports)), 10, 70, 20);
 						} else {
-							player.sendMessage(pluginColor + pluginTitle + " "
-									+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN)
-									+ getTextElseDefault(config.getString("language"), "maxReportsPerPlayerSuccessMessage")
-									.replace("%amount%", String.valueOf(maxReports)));
+							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) + getTextElseDefault(config.getString("language"), "maxReportsPerPlayerSuccessMessage").replace("%amount%", String.valueOf(maxReports)));
 						}
 					} else {
 						value = value.substring(0, 1).toUpperCase() + value.substring(1).toLowerCase();
 						String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(value);
 						if (customDisplayName.contains("Cancel")) {
-							player.sendMessage(pluginColor + pluginTitle + " "
-									+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN)
-									+ BugReportLanguage.getTitleFromLanguage("cancelled"));
+							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) + getTitleFromLanguage("cancelled"));
 						} else {
 							if (checkForKey("useTitleInsteadOfMessage", true)) {
-								player.sendTitle(pluginColor + pluginTitle,
-										getTextElseDefault(config.getString("language"), "enterValidNumber"), 10, 70, 20);
+								player.sendTitle(pluginColor + pluginTitle, getTextElseDefault(config.getString("language"), "enterValidNumber"), 10, 70, 20);
 							} else {
-								player.sendMessage(pluginColor + pluginTitle + " "
-										+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
-										+ getTextElseDefault(config.getString("language"), "enterValidNumber"));
+								player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + getTextElseDefault(config.getString("language"), "enterValidNumber"));
 							}
 						}
 					}
@@ -941,12 +885,9 @@ public class BugReportSettings {
 						reportCooldown = Integer.parseInt(value);
 					} catch (NumberFormatException e) {
 						if (checkForKey("useTitleInsteadOfMessage", true)) {
-							player.sendTitle(pluginColor + pluginTitle,
-									getTextElseDefault(config.getString("language"), "enterValidNumber"), 10, 70, 20);
+							player.sendTitle(pluginColor + pluginTitle, getTextElseDefault(config.getString("language"), "enterValidNumber"), 10, 70, 20);
 						} else {
-							player.sendMessage(pluginColor + pluginTitle + " "
-									+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
-									+ getTextElseDefault(config.getString("language"), "enterValidNumber"));
+							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + getTextElseDefault(config.getString("language"), "enterValidNumber"));
 						}
 						return;
 					}
@@ -954,14 +895,9 @@ public class BugReportSettings {
 					config.set("report-cooldown", reportCooldown);
 					saveConfig();
 					if (checkForKey("useTitleInsteadOfMessage", true)) {
-						player.sendTitle(pluginColor + pluginTitle,
-								getTextElseDefault(config.getString("language"), "reportCooldownSuccessMessage")
-										.replace("%time%", String.valueOf(reportCooldown)), 10, 70, 20);
+						player.sendTitle(pluginColor + pluginTitle, getTextElseDefault(config.getString("language"), "reportCooldownSuccessMessage").replace("%time%", String.valueOf(reportCooldown)), 10, 70, 20);
 					} else {
-						player.sendMessage(pluginColor + pluginTitle + " "
-								+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN)
-								+ getTextElseDefault(config.getString("language"), "reportCooldownSuccessMessage")
-								.replace("%time%", String.valueOf(reportCooldown)));
+						player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) + getTextElseDefault(config.getString("language"), "reportCooldownSuccessMessage").replace("%time%", String.valueOf(reportCooldown)));
 					}
 				});
 			}
@@ -1039,12 +975,9 @@ public class BugReportSettings {
 
 					if (!checkIfChatColorIsValid(value)) {
 						if (checkForKey("useTitleInsteadOfMessage", true)) {
-							player.sendTitle(pluginColor + pluginTitle,
-									getTextElseDefault(config.getString("language"), "invalidColor"), 10, 70, 20);
+							player.sendTitle(pluginColor + pluginTitle, getTextElseDefault(config.getString("language"), "invalidColor"), 10, 70, 20);
 						} else {
-							player.sendMessage(pluginColor + pluginTitle + " "
-									+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
-									+ getTextElseDefault(config.getString("language"), "invalidColor"));
+							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + getTextElseDefault(config.getString("language"), "invalidColor"));
 						}
 						return;
 					}
@@ -1074,13 +1007,7 @@ public class BugReportSettings {
 			}
 		}
 
-		private void handleSettingUpdate(AsyncPlayerChatEvent event,
-		                                 @NotNull Player player,
-		                                 @NotNull Map<UUID, String> settingClickMap,
-		                                 String displayName,
-		                                 String ignoredConfigKey,
-		                                 Consumer<String> updateLogic
-		) {
+		private void handleSettingUpdate(AsyncPlayerChatEvent event, @NotNull Player player, @NotNull Map<UUID, String> settingClickMap, String displayName, String ignoredConfigKey, Consumer<String> updateLogic) {
 			String clickDisplayName = settingClickMap.get(player.getUniqueId());
 			String displayNameDefault = BugReportLanguage.getEnglishVersionFromLanguage(displayName);
 

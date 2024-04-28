@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.leon.bugreport</groupId>
   <artifactId>BugReports</artifactId>
-  <version>0.11.3</version>
+  <version>0.11.4</version>
   <build>
     <plugins>
       <plugin>
@@ -37,12 +37,6 @@
                   </excludes>
                 </filter>
               </filters>
-              <transformers>
-                <transformer>
-                  <mainClass>HelloWorldBootstrap</mainClass>
-                </transformer>
-                <transformer />
-              </transformers>
             </configuration>
           </execution>
         </executions>
@@ -101,7 +95,7 @@
     <dependency>
       <groupId>com.github.plan-player-analytics</groupId>
       <artifactId>Plan</artifactId>
-      <version>5.6.2614</version>
+      <version>5.6.2820</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
