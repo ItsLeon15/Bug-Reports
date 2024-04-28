@@ -1,7 +1,5 @@
 package com.leon.bugreport.API;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -143,8 +141,6 @@ public class DataSource {
 	}
 
 	private static @Nullable String returnFalseIfCacheIsInvalid(@NotNull Map<String, CacheEntry> cache) {
-		ObjectMapper mapper = new ObjectMapper();
-
 		for (Map.Entry<String, CacheEntry> entry : cache.entrySet()) {
 			CacheEntry cacheEntry = entry.getValue();
 
@@ -166,23 +162,6 @@ public class DataSource {
 				UUID.fromString(cacheEntry.data);
 			} catch (IllegalArgumentException ex) {
 				return "Data is not a valid UUID";
-			}
-
-			String decodedJson;
-			try {
-				if (Objects.equals(cacheEntry.nestedData.data, "EMPTY_ON_PURPOSE"))
-					return "Nested data is empty on purpose";
-
-				byte[] decodedBytes = Base64.getDecoder().decode(cacheEntry.nestedData.data);
-				decodedJson = new String(decodedBytes);
-				Map<String, Object> jsonMap = mapper.readValue(decodedJson, new TypeReference<>() {
-				});
-
-				if (!jsonMap.containsKey("profileId") || !jsonMap.containsKey("profileName")) {
-					return "JSON is missing profileId or profileName";
-				}
-			} catch (Exception ex) {
-				return "Nested data is not a valid JSON";
 			}
 		}
 		return null;
