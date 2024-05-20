@@ -82,7 +82,7 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 		registerListeners();
 
 		new BugReportLanguage(this);
-		new Metrics(this, 18974);
+		Metrics metrics = new Metrics(this, 18974);
 
 		generateNewYML();
 	}

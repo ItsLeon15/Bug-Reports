@@ -12,19 +12,21 @@ import java.util.Map;
 import java.util.Objects;
 
 public class BugReportLanguage {
-	static List<String> languageCodes = List.of(
-			"en_US", "es_ES", "de_DE", "fr_FR",
-			"it_IT", "pt_BR", "ru_RU", "zh_CN",
-			"zh_TW"
-	);
+	static List<String> languageCodes = List.of("en_US", "es_ES", "de_DE", "fr_FR", "it_IT", "pt_BR", "ru_RU", "zh_CN", "zh_TW");
 	private static File langFolder;
 	private static String languageCode;
 	private static YamlConfiguration langConfig;
 	private static YamlConfiguration enLangConfig;
+	private static Plugin plugin;
 
 	public BugReportLanguage(@NotNull Plugin plugin) {
 		langFolder = new File(plugin.getDataFolder(), "languages");
-		languageCode = plugin.getConfig().getString("languages", "en_US");
+		languageCode = plugin.getConfig().getString("language", "en_US");
+
+		if (!languageCodes.contains(languageCode)) {
+			plugin.getLogger().warning("Invalid language code '" + languageCode + "'. Defaulting to 'en_US'.");
+			languageCode = "en_US";
+		}
 
 		loadLanguageFiles(plugin);
 	}
@@ -32,11 +34,6 @@ public class BugReportLanguage {
 	public static String getValueFromLanguageFile(String key, String defaultValue) {
 		String newKey = ChatColor.stripColor(key);
 		String value = langConfig.getString(languageCode + "." + newKey);
-
-		System.out.println("key: " + newKey);
-		System.out.println("value1: " + value);
-		System.out.println("languageCode: " + languageCode);
-		System.out.println("langConfig: " + langConfig);
 
 		if (value == null) {
 			value = defaultValue;
@@ -47,7 +44,7 @@ public class BugReportLanguage {
 
 	public static @Nullable String getEnglishValueFromValue(String value) {
 		if (enLangConfig == null) {
-			System.out.println("enLangConfig is null");
+			plugin.getLogger().warning("English language file 'en_US.yml' not found.");
 			return null;
 		}
 
@@ -56,14 +53,11 @@ public class BugReportLanguage {
 		for (Map.Entry<String, Object> entry : enLangConfig.getValues(true).entrySet()) {
 			if (entry.getValue() != null && entry.getValue().equals(newValue)) {
 				String entryGetKey = entry.getKey();
-				String outputValue = enLangConfig.getString(entryGetKey);
-				return outputValue;
+				return enLangConfig.getString(entryGetKey);
 			}
 		}
 
-		System.out.println("value: " + newValue);
-
-		return null;
+		return newValue;
 	}
 
 	public static void loadLanguageFiles(Plugin plugin) {
