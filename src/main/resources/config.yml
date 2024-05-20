@@ -5,6 +5,8 @@ enablePluginReportCategories: false
 enablePluginReportBook: false
 enableBugReportNotifications: true
 
+language: en_US
+
 # # Available placeholders:
 #
 # Aqua, Black, Blue, Dark_Aqua, Dark_Blue
@@ -12,7 +14,7 @@ enableBugReportNotifications: true
 # Gold, Gray, Green, Light_Purple, Red, White, Yellow
 discordEmbedColor: Green
 discordEmbedTitle: New Bug Report
-discordEmbedFooter: Bug Report v0.11.4
+discordEmbedFooter: Bug Report v0.11.5
 discordEmbedThumbnail: https://www.spigotmc.org/data/resource_icons/110/110732.jpg
 discordEnableThumbnail: true
 discordEnableUserAuthor: true
@@ -62,7 +64,6 @@ useTitleInsteadOfMessage: false
 enablePlayerHeads: true
 refreshPlayerHeadCache: 1d # Default, 1m, 1h, 1d, 1w, 1mo, 1y
 
-language: en
 max-reports-per-player: 50 # 0 = unlimited
 report-confirmation-message: Thanks for submitting a report!
 

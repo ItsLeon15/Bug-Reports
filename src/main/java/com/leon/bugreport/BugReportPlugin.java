@@ -81,9 +81,9 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 		registerCommands();
 		registerListeners();
 
+		new BugReportLanguage(this);
 		new Metrics(this, 18974);
 
-		BugReportLanguage.loadLanguageTexts(plugin, "languages.yml");
 		generateNewYML();
 	}
 
@@ -161,12 +161,12 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 				if (!newReports.isEmpty()) {
 					player.sendMessage(pluginColor + pluginTitle + " "
 							+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GRAY)
-							+ DefaultLanguageSelector.getTextElseDefault(language, "newReportsMessage")
+							+ BugReportLanguage.getValueFromLanguageFile("newReportsMessage", "You have %numReports% new reports")
 							.replace("%numReports%", String.valueOf(newReports.size())));
 				} else {
 					player.sendMessage(pluginColor + pluginTitle + " "
 							+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GRAY)
-							+ DefaultLanguageSelector.getTextElseDefault(language, "noNewReportsMessage"));
+							+ BugReportLanguage.getValueFromLanguageFile("noNewReportsMessage", "You have no new reports"));
 				}
 			}
 		}

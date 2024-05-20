@@ -45,7 +45,6 @@ public class BugReportManager implements Listener {
 	public static Plugin plugin;
 	public static FileConfiguration config;
 	public static File configFile;
-	public static BugReportLanguage lang;
 	public static String language;
 	public static ChatColor endingPluginTitleColor;
 	public static ChatColor pluginColor;
@@ -100,8 +99,8 @@ public class BugReportManager implements Listener {
 
 	public static boolean checkCategoryConfig() {
 		if (!config.contains("reportCategories")) {
-			plugin.getLogger().warning(DefaultLanguageSelector.getTextElseDefault(language, "missingReportCategoryMessage"));
-			logErrorMessage(DefaultLanguageSelector.getTextElseDefault(language, "missingReportCategoryMessage"));
+			plugin.getLogger().warning(BugReportLanguage.getValueFromLanguageFile("missingReportCategoryMessage", "Missing reportCategories in config.yml"));
+			logErrorMessage(BugReportLanguage.getValueFromLanguageFile("missingReportCategoryMessage", "Missing reportCategories in config.yml"));
 			return false;
 		}
 
@@ -112,8 +111,8 @@ public class BugReportManager implements Listener {
 
 			for (int i = 0; i < keys.length; i++) {
 				if (values[i] == null) {
-					plugin.getLogger().warning(DefaultLanguageSelector.getTextElseDefault(language, "missingValueMessage").replace("%key%", keys[i].toString()));
-					logErrorMessage(DefaultLanguageSelector.getTextElseDefault(language, "missingValueMessage").replace("%key%", keys[i].toString()));
+					plugin.getLogger().warning(BugReportLanguage.getValueFromLanguageFile("missingValueMessage", "Missing '%key%' in reportCategories in config.yml").replace("%key%", keys[i].toString()));
+					logErrorMessage(BugReportLanguage.getValueFromLanguageFile("missingValueMessage", "Missing '%key%' in reportCategories in config.yml").replace("%key%", keys[i].toString()));
 					return false;
 				}
 			}
@@ -135,8 +134,7 @@ public class BugReportManager implements Listener {
 
 		config = YamlConfiguration.loadConfiguration(configFile);
 
-		language = config.getString("language", "en");
-		lang = new BugReportLanguage(plugin, "languages.yml");
+		language = config.getString("language", "en_US");
 	}
 
 	public static void checkConfig() {
@@ -152,7 +150,7 @@ public class BugReportManager implements Listener {
 				put("enableBugReportNotifications", true);
 				put("discordEmbedTitle", "New Bug Report");
 				put("discordEmbedColor", "Yellow");
-				put("discordEmbedFooter", "Bug Report V0.11.4");
+				put("discordEmbedFooter", "Bug Report V0.11.5");
 				put("discordEmbedThumbnail", "https://www.spigotmc.org/data/resource_icons/110/110732.jpg");
 				put("discordEnableThumbnail", true);
 				put("discordEnableUserAuthor", true);
@@ -160,7 +158,7 @@ public class BugReportManager implements Listener {
 				put("useTitleInsteadOfMessage", false);
 				put("enablePlayerHeads", true);
 				put("refreshPlayerHeadCache", "1d");
-				put("language", "en");
+				put("language", "en_US");
 				put("max-reports-per-player", 50);
 				put("report-confirmation-message", "Thanks for submitting a report!");
 				put("pluginColor", "Yellow");
@@ -208,7 +206,7 @@ public class BugReportManager implements Listener {
 		int totalPages = Math.max(1, (int) Math.ceil((double) filteredReports.size() / itemsPerPage));
 		int currentPage = Math.max(1, Math.min(getCurrentPage(player), totalPages));
 
-		Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + (showArchived ? "Archived Bugs" : "Bug " + "Report") + " - " + Objects.requireNonNull(BugReportLanguage.getTitleFromLanguage("pageInfo")).replace("%currentPage%", String.valueOf(currentPage)).replace("%totalPages%", String.valueOf(totalPages)));
+		Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + (showArchived ? "Archived Bugs" : "Bug " + "Report") + " - " + Objects.requireNonNull(BugReportLanguage.getValueFromLanguageFile("buttonNames.pageInfo", "Page %currentPage% of %totalPages%")).replace("%currentPage%", String.valueOf(currentPage)).replace("%totalPages%", String.valueOf(totalPages)));
 
 		int startIndex = (currentPage - 1) * itemsPerPage;
 		int endIndex = Math.min(startIndex + itemsPerPage, filteredReports.size());
@@ -235,9 +233,9 @@ public class BugReportManager implements Listener {
 			slotIndex++;
 		}
 
-		ItemStack settingsButton = createButton(Material.CHEST, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("settings"));
-		ItemStack closeButton = createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getTitleFromLanguage("close"));
-		ItemStack pageIndicator = createButton(Material.PAPER, ChatColor.YELLOW + Objects.requireNonNull(BugReportLanguage.getTitleFromLanguage("pageInfo")).replace("%currentPage%", String.valueOf(currentPage)).replace("%totalPages%", String.valueOf(totalPages)));
+		ItemStack settingsButton = createButton(Material.CHEST, ChatColor.YELLOW + BugReportLanguage.getValueFromLanguageFile("buttonNames.settings", "Settings"));
+		ItemStack closeButton = createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getValueFromLanguageFile("buttonNames.close", "Close"));
+		ItemStack pageIndicator = createButton(Material.PAPER, ChatColor.YELLOW + Objects.requireNonNull(BugReportLanguage.getValueFromLanguageFile("buttonNames.pageInfo", "Page %currentPage% of %totalPages%")).replace("%currentPage%", String.valueOf(currentPage)).replace("%totalPages%", String.valueOf(totalPages)));
 
 		if (BugReportManager.getCurrentPage(player) == 1) {
 			gui.setItem(36, new ItemStack(Material.AIR));
@@ -281,7 +279,7 @@ public class BugReportManager implements Listener {
 	private static void createNavigationButtons(String forward, @NotNull Inventory bugReportGUI, int index) {
 		ItemStack forwardButton = new ItemStack(Material.ARROW);
 		ItemMeta forwardMeta = forwardButton.getItemMeta();
-		Objects.requireNonNull(forwardMeta).setDisplayName(ChatColor.GREEN + BugReportLanguage.getTitleFromLanguage(forward));
+		Objects.requireNonNull(forwardMeta).setDisplayName(ChatColor.GREEN + BugReportLanguage.getValueFromLanguageFile("buttonNames." + forward, forward.substring(0, 1).toUpperCase() + forward.substring(1)));
 		forwardButton.setItemMeta(forwardMeta);
 		bugReportGUI.setItem(index, forwardButton);
 	}
@@ -460,8 +458,8 @@ public class BugReportManager implements Listener {
 
 			return categories;
 		} else {
-			plugin.getLogger().warning(DefaultLanguageSelector.getTextElseDefault(language, "wentWrongLoadingCategoriesMessage"));
-			logErrorMessage(DefaultLanguageSelector.getTextElseDefault(language, "wentWrongLoadingCategoriesMessage"));
+			plugin.getLogger().warning(BugReportLanguage.getValueFromLanguageFile("wentWrongLoadingCategoriesMessage", "Something went wrong while loading the report categories"));
+			logErrorMessage(BugReportLanguage.getValueFromLanguageFile("wentWrongLoadingCategoriesMessage", "Something went wrong while loading the report categories"));
 			return null;
 		}
 	}
@@ -507,7 +505,7 @@ public class BugReportManager implements Listener {
 		if (config.getBoolean("enableBugReportNotifications", true)) {
 			if (BugReportManager.debugMode)
 				plugin.getLogger().info("Sending bug report notification to online players...");
-			String defaultMessage = pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GRAY) + DefaultLanguageSelector.getTextElseDefault(language, "bugReportNotificationMessage").replace("%player%", ChatColor.AQUA + playerName + ChatColor.GRAY);
+			String defaultMessage = pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GRAY) + BugReportLanguage.getValueFromLanguageFile("bugReportNotificationMessage", "A new bug report has been submitted by %player%!").replace("%player%", ChatColor.AQUA + playerName + ChatColor.GRAY);
 
 			for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
 				if (onlinePlayer.hasPermission("bugreport.notify")) {
@@ -520,8 +518,8 @@ public class BugReportManager implements Listener {
 			if (BugReportManager.debugMode) plugin.getLogger().info("Sending bug report to Discord...");
 			String webhookURL = config.getString("webhookURL", "");
 			if (webhookURL.isEmpty()) {
-				plugin.getLogger().warning(DefaultLanguageSelector.getTextElseDefault(language, "missingDiscordWebhookURLMessage"));
-				logErrorMessage(DefaultLanguageSelector.getTextElseDefault(language, "missingDiscordWebhookURLMessage"));
+				plugin.getLogger().warning(BugReportLanguage.getValueFromLanguageFile("missingDiscordWebhookURLMessage", "Missing webhookURL in config.yml"));
+				logErrorMessage(BugReportLanguage.getValueFromLanguageFile("missingDiscordWebhookURLMessage", "Missing webhookURL in config.yml"));
 			}
 
 			try {
@@ -576,9 +574,22 @@ public class BugReportManager implements Listener {
 			}
 
 			String displayName = itemMeta.getDisplayName();
-			String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(displayName);
+			String cleanedDisplayName = ChatColor.stripColor(displayName);
+			String customDisplayName = BugReportLanguage.getEnglishValueFromValue(displayName);
 
 			if (BugReportManager.debugMode) plugin.getLogger().info("Clicked item: " + customDisplayName);
+
+			if (cleanedDisplayName.startsWith("Bug Report #")) {
+				int reportID = Integer.parseInt(displayName.substring(14));
+				List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
+				String report = reports.stream().filter(reportString -> reportString.contains("Report ID: " + reportID)).findFirst().orElse(null);
+
+				if (BugReportManager.debugMode)
+					plugin.getLogger().info("Opening bug report details GUI for report ID " + reportID);
+
+				playButtonClickSound(player);
+				openBugReportDetailsGUI(player, report, reportID, isArchivedGUI);
+			}
 
 			switch (customDisplayName) {
 				case "Back" -> {
@@ -606,27 +617,6 @@ public class BugReportManager implements Listener {
 					playButtonClickSound(player);
 					player.closeInventory();
 				}
-			}
-			if (displayName.startsWith(ChatColor.YELLOW + "Bug Report #")) {
-				int reportID = Integer.parseInt(displayName.substring(14));
-				List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
-				String report = reports.stream().filter(reportString -> reportString.contains("Report ID: " + reportID)).findFirst().orElse(null);
-
-				if (BugReportManager.debugMode)
-					plugin.getLogger().info("Opening bug report details GUI for report ID " + reportID);
-
-				playButtonClickSound(player);
-				openBugReportDetailsGUI(player, report, reportID, isArchivedGUI);
-			}
-
-			if (customDisplayName.equals("Settings")) {
-				if (BugReportManager.debugMode) plugin.getLogger().info("Opening settings GUI...");
-				player.openInventory(getSettingsGUI());
-			}
-
-			if (customDisplayName.equals("Close")) {
-				closingInventoryMap.put(player.getUniqueId(), true);
-				player.closeInventory();
 			}
 		}
 
@@ -677,7 +667,7 @@ public class BugReportManager implements Listener {
 			}
 
 			String itemName = itemMeta.getDisplayName();
-			String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(itemName);
+			String customDisplayName = BugReportLanguage.getEnglishValueFromValue(itemName);
 
 			if (customDisplayName.contains("(Click to change)")) {
 				playButtonClickSound(player);
