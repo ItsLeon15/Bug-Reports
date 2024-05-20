@@ -3,23 +3,28 @@ package com.leon.bugreport;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 public class BugReportLanguage {
+	static List<String> languageCodes = List.of(
+			"en_US", "es_ES", "de_DE", "fr_FR",
+			"it_IT", "pt_BR", "ru_RU", "zh_CN",
+			"zh_TW"
+	);
 	private static File langFolder;
 	private static String languageCode;
 	private static YamlConfiguration langConfig;
 	private static YamlConfiguration enLangConfig;
 
 	public BugReportLanguage(@NotNull Plugin plugin) {
-		langFolder = new File(plugin.getDataFolder(), "lang");
-		languageCode = getLanguageCode(plugin);
+		langFolder = new File(plugin.getDataFolder(), "languages");
+		languageCode = plugin.getConfig().getString("languages", "en_US");
 
 		loadLanguageFiles(plugin);
 	}
@@ -66,15 +71,36 @@ public class BugReportLanguage {
 			langFolder.mkdirs();
 		}
 
-		if (langFolder.listFiles() == null || langFolder.listFiles().length == 0) {
+		File[] files = langFolder.listFiles();
+		if (files == null || files.length == 0) {
 			plugin.getLogger().warning("No language files found in the 'languages' folder.");
-			return;
-		}
-
-		for (File file : langFolder.listFiles()) {
-			if (file.getName().equalsIgnoreCase("en_US.yml")) {
-				enLangConfig = YamlConfiguration.loadConfiguration(file);
-				break;
+			for (String languageCode : languageCodes) {
+				plugin.saveResource("languages/" + languageCode + ".yml", false);
+			}
+		} else {
+			for (File file : files) {
+				if (file.getName().equalsIgnoreCase("en_US.yml")) {
+					enLangConfig = YamlConfiguration.loadConfiguration(file);
+					break;
+				}
+			}
+			for (String languageCode : languageCodes) {
+				boolean found = false;
+				for (File file : files) {
+					if (file.getName().equalsIgnoreCase(languageCode + ".yml")) {
+						found = true;
+						break;
+					}
+				}
+				if (!found) {
+					System.out.println("Saving language file: " + languageCode);
+					boolean resourceAvailable = plugin.getResource("languages/" + languageCode + ".yml") != null;
+					if (resourceAvailable) {
+						plugin.saveResource("languages/" + languageCode + ".yml", false);
+					} else {
+						plugin.getLogger().warning("Language file '" + languageCode + ".yml' not found in resources.");
+					}
+				}
 			}
 		}
 
@@ -93,15 +119,5 @@ public class BugReportLanguage {
 		}
 
 		plugin.getLogger().info("Loaded " + langConfig.getKeys(true).size() + " language keys.");
-	}
-
-	@Contract("_ -> !null")
-	private static String getLanguageCode(@NotNull Plugin plugin) {
-		return plugin.getConfig().getString("language", "en_US");
-	}
-
-	public void setLanguageCode(@NotNull Plugin plugin, String languageCode) {
-		plugin.getConfig().set("language", languageCode);
-		plugin.saveConfig();
 	}
 }
