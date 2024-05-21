@@ -175,7 +175,7 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 							.append("\n");
 				}
 
-				if (getConfig().getBoolean("update-checker")) {
+				if (getConfig().getBoolean("update-checker-join")) {
 					updateChecker.getVersion(spigotVersion -> {
 						String serverVersion = this.getDescription().getVersion();
 						if (compareVersions(serverVersion, spigotVersion) < 0) {
