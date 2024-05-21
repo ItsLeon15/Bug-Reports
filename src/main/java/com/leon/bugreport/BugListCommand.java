@@ -92,6 +92,7 @@ public class BugListCommand implements CommandExecutor {
 
 	private void returnReloadCommand(@NotNull Player player) {
 		BugReportManager.reloadConfig();
+		BugReportLanguage.loadLanguageFiles();
 		plugin.reloadConfig();
 		BugReportDatabase.reloadConnection();
 

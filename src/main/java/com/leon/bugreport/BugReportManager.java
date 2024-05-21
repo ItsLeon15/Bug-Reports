@@ -121,6 +121,7 @@ public class BugReportManager implements Listener {
 	}
 
 	public static void reloadConfig() {
+		language = config.getString("language", "en_US");
 		loadConfig();
 		checkConfig();
 	}

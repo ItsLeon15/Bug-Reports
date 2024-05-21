@@ -266,20 +266,21 @@ public class BugReportSettings {
 			player.closeInventory();
 			if (checkForKey("useTitleInsteadOfMessage", true)) {
 				player.sendTitle(pluginColor + pluginTitle,
-						BugReportLanguage.getValueFromLanguageFile("languageSetTo", "languageSetTo")
+						BugReportLanguage.getValueFromLanguageFile("languageSetTo", "Language set to %language%")
 								.replace("%language%", languageName), 10, 70, 20);
 			} else {
 				player.sendMessage(pluginColor + pluginTitle + " " +
 						Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN)
-						+ BugReportLanguage.getValueFromLanguageFile("languageSetTo", "languageSetTo")
+						+ BugReportLanguage.getValueFromLanguageFile("languageSetTo", "Language set to %language%")
 						.replace("%language%", languageName));
 			}
+
 			updateBugReportItems();
 			config.set("language", languageCode);
+			BugReportLanguage.setPluginLanguage(languageCode);
 
 			if (debugMode) plugin.getLogger().info("Language set to " + languageCode);
-			saveConfig();
-			loadConfig();
+			reloadConfig();
 
 			player.openInventory(openLanguageGUI());
 		}
