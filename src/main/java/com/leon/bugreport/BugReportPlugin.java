@@ -14,6 +14,7 @@ import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -31,172 +32,191 @@ import static com.leon.bugreport.BugReportManager.*;
 import static com.leon.bugreport.gui.bugreportGUI.generateNewYML;
 
 public class BugReportPlugin extends JavaPlugin implements Listener {
-	private BugReportManager reportManager;
+    private BugReportManager reportManager;
 
-	@NotNull
-	private static List<String> getNewReports(@NotNull List<String> reports, long lastLoginTimestamp) {
-		List<String> newReports = new ArrayList<>();
-		for (String report : reports) {
-			String[] lines = report.split("\n");
-			long reportTimestampLong = 0;
-			for (String line : lines) {
-				if (line.startsWith("Timestamp:")) {
-					reportTimestampLong = Long.parseLong(line.substring(10).trim());
-				}
-			}
-			if (reportTimestampLong > lastLoginTimestamp) {
-				newReports.add(report);
-			}
-		}
-		return newReports;
-	}
+	private FileConfiguration config;
 
-	@Override
-	public void onEnable() {
-		try {
-			reportManager = new BugReportManager(this);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+    @NotNull
+    private static List<String> getNewReports(@NotNull List<String> reports, long lastLoginTimestamp) {
+        List<String> newReports = new ArrayList<>();
+        for (String report : reports) {
+            String[] lines = report.split("\n");
+            long reportTimestampLong = 0;
+            for (String line : lines) {
+                if (line.startsWith("Timestamp:")) {
+                    reportTimestampLong = Long.parseLong(line.substring(10).trim());
+                }
+            }
+            if (reportTimestampLong > lastLoginTimestamp) {
+                newReports.add(report);
+            }
+        }
+        return newReports;
+    }
 
-		try {
-			if (BugReportManager.debugMode) plugin.getLogger().info("Hooking into Plan");
-			PlanHook.getInstance().hookIntoPlan();
-		} catch (NoClassDefFoundError planIsNotInstalled) {
-			// Ignore catch
-		}
+    @Override
+    public void onEnable() {
+        try {
+            reportManager = new BugReportManager(this);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
-		if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
-			if (BugReportManager.debugMode) plugin.getLogger().info("Hooking into PlaceholderAPI");
-			new BugPlaceholders(this).register();
-		}
+        try {
+            if (BugReportManager.debugMode) plugin.getLogger().info("Hooking into Plan");
+            PlanHook.getInstance().hookIntoPlan();
+        } catch (NoClassDefFoundError planIsNotInstalled) {
+            // Ignore catch
+        }
 
-		if (!getDataFolder().exists()) {
-			if (!getDataFolder().mkdirs()) {
-				plugin.getLogger().warning("Failed to create data folder.");
-				logErrorMessage("Failed to create data folder.");
-			}
-		}
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            if (BugReportManager.debugMode) plugin.getLogger().info("Hooking into PlaceholderAPI");
+            new BugPlaceholders(this).register();
+        }
 
-		registerCommands();
-		registerListeners();
+        if (!getDataFolder().exists()) {
+            if (!getDataFolder().mkdirs()) {
+                plugin.getLogger().warning("Failed to create data folder.");
+                logErrorMessage("Failed to create data folder.");
+            }
+        }
 
-		new BugReportLanguage(this);
-		Metrics metrics = new Metrics(this, 18974);
+        UpdateChecker updateChecker = new UpdateChecker(this, 110732);
 
-		generateNewYML();
-	}
+        if (getConfig().getBoolean("update-check-on-start")) {
+            updateChecker.getVersion(spigotVersion -> {
+                String serverVersion = this.getDescription().getVersion();
+                if (compareVersions(serverVersion, spigotVersion) < 0) {
+                    getLogger().warning("A new version of Bug Report is available: " + spigotVersion);
+                    if (getConfig().getBoolean("auto-update")) {
+                        updateChecker.checkAndUpdateIfEnabled();
+                    }
+                }
+            });
+        }
 
-	@Override
-	public void onDisable() {
-		if (BugReportManager.debugMode) plugin.getLogger().info("Disabling Bug Report");
+        registerCommands();
+        registerListeners();
 
-		bugReports.clear();
-		try {
-			dataSource.close();
-		} catch (Exception e) {
-			plugin.getLogger().warning("Failed to close database connection.");
-			logErrorMessage("Failed to close database connection.");
-		}
-	}
+        new BugReportLanguage(this);
+        Metrics metrics = new Metrics(this, 18974);
 
-	@EventHandler
-	public void onPlayerLeave(@NotNull PlayerQuitEvent event) {
-		Player player = event.getPlayer();
-		UUID playerId = player.getUniqueId();
-		BugReportDatabase.setPlayerLastLoginTimestamp(playerId);
-	}
+        generateNewYML();
+    }
 
-	private int compareVersions(@NotNull String version1, @NotNull String version2) {
-		if (BugReportManager.debugMode) plugin.getLogger().info("Comparing versions: " + version1 + " and " + version2);
-		String[] parts1 = version1.split("\\.");
-		String[] parts2 = version2.split("\\.");
+    @Override
+    public void onDisable() {
+        if (BugReportManager.debugMode) plugin.getLogger().info("Disabling Bug Report");
 
-		int minLength = Math.min(parts1.length, parts2.length);
+        bugReports.clear();
+        try {
+            dataSource.close();
+        } catch (Exception e) {
+            plugin.getLogger().warning("Failed to close database connection.");
+            logErrorMessage("Failed to close database connection.");
+        }
+    }
 
-		for (int i = 0; i < minLength; i++) {
-			int part1 = Integer.parseInt(parts1[i]);
-			int part2 = Integer.parseInt(parts2[i]);
+    @EventHandler
+    public void onPlayerLeave(@NotNull PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+        UUID playerId = player.getUniqueId();
+        BugReportDatabase.setPlayerLastLoginTimestamp(playerId);
+    }
 
-			if (part1 < part2) {
-				return -1;
-			} else if (part1 > part2) {
-				return 1;
-			}
-		}
+    private int compareVersions(@NotNull String version1, @NotNull String version2) {
+        if (BugReportManager.debugMode) plugin.getLogger().info("Comparing versions: " + version1 + " and " + version2);
+        String[] parts1 = version1.split("\\.");
+        String[] parts2 = version2.split("\\.");
 
-		if (parts1.length < parts2.length) {
-			return -1;
-		} else if (parts1.length > parts2.length) {
-			return 1;
-		}
+        int minLength = Math.min(parts1.length, parts2.length);
 
-		return 0;
-	}
+        for (int i = 0; i < minLength; i++) {
+            int part1 = Integer.parseInt(parts1[i]);
+            int part2 = Integer.parseInt(parts2[i]);
 
-	@EventHandler
-	public void onPlayerJoin(@NotNull PlayerJoinEvent event) {
-		for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-			if (onlinePlayer.isOp() || onlinePlayer.hasPermission("bugreport.notify")) {
-				new UpdateChecker(this, 110732).getVersion(spigotVersion -> {
-					String serverVersion = this.getDescription().getVersion();
-					if (compareVersions(serverVersion, spigotVersion) < 0) {
-						onlinePlayer.sendMessage(pluginColor + pluginTitle + " " + "A new version of Bug Report is available: "
-								+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + ChatColor.BOLD + spigotVersion);
-					}
-				});
+            if (part1 < part2) {
+                return -1;
+            } else if (part1 > part2) {
+                return 1;
+            }
+        }
 
-				if (!config.getBoolean("enableBugReportNotifications")) {
-					return;
-				}
+        if (parts1.length < parts2.length) {
+            return -1;
+        } else if (parts1.length > parts2.length) {
+            return 1;
+        }
 
-				Player player = event.getPlayer();
-				UUID playerId = player.getUniqueId();
+        return 0;
+    }
 
-				long lastLoginTimestamp = BugReportDatabase.getPlayerLastLoginTimestamp(playerId);
+    @EventHandler
+    public void onPlayerJoin(@NotNull PlayerJoinEvent event) {
+        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+            if (onlinePlayer.isOp() || onlinePlayer.hasPermission("bugreport.notify")) {
+                if (config.getBoolean("update-check-on-join")) {
+                    new UpdateChecker(this, 110732).getVersion(spigotVersion -> {
+                        String serverVersion = this.getDescription().getVersion();
+                        if (compareVersions(serverVersion, spigotVersion) < 0) {
+                            onlinePlayer.sendMessage(pluginColor + pluginTitle + " " + "A new version of Bug Report is available: "
+                                    + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + ChatColor.BOLD + spigotVersion);
+                        }
+                    });
+                }
 
-				List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
-				List<String> newReports = getNewReports(reports, lastLoginTimestamp);
 
-				if (!newReports.isEmpty()) {
-					player.sendMessage(pluginColor + pluginTitle + " "
-							+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GRAY)
-							+ BugReportLanguage.getValueFromLanguageFile("newReportsMessage", "You have %numReports% new reports")
-							.replace("%numReports%", String.valueOf(newReports.size())));
-				} else {
-					player.sendMessage(pluginColor + pluginTitle + " "
-							+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GRAY)
-							+ BugReportLanguage.getValueFromLanguageFile("noNewReportsMessage", "You have no new reports"));
-				}
-			}
-		}
-	}
+                if (!config.getBoolean("enableBugReportNotifications")) {
+                    return;
+                }
 
-	private void registerCommands() {
-		if (BugReportManager.debugMode) plugin.getLogger().info("Registering commands");
-		BugReportCommand bugReportCommandExecutor = new BugReportCommand(reportManager);
-		UniversalTabCompleter universalTabCompleter = new UniversalTabCompleter();
+                Player player = event.getPlayer();
+                UUID playerId = player.getUniqueId();
 
-		Objects.requireNonNull(getCommand("buglistarchived")).setExecutor(new BugListArchivedCommand(reportManager));
-		Objects.requireNonNull(getCommand("buglistsettings")).setExecutor(new BugListSettingsCommand(reportManager));
-		Objects.requireNonNull(getCommand("buglinkdiscord")).setExecutor(new LinkDiscordCommand(reportManager));
+                long lastLoginTimestamp = BugReportDatabase.getPlayerLastLoginTimestamp(playerId);
 
-		PluginCommand bugReportCommand = Objects.requireNonNull(this.getCommand("bugreport"));
-		bugReportCommand.setExecutor(bugReportCommandExecutor);
+                List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
+                List<String> newReports = getNewReports(reports, lastLoginTimestamp);
 
-		PluginCommand bugListCommand = Objects.requireNonNull(this.getCommand("buglist"));
-		bugListCommand.setTabCompleter(universalTabCompleter);
-		bugListCommand.setExecutor(new BugListCommand());
-	}
+                if (!newReports.isEmpty()) {
+                    player.sendMessage(pluginColor + pluginTitle + " "
+                            + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GRAY)
+                            + BugReportLanguage.getValueFromLanguageFile("newReportsMessage", "You have %numReports% new reports")
+                            .replace("%numReports%", String.valueOf(newReports.size())));
+                } else {
+                    player.sendMessage(pluginColor + pluginTitle + " "
+                            + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GRAY)
+                            + BugReportLanguage.getValueFromLanguageFile("noNewReportsMessage", "You have no new reports"));
+                }
+            }
+        }
+    }
 
-	private void registerListeners() {
-		if (BugReportManager.debugMode) plugin.getLogger().info("Registering listeners");
-		getServer().getPluginManager().registerEvents(new BugReportSettings.BugReportSettingsListener(), this);
-		getServer().getPluginManager().registerEvents(new BugReportManager.BugReportListener(), this);
-		getServer().getPluginManager().registerEvents(new BugReportCommand(reportManager), this);
-		getServer().getPluginManager().registerEvents(new ItemDropEvent(), this);
-		getServer().getPluginManager().registerEvents(new ReportListener(), this);
-		getServer().getPluginManager().registerEvents(this, this);
-		new CacheCleanupListener();
-	}
+    private void registerCommands() {
+        if (BugReportManager.debugMode) plugin.getLogger().info("Registering commands");
+        BugReportCommand bugReportCommandExecutor = new BugReportCommand(reportManager);
+        UniversalTabCompleter universalTabCompleter = new UniversalTabCompleter();
+
+        Objects.requireNonNull(getCommand("buglistarchived")).setExecutor(new BugListArchivedCommand(reportManager));
+        Objects.requireNonNull(getCommand("buglistsettings")).setExecutor(new BugListSettingsCommand(reportManager));
+        Objects.requireNonNull(getCommand("buglinkdiscord")).setExecutor(new LinkDiscordCommand(reportManager));
+
+        PluginCommand bugReportCommand = Objects.requireNonNull(this.getCommand("bugreport"));
+        bugReportCommand.setExecutor(bugReportCommandExecutor);
+
+        PluginCommand bugListCommand = Objects.requireNonNull(this.getCommand("buglist"));
+        bugListCommand.setTabCompleter(universalTabCompleter);
+        bugListCommand.setExecutor(new BugListCommand());
+    }
+
+    private void registerListeners() {
+        if (BugReportManager.debugMode) plugin.getLogger().info("Registering listeners");
+        getServer().getPluginManager().registerEvents(new BugReportSettings.BugReportSettingsListener(), this);
+        getServer().getPluginManager().registerEvents(new BugReportManager.BugReportListener(), this);
+        getServer().getPluginManager().registerEvents(new BugReportCommand(reportManager), this);
+        getServer().getPluginManager().registerEvents(new ItemDropEvent(), this);
+        getServer().getPluginManager().registerEvents(new ReportListener(), this);
+        getServer().getPluginManager().registerEvents(this, this);
+        new CacheCleanupListener();
+    }
 }
