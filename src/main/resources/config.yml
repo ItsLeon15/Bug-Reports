@@ -7,6 +7,10 @@ enableBugReportNotifications: true
 
 language: en_US
 
+update-checker: true
+update-checker-join: true
+auto-update: false
+
 # # Available placeholders:
 #
 # Aqua, Black, Blue, Dark_Aqua, Dark_Blue

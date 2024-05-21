@@ -78,6 +78,20 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 			}
 		}
 
+		UpdateChecker updateChecker = new UpdateChecker(this, 110732);
+
+		if (getConfig().getBoolean("update-checker")) {
+			updateChecker.getVersion(spigotVersion -> {
+				String serverVersion = this.getDescription().getVersion();
+				if (compareVersions(serverVersion, spigotVersion) < 0) {
+					getLogger().warning("A new version of Bug Report is available: " + spigotVersion);
+					if (getConfig().getBoolean("auto-update")) {
+						updateChecker.checkAndUpdateIfEnabled();
+					}
+				}
+			});
+		}
+
 		registerCommands();
 		registerListeners();
 
@@ -138,13 +152,15 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 	public void onPlayerJoin(@NotNull PlayerJoinEvent event) {
 		for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
 			if (onlinePlayer.isOp() || onlinePlayer.hasPermission("bugreport.notify")) {
-				new UpdateChecker(this, 110732).getVersion(spigotVersion -> {
-					String serverVersion = this.getDescription().getVersion();
-					if (compareVersions(serverVersion, spigotVersion) < 0) {
-						onlinePlayer.sendMessage(pluginColor + pluginTitle + " " + "A new version of Bug Report is available: "
-								+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + ChatColor.BOLD + spigotVersion);
-					}
-				});
+				if (config.getBoolean("update-check-on-join")) {
+					new UpdateChecker(this, 110732).getVersion(spigotVersion -> {
+						String serverVersion = this.getDescription().getVersion();
+						if (compareVersions(serverVersion, spigotVersion) < 0) {
+							onlinePlayer.sendMessage(pluginColor + pluginTitle + " " + "A new version of Bug Report is available: "
+									+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + ChatColor.BOLD + spigotVersion);
+						}
+					});
+				}
 
 				if (!config.getBoolean("enableBugReportNotifications")) {
 					return;
