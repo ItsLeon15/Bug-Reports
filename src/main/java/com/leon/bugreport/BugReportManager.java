@@ -151,7 +151,6 @@ public class BugReportManager implements Listener {
 				put("enableBugReportNotifications", true);
 				put("update-checker", true);
 				put("update-checker-join", true);
-				put("auto-update", false);
 				put("discordEmbedTitle", "New Bug Report");
 				put("discordEmbedColor", "Yellow");
 				put("discordEmbedFooter", "Bug Report V0.12.0");
