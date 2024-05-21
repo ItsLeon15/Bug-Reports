@@ -45,7 +45,7 @@ public class UpdateChecker {
 				String downloadUrl = "https://api.spiget.org/v2/resources/" + resourceId + "/download";
 				try (InputStream in = new URL(downloadUrl).openStream()) {
 					File pluginFile = plugin.getDataFolder().getParentFile();
-					File newFile = new File(pluginFile, "BugReports-" + version + ".jar");
+					File newFile = new File(pluginFile, "Bug-Reports" + version + ".jar");
 					FileUtils.copyInputStreamToFile(in, newFile);
 					plugin.getLogger().info("Update downloaded successfully.");
 				} catch (IOException e) {
