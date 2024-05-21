@@ -78,6 +78,20 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 			}
 		}
 
+		UpdateChecker updateChecker = new UpdateChecker(this, 110732);
+
+		if (getConfig().getBoolean("update-check-on-start")) {
+			updateChecker.getVersion(spigotVersion -> {
+				String serverVersion = this.getDescription().getVersion();
+				if (compareVersions(serverVersion, spigotVersion) < 0) {
+					getLogger().warning("A new version of Bug Report is available: " + spigotVersion);
+					if (getConfig().getBoolean("auto-update")) {
+						updateChecker.checkAndUpdateIfEnabled();
+					}
+				}
+			});
+		}
+
 		registerCommands();
 		registerListeners();
 
