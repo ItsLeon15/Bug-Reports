@@ -204,69 +204,76 @@ public class BugReportCommand implements CommandExecutor, Listener {
 			return true;
 		}
 
-		if (config.getBoolean("enablePluginReportBook", true)) {
-			ItemStack bugReportBook = new ItemStack(Material.WRITABLE_BOOK);
-			BookMeta meta = (BookMeta) bugReportBook.getItemMeta();
-			if (meta != null) {
-				meta.setCustomModelData(1889234213);
-				meta.setDisplayName(ChatColor.YELLOW + "Bug Report");
-				meta.setTitle("Bug Report");
-				meta.setAuthor(player.getName());
-				meta.addPage("Write your bug report here...");
-				bugReportBook.setItemMeta(meta);
-			}
+		boolean usePermission = config.getBoolean("use-bug-report-permission", true);
 
-			if (player.getInventory().firstEmpty() == -1) {
-				player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + "Your inventory is full, please make some space before getting a bug report book");
-				return true;
-			}
-
-			player.getInventory().addItem(bugReportBook);
-			String message = pluginColor + pluginTitle + " " + ChatColor.YELLOW + "Bug Report book added to your inventory\n" + pluginColor + pluginTitle + " " + ChatColor.YELLOW + "Write your bug report in the book and sign it to submit";
-
-			player.sendMessage(message);
-			return true;
-		}
-
-		if (config.getBoolean("enablePluginReportCategories", true)) {
-			if (!BugReportManager.checkCategoryConfig()) {
-				player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + BugReportLanguage.getValueFromLanguageFile("bugReportCategoriesNotConfiguredMessage", "Bug report categories are not configured"));
-				return true;
-			}
-			openCategorySelectionGUI(player);
-			return true;
-		}
-
-		if (args.length < 1) {
-			player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + "Usage: /bugreport <message>");
-			return true;
-		}
-
-		int maxReports = config.getInt("max-reports-per-player");
-		if (maxReports != 0) {
-			int reportsLeft = maxReports - getReportCount(player.getUniqueId());
-			if (reportsLeft <= 0) {
-				if (checkForKey("useTitleInsteadOfMessage", true)) {
-					player.sendTitle(RED + BugReportLanguage.getValueFromLanguageFile("maxReportsPerPlayerMessage", "You have reached the maximum amount of reports you can submit"), "", 10, 70, 25);
-				} else {
-					player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + BugReportLanguage.getValueFromLanguageFile("maxReportsPerPlayerMessage", "You have reached the maximum amount of reports you can submit"));
+		if (!usePermission || player.hasPermission("bugreport.use") || player.hasPermission("bugreport.admin")) {
+			if (config.getBoolean("enablePluginReportBook", true)) {
+				ItemStack bugReportBook = new ItemStack(Material.WRITABLE_BOOK);
+				BookMeta meta = (BookMeta) bugReportBook.getItemMeta();
+				if (meta != null) {
+					meta.setCustomModelData(1889234213);
+					meta.setDisplayName(ChatColor.YELLOW + "Bug Report");
+					meta.setTitle("Bug Report");
+					meta.setAuthor(player.getName());
+					meta.addPage("Write your bug report here...");
+					bugReportBook.setItemMeta(meta);
 				}
+
+				if (player.getInventory().firstEmpty() == -1) {
+					player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + "Your inventory is full, please make some space before getting a bug report book");
+					return true;
+				}
+
+				player.getInventory().addItem(bugReportBook);
+				String message = pluginColor + pluginTitle + " " + ChatColor.YELLOW + "Bug Report book added to your inventory\n" + pluginColor + pluginTitle + " " + ChatColor.YELLOW + "Write your bug report in the book and sign it to submit";
+
+				player.sendMessage(message);
 				return true;
 			}
+
+			if (config.getBoolean("enablePluginReportCategories", true)) {
+				if (!BugReportManager.checkCategoryConfig()) {
+					player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + BugReportLanguage.getValueFromLanguageFile("bugReportCategoriesNotConfiguredMessage", "Bug report categories are not configured"));
+					return true;
+				}
+				openCategorySelectionGUI(player);
+				return true;
+			}
+
+			if (args.length < 1) {
+				player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + "Usage: /bugreport <message>");
+				return true;
+			}
+
+			int maxReports = config.getInt("max-reports-per-player");
+			if (maxReports != 0) {
+				int reportsLeft = maxReports - getReportCount(player.getUniqueId());
+				if (reportsLeft <= 0) {
+					if (checkForKey("useTitleInsteadOfMessage", true)) {
+						player.sendTitle(RED + BugReportLanguage.getValueFromLanguageFile("maxReportsPerPlayerMessage", "You have reached the maximum amount of reports you can submit"), "", 10, 70, 25);
+					} else {
+						player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + BugReportLanguage.getValueFromLanguageFile("maxReportsPerPlayerMessage", "You have reached the maximum amount of reports you can submit"));
+					}
+					return true;
+				}
+			}
+
+			try {
+				reportManager.submitBugReport(player, String.join(" ", args), null);
+			} catch (Exception e) {
+				plugin.getLogger().warning("Failed to submit bug report");
+				logErrorMessage("Failed to submit bug report");
+				throw new RuntimeException(e);
+			}
+			if (checkForKey("useTitleInsteadOfMessage", true)) {
+				player.sendTitle(GREEN + BugReportLanguage.getValueFromLanguageFile("bugReportConfirmationMessage", "Bug report submitted successfully!"), "", 10, 70, 25);
+			} else {
+				player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) + BugReportLanguage.getValueFromLanguageFile("bugReportConfirmationMessage", "Bug report submitted successfully!"));
+			}
+		} else {
+			player.sendMessage("You don't have permission to use this command.");
 		}
 
-		try {
-			reportManager.submitBugReport(player, String.join(" ", args), null);
-		} catch (Exception e) {
-			plugin.getLogger().warning("Failed to submit bug report");
-			logErrorMessage("Failed to submit bug report");
-			throw new RuntimeException(e);
-		}
-		if (checkForKey("useTitleInsteadOfMessage", true)) {
-			player.sendTitle(GREEN + BugReportLanguage.getValueFromLanguageFile("bugReportConfirmationMessage", "Bug report submitted successfully!"), "", 10, 70, 25);
-		} else {
-			player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) + BugReportLanguage.getValueFromLanguageFile("bugReportConfirmationMessage", "Bug report submitted successfully!"));
-		}
 		return true;
 	}
 

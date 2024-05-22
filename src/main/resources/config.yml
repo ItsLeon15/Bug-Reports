@@ -71,6 +71,8 @@ refreshPlayerHeadCache: 1d # Default, 1m, 1h, 1d, 1w, 1mo, 1y
 max-reports-per-player: 50 # 0 = unlimited
 report-confirmation-message: Thanks for submitting a report!
 
+use-bug-report-permission: true
+
 # # Available placeholders:
 #
 # Aqua, Black, Blue, Dark_Aqua, Dark_Blue

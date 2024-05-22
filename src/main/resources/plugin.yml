@@ -12,6 +12,20 @@ permissions:
   bugreport.notify:
     description: Receive notifications for bug reports
     default: op
+  bugreport.archived:
+    description: Allows the player to access the archived bug reports
+    default: op
+  bugreport.settings:
+    description: Allows the player to access and change the settings of the plugin
+    default: op
+  bugreport.list:
+    description: Allows the player to access the list of bug reports
+    default: op
+  bugreport.use:
+    description: Allows the player to use the bug report command
+    default: op
+
+
 
 commands:
   bugreport:

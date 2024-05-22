@@ -24,7 +24,7 @@ public class BugListArchivedCommand implements CommandExecutor {
 			return true;
 		}
 
-		if (player.hasPermission("bugreport.admin")) {
+		if (player.hasPermission("bugreport.admin") || player.hasPermission("bugreport.archived")) {
 			BugReportManager.setCurrentPage(player, 1);
 			Inventory bugReportGUI = BugReportManager.getArchivedBugReportsGUI(player);
 			player.openInventory(bugReportGUI);
