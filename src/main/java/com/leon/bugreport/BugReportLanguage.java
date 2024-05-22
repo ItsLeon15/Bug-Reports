@@ -8,74 +8,153 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class BugReportLanguage {
-	private final static Map<String, ConfigurationSection> languageTexts = new HashMap<>();
+	public static final List<String> languageCodes = List.of("en_US", "es_ES", "de_DE", "fr_FR", "it_IT", "pt_BR", "ru_RU", "zh_CN", "zh_TW");
+	private static File enLangTempFile;
+	private static File langFolder;
+	private static String languageCode;
+	private static Map<String, String> langConfig;
+	private static Map<String, String> enLangConfig;
+	private static Plugin plugin;
 
-	public BugReportLanguage(Plugin plugin, String languageFilePath) {
-		loadLanguageTexts(plugin, languageFilePath);
-	}
+	public BugReportLanguage(@NotNull Plugin plugin) {
+		BugReportLanguage.plugin = plugin;
+		langFolder = new File(plugin.getDataFolder(), "languages");
+		languageCode = plugin.getConfig().getString("language", "en_US");
 
-	public static void loadLanguageTexts(@NotNull Plugin plugin, String languageFilePath) {
-		File languageFile = new File(plugin.getDataFolder(), languageFilePath);
-		if (!languageFile.exists()) {
-			plugin.saveResource(languageFilePath, false);
+		if (!langFolder.exists()) {
+			langFolder.mkdirs();
 		}
 
-		YamlConfiguration config = YamlConfiguration.loadConfiguration(languageFile);
-		ConfigurationSection languageSection = config.getConfigurationSection("languages");
-		if (languageSection != null) {
-			for (String language : languageSection.getKeys(false)) {
-				ConfigurationSection textsSection = languageSection.getConfigurationSection(language);
-				if (textsSection != null) {
-					if (BugReportManager.debugMode) plugin.getLogger().info("Loading language: " + language);
-					languageTexts.put(language, textsSection);
+		if (!languageCodes.contains(languageCode)) {
+			plugin.getLogger().warning("Invalid language code '" + languageCode + "'. Defaulting to 'en_US'.");
+			languageCode = "en_US";
+		}
+
+		loadLanguageFiles();
+	}
+
+	public static String getValueFromLanguageFile(String key, String defaultValue) {
+		String strippedKey = ChatColor.stripColor(key);
+		String value = langConfig.get(strippedKey);
+
+		if (value == null) {
+			value = defaultValue;
+		}
+
+		return value;
+	}
+
+	private static void ensureTempEnglishFileExists() {
+		if (enLangTempFile == null) {
+			enLangTempFile = new File(langFolder, "temp/en_US_temp.yml");
+		}
+
+		enLangTempFile.getParentFile().mkdirs();
+		plugin.saveResource("languages/temp/en_US_temp.yml", true);
+	}
+
+	private static void reloadEnglishTempConfig() {
+		enLangConfig = flattenYamlConfiguration(YamlConfiguration.loadConfiguration(enLangTempFile));
+	}
+
+	private static void checkIfEnglishFileModified() {
+		ensureTempEnglishFileExists();
+		reloadEnglishTempConfig();
+	}
+
+	public static @Nullable String getEnglishValueFromValue(String value) {
+		checkIfEnglishFileModified();
+
+		String strippedValue = ChatColor.stripColor(value);
+
+		for (Map.Entry<String, String> entry : langConfig.entrySet()) {
+			if (entry.getValue().equals(strippedValue)) {
+				String key = entry.getKey();
+				String englishValue = enLangConfig.get("en_US." + key);
+				return englishValue != null ? englishValue : strippedValue;
+			}
+		}
+
+		return strippedValue;
+	}
+
+	public static void loadLanguageFiles() {
+		ensureTempEnglishFileExists();
+
+		File[] files = langFolder.listFiles();
+		if (files == null || files.length == 0) {
+			plugin.getLogger().warning("No language files found in the 'languages' folder.");
+			for (String languageCode : languageCodes) {
+				plugin.saveResource("languages/" + languageCode + ".yml", false);
+			}
+		} else {
+			for (String languageCode : languageCodes) {
+				boolean found = false;
+				for (File file : files) {
+					if (file.getName().equalsIgnoreCase(languageCode + ".yml")) {
+						if (isFileEmpty(file)) {
+							plugin.getLogger().warning("Language file '" + languageCode + ".yml' is empty.");
+							plugin.getLogger().warning("Creating new file.");
+							plugin.saveResource("languages/" + languageCode + ".yml", true);
+						}
+						found = true;
+						break;
+					}
+				}
+				if (!found) {
+					boolean resourceAvailable = plugin.getResource("languages/" + languageCode + ".yml") != null;
+					if (resourceAvailable) {
+						plugin.saveResource("languages/" + languageCode + ".yml", false);
+					} else {
+						plugin.getLogger().warning("Language file '" + languageCode + ".yml' not found in resources.");
+					}
 				}
 			}
 		}
+
+		checkIfEnglishFileModified();
+
+		langConfig = new HashMap<>();
+
+		File langFile = new File(langFolder, languageCode + ".yml");
+		if (langFile.exists()) {
+			YamlConfiguration yamlConfig = YamlConfiguration.loadConfiguration(langFile);
+			ConfigurationSection langSection = yamlConfig.getConfigurationSection(languageCode);
+			langConfig = flattenYamlConfiguration(Objects.requireNonNullElse(langSection, yamlConfig));
+		} else {
+			plugin.getLogger().warning("Language file '" + languageCode + ".yml' not found.");
+		}
+
+		if (BugReportManager.debugMode) plugin.getLogger().info("Loaded " + langConfig.size() + " language keys.");
 	}
 
-	public static String getEnglishVersionFromLanguage(String displayName) {
-		String[] englishTitles = {
-				"Back", "Forward", "Page %currentPage% of %totalPages%", "Settings",
-				"Close", "Page", "Enable Discord Webhook", "Enable Bug Report Notifications",
-				"Enable Category Selection", "Set Max Reports Per Player", "Set Language", "On",
-				"Off", "Language", "Cancelled", "Cancel", "Archive", "Unarchive", "Delete",
-				"Other Settings", "Enable Title Message", "Enable Player Heads", "Enable Report Book",
-				"View Status", "Edit Status", "Rename Status", "Remove Status",
-				"Status Name", "Status Material", "Status Color", "Status Description", "Status Selection",
-				"Delete Bug Report?", "Archive Bug Report?"
-		};
+	private static boolean isFileEmpty(@NotNull File file) {
+		YamlConfiguration yamlConfig = YamlConfiguration.loadConfiguration(file);
+		return yamlConfig.getKeys(false).isEmpty();
+	}
 
-		for (String lang : languageTexts.keySet()) {
-			ConfigurationSection buttonNamesSection = languageTexts.get(lang).getConfigurationSection("buttonNames");
-			if (buttonNamesSection != null) {
-				String[] currentLangTitles = buttonNamesSection.getKeys(false).stream()
-						.map(buttonNamesSection::getString)
-						.toArray(String[]::new);
-				int index = Arrays.asList(currentLangTitles).indexOf(ChatColor.stripColor(displayName));
-				if (index != -1 && index < englishTitles.length) {
-					return englishTitles[index];
-				}
+	private static @NotNull Map<String, String> flattenYamlConfiguration(@NotNull ConfigurationSection section) {
+		Map<String, String> flattenedConfig = new HashMap<>();
+		for (String key : section.getKeys(true)) {
+			if (section.isString(key)) {
+				flattenedConfig.put(key, section.getString(key));
 			}
 		}
-		return ChatColor.stripColor(displayName);
+		return flattenedConfig;
 	}
 
-	public static @Nullable String getText(String language, String textName) {
-		ConfigurationSection texts = languageTexts.get(language);
-		return texts != null ? texts.getString(textName) : null;
-	}
+	public static void setPluginLanguage(String lC) {
+		plugin.getConfig().set("language", lC);
+		plugin.saveConfig();
 
-	public static @Nullable String getTitleFromLanguage(String key) {
-		ConfigurationSection languageSection = languageTexts.get(BugReportManager.language);
-		if (languageSection != null) {
-			ConfigurationSection buttonNamesSection = languageSection.getConfigurationSection("buttonNames");
-			return buttonNamesSection != null ? buttonNamesSection.getString(key) : null;
-		}
-		return null;
+		languageCode = lC;
+
+		loadLanguageFiles();
 	}
 }

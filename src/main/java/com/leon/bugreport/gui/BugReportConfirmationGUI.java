@@ -36,20 +36,20 @@ public class BugReportConfirmationGUI {
 		String guiTitle;
 
 		if (isArchived) {
-			guiTitle = ChatColor.YELLOW + Objects.requireNonNull(BugReportLanguage.getTitleFromLanguage("confirmationArchive"));
+			guiTitle = ChatColor.YELLOW + Objects.requireNonNull(BugReportLanguage.getValueFromLanguageFile("buttonNames.confirmationArchive", "Archive Bug Report?"));
 		} else {
-			guiTitle = ChatColor.YELLOW + Objects.requireNonNull(BugReportLanguage.getTitleFromLanguage("confirmationDelete"));
+			guiTitle = ChatColor.YELLOW + Objects.requireNonNull(BugReportLanguage.getValueFromLanguageFile("buttonNames.confirmationDelete", "Delete Bug Report?"));
 		}
 
 		Inventory gui = Bukkit.createInventory(null, 27, guiTitle);
-		ItemStack backButton = createButton(Material.BARRIER, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("back"));
+		ItemStack backButton = createButton(Material.BARRIER, ChatColor.YELLOW + BugReportLanguage.getValueFromLanguageFile("buttonNames.back", "Back"));
 		gui.setItem(15, backButton);
 
 		if (isArchived) {
-			ItemStack archiveButton = createCustomPlayerHead(guiTextures.archiveTexture, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("archive"), 16);
+			ItemStack archiveButton = createCustomPlayerHead(guiTextures.archiveTexture, ChatColor.YELLOW + BugReportLanguage.getValueFromLanguageFile("buttonNames.archive", "Archive"), 16);
 			gui.setItem(11, archiveButton);
 		} else {
-			ItemStack deleteButton = createCustomPlayerHead(guiTextures.deleteTexture, ChatColor.YELLOW + BugReportLanguage.getTitleFromLanguage("delete"), 18);
+			ItemStack deleteButton = createCustomPlayerHead(guiTextures.deleteTexture, ChatColor.YELLOW + BugReportLanguage.getValueFromLanguageFile("buttonNames.delete", "Delete"), 18);
 			gui.setItem(11, deleteButton);
 		}
 
@@ -86,7 +86,7 @@ public class BugReportConfirmationGUI {
 
 			if (BugReportManager.debugMode) plugin.getLogger().info("Clicked inventory: " + displayName);
 
-			String customDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(displayName);
+			String customDisplayName = BugReportLanguage.getEnglishValueFromValue(displayName);
 			boolean isArchivedDetails = customDisplayName.startsWith("Archive Bug Report");
 			boolean isDeletedDetails = customDisplayName.startsWith("Delete Bug Report");
 
@@ -116,7 +116,7 @@ public class BugReportConfirmationGUI {
 			}
 
 			String itemDisplayName = itemMeta.getDisplayName();
-			String customItemDisplayName = BugReportLanguage.getEnglishVersionFromLanguage(ChatColor.stripColor(itemDisplayName));
+			String customItemDisplayName = BugReportLanguage.getEnglishValueFromValue(ChatColor.stripColor(itemDisplayName));
 
 			if (BugReportManager.debugMode) plugin.getLogger().info("Clicked item: " + customItemDisplayName);
 

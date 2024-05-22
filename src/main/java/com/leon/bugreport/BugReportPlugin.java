@@ -31,6 +31,7 @@ import static com.leon.bugreport.BugReportManager.*;
 import static com.leon.bugreport.gui.bugreportGUI.generateNewYML;
 
 public class BugReportPlugin extends JavaPlugin implements Listener {
+	private final UpdateChecker updateChecker = new UpdateChecker(this, 110732);
 	private BugReportManager reportManager;
 
 	@NotNull
@@ -78,12 +79,21 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 			}
 		}
 
+		if (getConfig().getBoolean("update-checker")) {
+			updateChecker.getVersion(spigotVersion -> {
+				String serverVersion = this.getDescription().getVersion();
+				if (compareVersions(serverVersion, spigotVersion) < 0) {
+					plugin.getLogger().info("A new version of Bug Report is available: " + spigotVersion);
+				}
+			});
+		}
+
 		registerCommands();
 		registerListeners();
 
-		new Metrics(this, 18974);
+		new BugReportLanguage(this);
+		Metrics metrics = new Metrics(this, 18974);
 
-		BugReportLanguage.loadLanguageTexts(plugin, "languages.yml");
 		generateNewYML();
 	}
 
@@ -138,35 +148,46 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 	public void onPlayerJoin(@NotNull PlayerJoinEvent event) {
 		for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
 			if (onlinePlayer.isOp() || onlinePlayer.hasPermission("bugreport.notify")) {
-				new UpdateChecker(this, 110732).getVersion(spigotVersion -> {
-					String serverVersion = this.getDescription().getVersion();
-					if (compareVersions(serverVersion, spigotVersion) < 0) {
-						onlinePlayer.sendMessage(pluginColor + pluginTitle + " " + "A new version of Bug Report is available: "
-								+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + ChatColor.BOLD + spigotVersion);
-					}
-				});
-
 				if (!config.getBoolean("enableBugReportNotifications")) {
-					return;
+					continue;
 				}
 
-				Player player = event.getPlayer();
-				UUID playerId = player.getUniqueId();
+				UUID playerId = onlinePlayer.getUniqueId();
 
 				long lastLoginTimestamp = BugReportDatabase.getPlayerLastLoginTimestamp(playerId);
 
 				List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
 				List<String> newReports = getNewReports(reports, lastLoginTimestamp);
 
+				StringBuilder message = new StringBuilder();
 				if (!newReports.isEmpty()) {
-					player.sendMessage(pluginColor + pluginTitle + " "
-							+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GRAY)
-							+ DefaultLanguageSelector.getTextElseDefault(language, "newReportsMessage")
-							.replace("%numReports%", String.valueOf(newReports.size())));
+					message.append(pluginColor)
+							.append(pluginTitle).append(" ")
+							.append(Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GRAY))
+							.append(BugReportLanguage.getValueFromLanguageFile("newReportsMessage", "You have %numReports% new reports")
+									.replace("%numReports%", String.valueOf(newReports.size())))
+							.append("\n");
 				} else {
-					player.sendMessage(pluginColor + pluginTitle + " "
-							+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GRAY)
-							+ DefaultLanguageSelector.getTextElseDefault(language, "noNewReportsMessage"));
+					message.append(pluginColor)
+							.append(pluginTitle).append(" ")
+							.append(Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GRAY))
+							.append(BugReportLanguage.getValueFromLanguageFile("noNewReportsMessage", "You have no new reports"))
+							.append("\n");
+				}
+
+				if (getConfig().getBoolean("update-checker-join")) {
+					updateChecker.getVersion(spigotVersion -> {
+						String serverVersion = this.getDescription().getVersion();
+						if (compareVersions(serverVersion, spigotVersion) < 0) {
+							message.append(pluginColor).append(pluginTitle).append(" ")
+									.append(Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GRAY))
+									.append("A new version of Bug Report is available:")
+									.append(ChatColor.YELLOW).append(" v").append(spigotVersion);
+							onlinePlayer.sendMessage(message.toString());
+						}
+					});
+				} else {
+					onlinePlayer.sendMessage(message.toString());
 				}
 			}
 		}

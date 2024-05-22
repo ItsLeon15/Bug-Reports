@@ -19,7 +19,7 @@ import static com.leon.bugreport.commands.BugReportCommand.stringColorToColorCod
 
 public class LinkDiscord {
 	private static final String EMBED_TITLE = "New Bug Report";
-	private static final String EMBED_FOOTER_TEXT = "Bug Report V0.11.4";
+	private static final String EMBED_FOOTER_TEXT = "Bug Report V0.12.0";
 	private static final String EMBED_THUMBNAIL = "https://www.spigotmc.org/data/resource_icons/110/110732.jpg";
 	private static final Color EMBED_COLOR = Color.YELLOW;
 	private String webhookURL;
@@ -129,7 +129,8 @@ public class LinkDiscord {
 	private boolean checkIfValueIsValid(@NotNull String placeholderValue) {
 		return switch (placeholderValue) {
 			case "%report_username%", "%report_full_message%", "%report_category%", "%report_status%",
-			     "%report_gamemode%", "%report_location%", "%report_world%", "%report_uuid%", "%report_server_name%" -> true;
+				 "%report_gamemode%", "%report_location%", "%report_world%", "%report_uuid%", "%report_server_name%" ->
+					true;
 			default -> false;
 		};
 	}
@@ -185,7 +186,7 @@ public class LinkDiscord {
 
 			connection.setRequestMethod("GET");
 			connection.setRequestProperty("Content-Type", "application/json");
-			connection.setRequestProperty("User-Agent", "BugReport/0.11.4");
+			connection.setRequestProperty("User-Agent", "BugReport/0.12.0");
 			connection.setConnectTimeout(5000);
 			connection.setReadTimeout(5000);
 			connection.setDoOutput(true);

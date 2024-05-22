@@ -15,32 +15,32 @@ public class BugPlaceholders extends PlaceholderExpansion {
 	}
 
 	@Override
-	public boolean persist(){
+	public boolean persist() {
 		return true;
 	}
 
 	@Override
-	public boolean canRegister(){
+	public boolean canRegister() {
 		return true;
 	}
 
 	@Override
-	public String getAuthor(){
+	public String getAuthor() {
 		return plugin.getDescription().getAuthors().toString();
 	}
 
 	@Override
-	public String getIdentifier(){
+	public String getIdentifier() {
 		return "bugreports";
 	}
 
 	@Override
-	public String getVersion(){
+	public String getVersion() {
 		return plugin.getDescription().getVersion();
 	}
 
 	@Override
-	public String onRequest(OfflinePlayer player, @NotNull String params){
+	public String onRequest(OfflinePlayer player, @NotNull String params) {
 		switch (params) {
 			case "totalBugReports" -> {
 				return String.valueOf(loadBugReportCount());

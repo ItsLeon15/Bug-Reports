@@ -1,15 +1,13 @@
 package com.leon.bugreport.listeners;
 
-import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Scanner;
 import java.util.function.Consumer;
-
-import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
 
 public class UpdateChecker {
 	private final JavaPlugin plugin;
@@ -21,17 +19,19 @@ public class UpdateChecker {
 	}
 
 	public void getVersion(final Consumer<String> consumer) {
-		Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> {
-			try (InputStream is = new URL("https://api.spigotmc.org/legacy/update.php?resource=" + this.resourceId + "/~").openStream()) {
-				try (Scanner scann = new Scanner(is)) {
-					if (scann.hasNext()) {
-						consumer.accept(scann.next());
+		new BukkitRunnable() {
+			@Override
+			public void run() {
+				try (InputStream is = new URL("https://api.spigotmc.org/legacy/update.php?resource=" + resourceId).openStream()) {
+					try (Scanner scanner = new Scanner(is)) {
+						if (scanner.hasNext()) {
+							consumer.accept(scanner.next());
+						}
 					}
+				} catch (IOException e) {
+					plugin.getLogger().warning("Unable to check for updates: " + e.getMessage());
 				}
-			} catch (IOException e) {
-				plugin.getLogger().warning("Unable to check for updates: " + e.getMessage());
-				logErrorMessage("Unable to check for updates: " + e.getMessage());
 			}
-		});
+		}.runTaskAsynchronously(plugin);
 	}
 }
