@@ -11,6 +11,8 @@ update-checker: true
 update-checker-join: true
 auto-update: false
 
+bugreport-command: bugreport
+
 # # Available placeholders:
 #
 # Aqua, Black, Blue, Dark_Aqua, Dark_Blue

@@ -6,22 +6,32 @@ import com.leon.bugreport.commands.BugListSettingsCommand;
 import com.leon.bugreport.commands.BugReportCommand;
 import com.leon.bugreport.commands.LinkDiscordCommand;
 import com.leon.bugreport.expansions.BugPlaceholders;
+import com.leon.bugreport.extensions.Metrics;
 import com.leon.bugreport.extensions.PlanHook;
 import com.leon.bugreport.listeners.ItemDropEvent;
 import com.leon.bugreport.listeners.ReportListener;
 import com.leon.bugreport.listeners.UpdateChecker;
-import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandMap;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
 
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.util.*;
 
 import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
@@ -32,6 +42,7 @@ import static com.leon.bugreport.gui.bugreportGUI.generateNewYML;
 
 public class BugReportPlugin extends JavaPlugin implements Listener {
 	private BugReportManager reportManager;
+	private String bugReportCommandConfig;
 
 	@NotNull
 	private static List<String> getNewReports(@NotNull List<String> reports, long lastLoginTimestamp) {
@@ -92,6 +103,11 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 			});
 		}
 
+		saveDefaultConfig();
+		bugReportCommandConfig = getConfig().getString("bugreport-command", "bugreport");
+
+		registerDynamicCommand(bugReportCommandConfig, new BugReportCommand(reportManager));
+
 		registerCommands();
 		registerListeners();
 
@@ -113,6 +129,25 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 			logErrorMessage("Failed to close database connection.");
 		}
 	}
+
+	private void registerDynamicCommand(String commandName, CommandExecutor executor) {
+		try {
+			Field bukkitCommandMap = getServer().getClass().getDeclaredField("commandMap");
+			bukkitCommandMap.setAccessible(true);
+			CommandMap commandMap = (CommandMap) bukkitCommandMap.get(getServer());
+
+			Constructor<PluginCommand> constructor = PluginCommand.class.getDeclaredConstructor(String.class, Plugin.class);
+			constructor.setAccessible(true);
+			PluginCommand command = constructor.newInstance(commandName, this);
+
+			command.setExecutor(executor);
+
+			commandMap.register(getDescription().getName(), command);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 
 	@EventHandler
 	public void onPlayerLeave(@NotNull PlayerQuitEvent event) {
@@ -204,6 +239,8 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 		bugListCommand.setTabCompleter(universalTabCompleter);
 		bugListCommand.setExecutor(new BugListCommand());
 	}
+
+
 
 	private void registerListeners() {
 		if (BugReportManager.debugMode) plugin.getLogger().info("Registering listeners");
