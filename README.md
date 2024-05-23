@@ -77,6 +77,11 @@ enablePluginReportCategories: false
 enablePluginReportBook: false
 enableBugReportNotifications: true
 
+language: en_US
+
+update-checker: true
+update-checker-join: true
+
 # # Available placeholders:
 #
 # Aqua, Black, Blue, Dark_Aqua, Dark_Blue
@@ -84,17 +89,56 @@ enableBugReportNotifications: true
 # Gold, Gray, Green, Light_Purple, Red, White, Yellow
 discordEmbedColor: Green
 discordEmbedTitle: New Bug Report
-discordEmbedFooter: Bug Report v0.8.0
+discordEmbedFooter: Bug Report v0.12.0
 discordEmbedThumbnail: https://www.spigotmc.org/data/resource_icons/110/110732.jpg
 discordEnableThumbnail: true
 discordEnableUserAuthor: true
 discordIncludeDate: true
 
+serverName: ""
+
+discordEmbedFields:
+  - name: "Username"
+    id: 1
+    value: "%report_username%"
+    inline: true
+  - name: "UUID"
+    id: 2
+    value: "%report_uuid%"
+    inline: true
+  - name: "World"
+    id: 3
+    value: "%report_world%"
+    inline: true
+  - name: "Location (X, Y, Z)"
+    id: 4
+    value: "%report_location%"
+    inline: true
+  - name: "Gamemode"
+    id: 5
+    value: "%report_gamemode%"
+    inline: true
+  - name: "Status"
+    id: 6
+    value: "%report_status%"
+    inline: true
+  - name: "Category"
+    id: 7
+    value: "%report_category%"
+    inline: true
+  - name: "Sever Name"
+    id: 8
+    value: "%report_server_name%"
+    inline: true
+  - name: "Full Message"
+    id: 9
+    value: "%report_full_message%"
+    inline: false
+
 useTitleInsteadOfMessage: false
 enablePlayerHeads: true
 refreshPlayerHeadCache: 1d # Default, 1m, 1h, 1d, 1w, 1mo, 1y
 
-language: en
 max-reports-per-player: 50 # 0 = unlimited
 report-confirmation-message: Thanks for submitting a report!
 
@@ -104,6 +148,10 @@ report-confirmation-message: Thanks for submitting a report!
 # Dark_Gray, Dark_Green, Dark_Purple, Dark_Red
 # Gold, Gray, Green, Light_Purple, Red, White, Yellow
 pluginColor: Yellow
+
+# You are able to use & for color codes such as "&8[&6Bug Report&8]&9".
+# For a list of color codes, visit https://htmlcolorcodes.com/minecraft-color-codes (Format Codes will NOT work!)
+# This will override the pluginColor option.
 pluginTitle: '[Bug Report]'
 
 # This can either be "mysql" or "local".
@@ -138,6 +186,28 @@ reportCategories:
     description: Report something else
     item: minecraft:paper
     color: yellow
+
+statuses:
+  - name: Open
+    description: Report is open
+    icon: minecraft:green_dye
+    color: GREEN
+    id: 1
+  - name: Archived
+    description: Report is archived
+    icon: minecraft:red_dye
+    color: RED
+    id: 2
+  - name: Pending
+    description: Report is pending
+    icon: minecraft:yellow_dye
+    color: YELLOW
+    id: 3
+  - name: Ignored
+    description: Report is ignored
+    icon: minecraft:white_dye
+    color: WHITE
+    id: 4
 ```
 
 ## Metrics Collection
