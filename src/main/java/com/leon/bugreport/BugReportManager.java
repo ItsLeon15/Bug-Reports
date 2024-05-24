@@ -160,7 +160,6 @@ public class BugReportManager implements Listener {
 				put("discordIncludeDate", true);
 				put("useTitleInsteadOfMessage", false);
 				put("enablePlayerHeads", true);
-				put("refreshPlayerHeadCache", "1d");
 				put("language", "en_US");
 				put("max-reports-per-player", 50);
 				put("report-confirmation-message", "Thanks for submitting a report!");

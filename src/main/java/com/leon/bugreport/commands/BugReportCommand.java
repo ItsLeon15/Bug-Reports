@@ -204,9 +204,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 			return true;
 		}
 
-		boolean usePermission = config.getBoolean("use-bug-report-permission", true);
-
-		if (!usePermission || player.hasPermission("bugreport.use") || player.hasPermission("bugreport.admin")) {
+		if (player.hasPermission("bugreport.use") || player.hasPermission("bugreport.admin")) {
 			if (config.getBoolean("enablePluginReportBook", true)) {
 				ItemStack bugReportBook = new ItemStack(Material.WRITABLE_BOOK);
 				BookMeta meta = (BookMeta) bugReportBook.getItemMeta();
