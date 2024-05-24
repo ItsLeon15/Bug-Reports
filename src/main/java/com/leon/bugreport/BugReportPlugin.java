@@ -1,6 +1,5 @@
 package com.leon.bugreport;
 
-import com.leon.bugreport.API.CacheCleanupListener;
 import com.leon.bugreport.commands.BugListArchivedCommand;
 import com.leon.bugreport.commands.BugListSettingsCommand;
 import com.leon.bugreport.commands.BugReportCommand;
@@ -218,6 +217,5 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 		getServer().getPluginManager().registerEvents(new ItemDropEvent(), this);
 		getServer().getPluginManager().registerEvents(new ReportListener(), this);
 		getServer().getPluginManager().registerEvents(this, this);
-		new CacheCleanupListener();
 	}
 }

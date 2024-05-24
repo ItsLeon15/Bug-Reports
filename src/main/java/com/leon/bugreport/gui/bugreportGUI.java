@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -18,7 +19,6 @@ import java.io.File;
 import java.io.Serial;
 import java.util.*;
 
-import static com.leon.bugreport.API.DataSource.getPlayerHead;
 import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
 import static com.leon.bugreport.BugReportManager.*;
 import static com.leon.bugreport.BugReportSettings.createCustomPlayerHead;
@@ -224,12 +224,20 @@ public class bugreportGUI {
 		return true;
 	}
 
+	private static ItemStack createPlayerHead(String username) {
+		ItemStack playerHead = new ItemStack(Material.PLAYER_HEAD);
+		SkullMeta meta = (SkullMeta) playerHead.getItemMeta();
+		Objects.requireNonNull(meta).setOwner(username);
+		playerHead.setItemMeta(meta);
+		return playerHead;
+	}
+
 	private static @NotNull ItemStack createItemForReportDetail(String bugReportItemKey, Material defaultMaterial, @Nullable String textureBase64, @NotNull Map<String, String> reportDetails, Boolean isArchivedGUI) {
 		String reportDetailKey = deriveReportDetailKey(bugReportItemKey);
 		var ref = new Object() {
 			String detailValue = reportDetails.getOrDefault(reportDetailKey, "N/A");
 		};
-		ItemStack item;
+		ItemStack item = new ItemStack(defaultMaterial);
 
 		switch (bugReportItemKey) {
 			case "BugReportTimestamp" -> ref.detailValue = translateTimestampToDate(Long.parseLong(ref.detailValue));
@@ -237,14 +245,18 @@ public class bugreportGUI {
 				String categoryID = reportDetails.getOrDefault("Category ID", "N/A");
 				if (!"N/A".equals(categoryID)) {
 					List<Map<?, ?>> categoryList = config.getMapList("reportCategories");
-					ref.detailValue = categoryList.stream().filter(categoryMap -> categoryID.equals(String.valueOf(categoryMap.get("id")))).map(categoryMap -> (String) categoryMap.get("name")).findFirst().orElse("Unknown Category");
+					ref.detailValue = categoryList.stream()
+							.filter(categoryMap -> categoryID.equals(String.valueOf(categoryMap.get("id"))))
+							.map(categoryMap -> (String) categoryMap.get("name"))
+							.findFirst()
+							.orElse("Unknown Category");
 				}
 			}
 			case "BugReporter" -> {
 				String username = reportDetails.get("Username");
 
 				if (config.getBoolean("enablePlayerHeads")) {
-					item = getPlayerHead(username);
+					item = createPlayerHead(username);
 				} else {
 					item = createInfoItem(Material.PLAYER_HEAD, ChatColor.GOLD + "Username", ChatColor.WHITE + username, false);
 				}
@@ -275,9 +287,7 @@ public class bugreportGUI {
 						String statusName = statusMap.get("name").toString();
 						String statusDescription = statusMap.get("description").toString();
 
-						ChatColor.valueOf(statusMap.get("color").toString().toUpperCase());
 						ChatColor statusColor = ChatColor.valueOf(statusMap.get("color").toString().toUpperCase());
-
 						Material statusIcon = Material.matchMaterial((String) statusMap.get("icon")) != null ? Material.matchMaterial((String) statusMap.get("icon")) : Material.BARRIER;
 						statusItem = createInfoItem(statusIcon, statusColor + statusName + " (Click to change)", statusColor + statusDescription, false);
 
@@ -389,7 +399,7 @@ public class bugreportGUI {
 
 		ItemStack usernameItem;
 		if (config.getBoolean("enablePlayerHeads")) {
-			usernameItem = getPlayerHead(username);
+			usernameItem = createPlayerHead(username);
 		} else {
 			usernameItem = createInfoItem(Material.PLAYER_HEAD, ChatColor.GOLD + "Username", ChatColor.WHITE + username, false);
 		}

@@ -21,6 +21,7 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.Plugin;
@@ -31,7 +32,6 @@ import java.io.File;
 import java.io.Serial;
 import java.util.*;
 
-import static com.leon.bugreport.API.DataSource.getPlayerHead;
 import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
 import static com.leon.bugreport.BugReportDatabase.getStaticUUID;
 import static com.leon.bugreport.BugReportSettings.getSettingsGUI;
@@ -197,13 +197,6 @@ public class BugReportManager implements Listener {
 
 		List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
 
-		Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-			for (String report : reports) {
-				String username = getReportByKey(report, "Username");
-				getPlayerHead(username);
-			}
-		});
-
 		List<String> filteredReports = getFilteredReports(showArchived, reports);
 
 		int totalPages = Math.max(1, (int) Math.ceil((double) filteredReports.size() / itemsPerPage));
@@ -222,7 +215,7 @@ public class BugReportManager implements Listener {
 
 			String username = firstLine.split(": ")[1];
 
-			ItemStack playerHead = BugReportManager.config.getBoolean("enablePlayerHeads") ? getPlayerHead(username) : createInfoItem(Material.ENCHANTED_BOOK, ChatColor.GOLD + "Username", ChatColor.WHITE + username, false);
+			ItemStack playerHead = BugReportManager.config.getBoolean("enablePlayerHeads") ? createPlayerHead(username) : createInfoItem(Material.ENCHANTED_BOOK, ChatColor.GOLD + "Username", ChatColor.WHITE + username, false);
 
 			ItemStack reportItem = new ItemStack(playerHead);
 
@@ -257,6 +250,14 @@ public class BugReportManager implements Listener {
 		gui.setItem(navigationRow + 6, closeButton);
 
 		return gui;
+	}
+
+	private static ItemStack createPlayerHead(String username) {
+		ItemStack playerHead = new ItemStack(Material.PLAYER_HEAD);
+		SkullMeta meta = (SkullMeta) playerHead.getItemMeta();
+		Objects.requireNonNull(meta).setOwner(username);
+		playerHead.setItemMeta(meta);
+		return playerHead;
 	}
 
 	public static String getReportByKey(@NotNull String currentReport, String keyName) {
