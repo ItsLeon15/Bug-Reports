@@ -49,6 +49,7 @@ public class BugReportManager implements Listener {
 	public static ChatColor endingPluginTitleColor;
 	public static ChatColor pluginColor;
 	public static String pluginTitle;
+	public static int localCurrentPage = 1;
 	private static BugReportDatabase database;
 	private final List<Category> reportCategories;
 	private final LinkDiscord discord;
@@ -189,7 +190,7 @@ public class BugReportManager implements Listener {
 		}
 	}
 
-	public static @NotNull Inventory generateBugReportGUI(@NotNull Player player, boolean showArchived) {
+	public static @NotNull Inventory generateBugReportGUI(int testCurrentPage, @NotNull Player player, boolean showArchived) {
 		loadBugReports();
 
 		int itemsPerPage = 27;
@@ -207,7 +208,8 @@ public class BugReportManager implements Listener {
 		List<String> filteredReports = getFilteredReports(showArchived, reports);
 
 		int totalPages = Math.max(1, (int) Math.ceil((double) filteredReports.size() / itemsPerPage));
-		int currentPage = Math.max(1, Math.min(getCurrentPage(player), totalPages));
+		int currentPage = Math.max(1, Math.min(testCurrentPage, totalPages));
+		System.out.println("Current page: " + testCurrentPage);
 
 		Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW
 				+ (showArchived ? "Archived Bugs" : "Bug " + "Report") + " - "
@@ -222,7 +224,6 @@ public class BugReportManager implements Listener {
 			String report = filteredReports.get(i);
 			String reportID = getReportByKey(report, "Report ID");
 			String firstLine = report.split("\n")[0];
-
 			String username = firstLine.split(": ")[1];
 
 			ItemStack playerHead = BugReportManager.config.getBoolean("enablePlayerHeads")
@@ -324,12 +325,12 @@ public class BugReportManager implements Listener {
 		return "0";
 	}
 
-	public static @NotNull Inventory getArchivedBugReportsGUI(Player player) {
-		return generateBugReportGUI(player, true);
+	public static @NotNull Inventory getArchivedBugReportsGUI(int testCurrentPage, Player player) {
+		return generateBugReportGUI(testCurrentPage, player, true);
 	}
 
-	public static @NotNull Inventory getBugReportGUI(Player player) {
-		return generateBugReportGUI(player, false);
+	public static @NotNull Inventory getBugReportGUI(int testCurrentPage, Player player) {
+		return generateBugReportGUI(testCurrentPage, player, false);
 	}
 
 	public static @NotNull ItemStack createButton(Material material, String name) {
@@ -346,18 +347,21 @@ public class BugReportManager implements Listener {
 
 	public static int getCurrentPage(@NotNull Player player) {
 		List<MetadataValue> metadata = player.getMetadata("currentPage");
+		if (BugReportManager.debugMode)
+			plugin.getLogger().info("Current page for " + player.getName() + " is " + (!metadata.isEmpty() ? metadata.get(0).asInt() : 0));
 		return !metadata.isEmpty() ? metadata.get(0).asInt() : 0;
+	}
+
+	public static void setCurrentPage(@NotNull Player player, int page) {
+		System.out.println("Setting current page to " + page + " for " + player.getName());
+		if (BugReportManager.debugMode)
+			plugin.getLogger().info("Setting current page to " + page + " for " + player.getName());
+		player.setMetadata("currentPage", new FixedMetadataValue(plugin, page));
 	}
 
 	public static int getTotalPages() {
 		List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
 		return (int) Math.ceil((double) reports.size() / 27);
-	}
-
-	public static void setCurrentPage(@NotNull Player player, int page) {
-		if (BugReportManager.debugMode)
-			plugin.getLogger().info("Setting current page to " + page + " for " + player.getName());
-		player.setMetadata("currentPage", new FixedMetadataValue(plugin, page));
 	}
 
 	/**
@@ -597,15 +601,22 @@ public class BugReportManager implements Listener {
 
 				playButtonClickSound(player);
 				openBugReportDetailsGUI(player, report, reportID, isArchivedGUI);
+				return;
 			}
 
 			switch (customDisplayName) {
 				case "Back" -> {
 					int currentPage = getCurrentPage(player);
 					if (currentPage > 1) {
-						setCurrentPage(player, currentPage - 1);
-						playButtonClickSound(player);
-						player.openInventory(isArchivedGUI ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
+						if (TitleText.startsWith("Bug Report Details - ")) {
+							playButtonClickSound(player);
+							player.openInventory(isArchivedGUI ? getArchivedBugReportsGUI(currentPage, player) : getBugReportGUI(currentPage, player));
+						} else {
+							setCurrentPage(player, currentPage - 1);
+							playButtonClickSound(player);
+							localCurrentPage = currentPage - 1;
+							player.openInventory(isArchivedGUI ? getArchivedBugReportsGUI(localCurrentPage, player) : getBugReportGUI(localCurrentPage, player));
+						}
 					}
 				}
 				case "Forward" -> {
@@ -613,7 +624,8 @@ public class BugReportManager implements Listener {
 					if (currentPage < getTotalPages()) {
 						setCurrentPage(player, currentPage + 1);
 						playButtonClickSound(player);
-						player.openInventory(isArchivedGUI ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
+						localCurrentPage = currentPage + 1;
+						player.openInventory(isArchivedGUI ? getArchivedBugReportsGUI(localCurrentPage, player) : getBugReportGUI(localCurrentPage, player));
 					}
 				}
 				case "Settings" -> {
@@ -687,7 +699,14 @@ public class BugReportManager implements Listener {
 			switch (customDisplayName) {
 				case "Back" -> {
 					playButtonClickSound(player);
-					player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
+
+					System.out.println("DEBUG" + localCurrentPage);
+					System.out.println("DEBUG" + player.getMetadata("currentPage").get(0).asInt());
+
+					player.openInventory(isArchivedDetails
+							? getArchivedBugReportsGUI(localCurrentPage, player)
+							: getBugReportGUI(localCurrentPage, player)
+					);
 				}
 				case "Unarchive" -> {
 					playButtonClickSound(player);
@@ -695,8 +714,7 @@ public class BugReportManager implements Listener {
 
 					if (BugReportManager.debugMode)
 						plugin.getLogger().info("Unarchiving bug report #" + reportIDGUI + "...");
-
-					player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI(player) : getBugReportGUI(player));
+					player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI(localCurrentPage, player) : getBugReportGUI(localCurrentPage, player));
 					player.sendMessage(pluginColor + pluginTitle + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + " Bug Report #" + reportIDGUI + " has been unarchived.");
 
 					HandlerList.unregisterAll(this);

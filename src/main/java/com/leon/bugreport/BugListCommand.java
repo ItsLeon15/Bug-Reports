@@ -47,7 +47,7 @@ public class BugListCommand implements CommandExecutor {
 
 		if (args.length == 0) {
 			BugReportManager.setCurrentPage(player, 1);
-			Inventory bugReportGUI = BugReportManager.getBugReportGUI(player);
+			Inventory bugReportGUI = BugReportManager.getBugReportGUI(localCurrentPage, player);
 			player.openInventory(bugReportGUI);
 			return true;
 		}
@@ -146,7 +146,7 @@ public class BugListCommand implements CommandExecutor {
 
 	private void returnDefaultCommand(Player player) {
 		BugReportManager.setCurrentPage(player, 1);
-		Inventory bugReportGUI = BugReportManager.getBugReportGUI(player);
+		Inventory bugReportGUI = BugReportManager.getBugReportGUI(localCurrentPage, player);
 		player.openInventory(bugReportGUI);
 	}
 }

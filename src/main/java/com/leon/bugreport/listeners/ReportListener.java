@@ -13,7 +13,7 @@ public class ReportListener implements Listener {
 	public void onReportCreated(ReportCreatedEvent event) {
 		for (Player player : Bukkit.getOnlinePlayers()) {
 			if (player.getOpenInventory().getTitle().startsWith(ChatColor.YELLOW + "Bug Report")) {
-				Inventory newGui = BugReportManager.generateBugReportGUI(player, false);
+				Inventory newGui = BugReportManager.generateBugReportGUI(1, player, false);
 				player.openInventory(newGui);
 			}
 		}

@@ -7,6 +7,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
@@ -18,7 +19,7 @@ public class BugListArchivedCommand implements CommandExecutor {
 	}
 
 	@Override
-	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
 		if (!(sender instanceof Player player)) {
 			sender.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + "This command can only be run by a player.");
 			return true;
@@ -26,7 +27,7 @@ public class BugListArchivedCommand implements CommandExecutor {
 
 		if (player.hasPermission("bugreport.admin") || player.hasPermission("bugreport.archived")) {
 			BugReportManager.setCurrentPage(player, 1);
-			Inventory bugReportGUI = BugReportManager.getArchivedBugReportsGUI(player);
+			Inventory bugReportGUI = BugReportManager.getArchivedBugReportsGUI(localCurrentPage, player);
 			player.openInventory(bugReportGUI);
 		} else {
 			player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + "You don't have permission to use this command.");
