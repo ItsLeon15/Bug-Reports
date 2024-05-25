@@ -74,7 +74,7 @@ public class LinkDiscord {
 
 	public void sendBugReport(String message, String world, String username, String location, String gamemode, Integer category, String serverName) {
 		if (webhookURL == null || webhookURL.isEmpty()) {
-			System.out.println("Webhook URL is not configured. Bug report not sent to Discord.");
+			plugin.getLogger().info("Webhook URL is not configured. Bug report not sent to Discord.");
 			return;
 		}
 

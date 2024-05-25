@@ -37,7 +37,7 @@ commands:
       - bl
     description: View bug reports
     usage: /buglist
-    executor: com.leon.bugreport.BugListCommand
+    executor: com.leon.bugreport.commands.BugListCommand
   buglinkdiscord:
     aliases:
       - bld

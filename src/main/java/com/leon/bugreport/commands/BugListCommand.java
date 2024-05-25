@@ -1,5 +1,8 @@
-package com.leon.bugreport;
+package com.leon.bugreport.commands;
 
+import com.leon.bugreport.BugReportDatabase;
+import com.leon.bugreport.BugReportLanguage;
+import com.leon.bugreport.BugReportManager;
 import com.leon.bugreport.listeners.UpdateChecker;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -47,7 +50,7 @@ public class BugListCommand implements CommandExecutor {
 
 		if (args.length == 0) {
 			BugReportManager.setCurrentPage(player, 1);
-			Inventory bugReportGUI = BugReportManager.getBugReportGUI(localCurrentPage, player);
+			Inventory bugReportGUI = BugReportManager.getBugReportGUI(1, player);
 			player.openInventory(bugReportGUI);
 			return true;
 		}
@@ -146,7 +149,7 @@ public class BugListCommand implements CommandExecutor {
 
 	private void returnDefaultCommand(Player player) {
 		BugReportManager.setCurrentPage(player, 1);
-		Inventory bugReportGUI = BugReportManager.getBugReportGUI(localCurrentPage, player);
+		Inventory bugReportGUI = BugReportManager.getBugReportGUI(1, player);
 		player.openInventory(bugReportGUI);
 	}
 }

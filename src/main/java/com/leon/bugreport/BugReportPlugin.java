@@ -1,10 +1,7 @@
 package com.leon.bugreport;
 
 import com.leon.bugreport.API.CacheCleanupListener;
-import com.leon.bugreport.commands.BugListArchivedCommand;
-import com.leon.bugreport.commands.BugListSettingsCommand;
-import com.leon.bugreport.commands.BugReportCommand;
-import com.leon.bugreport.commands.LinkDiscordCommand;
+import com.leon.bugreport.commands.*;
 import com.leon.bugreport.expansions.BugPlaceholders;
 import com.leon.bugreport.extensions.PlanHook;
 import com.leon.bugreport.listeners.ItemDropEvent;

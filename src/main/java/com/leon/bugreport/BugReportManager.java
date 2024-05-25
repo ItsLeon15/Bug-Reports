@@ -209,7 +209,6 @@ public class BugReportManager implements Listener {
 
 		int totalPages = Math.max(1, (int) Math.ceil((double) filteredReports.size() / itemsPerPage));
 		int currentPage = Math.max(1, Math.min(testCurrentPage, totalPages));
-		System.out.println("Current page: " + testCurrentPage);
 
 		Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW
 				+ (showArchived ? "Archived Bugs" : "Bug " + "Report") + " - "
@@ -353,7 +352,6 @@ public class BugReportManager implements Listener {
 	}
 
 	public static void setCurrentPage(@NotNull Player player, int page) {
-		System.out.println("Setting current page to " + page + " for " + player.getName());
 		if (BugReportManager.debugMode)
 			plugin.getLogger().info("Setting current page to " + page + " for " + player.getName());
 		player.setMetadata("currentPage", new FixedMetadataValue(plugin, page));
@@ -699,10 +697,6 @@ public class BugReportManager implements Listener {
 			switch (customDisplayName) {
 				case "Back" -> {
 					playButtonClickSound(player);
-
-					System.out.println("DEBUG" + localCurrentPage);
-					System.out.println("DEBUG" + player.getMetadata("currentPage").get(0).asInt());
-
 					player.openInventory(isArchivedDetails
 							? getArchivedBugReportsGUI(localCurrentPage, player)
 							: getBugReportGUI(localCurrentPage, player)
