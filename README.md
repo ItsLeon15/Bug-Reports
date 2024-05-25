@@ -87,7 +87,10 @@ language: en_US
 
 update-checker: true
 update-checker-join: true
+<<<<<<< main
 auto-update: false
+=======
+>>>>>>> main
 
 # # Available placeholders:
 #
@@ -104,10 +107,13 @@ discordIncludeDate: true
 
 serverName: ""
 
+<<<<<<< main
 
 # Placeholders via PlaceholderAPI are allowed to be used in the discordEmbedFields.
 # E.g: You can create a field with the biome of the player, where the bugreport was created.
 # Choose for the value: "%player_biome%" (without ""). This works with any other Placeholder supported by PlaceholderAPI.
+=======
+>>>>>>> main
 discordEmbedFields:
   - name: "Username"
     id: 1
