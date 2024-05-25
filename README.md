@@ -96,7 +96,7 @@ update-checker-join: true
 # Gold, Gray, Green, Light_Purple, Red, White, Yellow
 discordEmbedColor: Green
 discordEmbedTitle: New Bug Report
-discordEmbedFooter: Bug Report v0.12.0
+discordEmbedFooter: Bug Report v0.12.1
 discordEmbedThumbnail: https://www.spigotmc.org/data/resource_icons/110/110732.jpg
 discordEnableThumbnail: true
 discordEnableUserAuthor: true
