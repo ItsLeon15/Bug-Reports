@@ -9,7 +9,6 @@ language: en_US
 
 update-checker: true
 update-checker-join: true
-auto-update: false
 
 # # Available placeholders:
 #
@@ -25,7 +24,6 @@ discordEnableUserAuthor: true
 discordIncludeDate: true
 
 serverName: ""
-
 
 # Placeholders via PlaceholderAPI are allowed to be used in the discordEmbedFields.
 # E.g: You can create a field with the biome of the player, where the bugreport was created.
@@ -70,6 +68,7 @@ discordEmbedFields:
 
 useTitleInsteadOfMessage: false
 enablePlayerHeads: true
+refreshPlayerHeadCache: 1d # Default, 1m, 1h, 1d, 1w, 1mo, 1y
 
 max-reports-per-player: 50 # 0 = unlimited
 report-confirmation-message: Thanks for submitting a report!

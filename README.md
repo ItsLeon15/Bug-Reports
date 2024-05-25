@@ -41,7 +41,8 @@ language selector and more!
 - bugreport.archived - **Allows the player to access the archived bug reports**.
 - bugreport.settings - **Allows the player to access and change the settings of the plugin**.
 - bugreport.list - **Allows the player to access the list of bug reports**.
-- bugreport.use - **Allows the player to use the bug report command**. Can be enabled/disabled in the config.yml under **use-bug-report-permission: true**.
+- bugreport.use - **Allows the player to use the bug report command**. Can be enabled/disabled in the config.yml under *
+  *use-bug-report-permission: true**.
 
 ## Bug List GUI
 
@@ -87,7 +88,6 @@ language: en_US
 
 update-checker: true
 update-checker-join: true
-auto-update: false
 
 # # Available placeholders:
 #
@@ -148,6 +148,7 @@ discordEmbedFields:
 
 useTitleInsteadOfMessage: false
 enablePlayerHeads: true
+refreshPlayerHeadCache: 1d # Default, 1m, 1h, 1d, 1w, 1mo, 1y
 
 max-reports-per-player: 50 # 0 = unlimited
 report-confirmation-message: Thanks for submitting a report!
