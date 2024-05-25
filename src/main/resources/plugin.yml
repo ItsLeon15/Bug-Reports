@@ -25,8 +25,6 @@ permissions:
     description: Allows the player to use the bug report command
     default: op
 
-
-
 commands:
   bugreport:
     aliases:
@@ -49,7 +47,6 @@ commands:
   buglistarchived:
     aliases:
       - bla
-      - archivedreports
     description: Lists all archived bug reports
     usage: /buglistarchived
     executor: com.leon.bugreport.BugListArchivedCommand

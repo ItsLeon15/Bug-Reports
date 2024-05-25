@@ -10,7 +10,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.SkullMeta;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,6 +18,7 @@ import java.io.File;
 import java.io.Serial;
 import java.util.*;
 
+import static com.leon.bugreport.API.DataSource.getPlayerHead;
 import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
 import static com.leon.bugreport.BugReportManager.*;
 import static com.leon.bugreport.BugReportSettings.createCustomPlayerHead;
@@ -224,20 +224,12 @@ public class bugreportGUI {
 		return true;
 	}
 
-	private static ItemStack createPlayerHead(String username) {
-		ItemStack playerHead = new ItemStack(Material.PLAYER_HEAD);
-		SkullMeta meta = (SkullMeta) playerHead.getItemMeta();
-		Objects.requireNonNull(meta).setOwner(username);
-		playerHead.setItemMeta(meta);
-		return playerHead;
-	}
-
 	private static @NotNull ItemStack createItemForReportDetail(String bugReportItemKey, Material defaultMaterial, @Nullable String textureBase64, @NotNull Map<String, String> reportDetails, Boolean isArchivedGUI) {
 		String reportDetailKey = deriveReportDetailKey(bugReportItemKey);
 		var ref = new Object() {
 			String detailValue = reportDetails.getOrDefault(reportDetailKey, "N/A");
 		};
-		ItemStack item = new ItemStack(defaultMaterial);
+		ItemStack item;
 
 		switch (bugReportItemKey) {
 			case "BugReportTimestamp" -> ref.detailValue = translateTimestampToDate(Long.parseLong(ref.detailValue));
@@ -256,7 +248,7 @@ public class bugreportGUI {
 				String username = reportDetails.get("Username");
 
 				if (config.getBoolean("enablePlayerHeads")) {
-					item = createPlayerHead(username);
+					item = getPlayerHead(username);
 				} else {
 					item = createInfoItem(Material.PLAYER_HEAD, ChatColor.GOLD + "Username", ChatColor.WHITE + username, false);
 				}
@@ -399,7 +391,7 @@ public class bugreportGUI {
 
 		ItemStack usernameItem;
 		if (config.getBoolean("enablePlayerHeads")) {
-			usernameItem = createPlayerHead(username);
+			usernameItem = getPlayerHead(username);
 		} else {
 			usernameItem = createInfoItem(Material.PLAYER_HEAD, ChatColor.GOLD + "Username", ChatColor.WHITE + username, false);
 		}
