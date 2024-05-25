@@ -1,6 +1,5 @@
 package com.leon.bugreport;
 
-import com.leon.bugreport.API.CacheCleanupListener;
 import com.leon.bugreport.commands.BugListArchivedCommand;
 import com.leon.bugreport.commands.BugListSettingsCommand;
 import com.leon.bugreport.commands.BugReportCommand;
@@ -8,9 +7,9 @@ import com.leon.bugreport.commands.LinkDiscordCommand;
 import com.leon.bugreport.expansions.BugPlaceholders;
 import com.leon.bugreport.extensions.PlanHook;
 import com.leon.bugreport.listeners.ItemDropEvent;
+import com.leon.bugreport.listeners.Metrics;
 import com.leon.bugreport.listeners.ReportListener;
 import com.leon.bugreport.listeners.UpdateChecker;
-import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.PluginCommand;
@@ -218,6 +217,5 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 		getServer().getPluginManager().registerEvents(new ItemDropEvent(), this);
 		getServer().getPluginManager().registerEvents(new ReportListener(), this);
 		getServer().getPluginManager().registerEvents(this, this);
-		new CacheCleanupListener();
 	}
 }

@@ -1,5 +1,8 @@
 package com.leon.bugreport.discord;
 
+import me.clip.placeholderapi.PlaceholderAPI;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -113,7 +116,7 @@ public class LinkDiscord {
 
 			String value = getValueForField(detailValue, username, world, location, gamemode, category, message, serverName);
 
-			if (checkIfValueIsValid(detailValue)) {
+			if (value != null) {
 				Boolean inline = detail.getInline();
 				embedObject.addField(name, value, inline);
 			} else {
@@ -125,17 +128,13 @@ public class LinkDiscord {
 		sendEmptyEmbedOrDefault(username, embedObject);
 	}
 
-	@Contract(pure = true)
-	private boolean checkIfValueIsValid(@NotNull String placeholderValue) {
-		return switch (placeholderValue) {
-			case "%report_username%", "%report_full_message%", "%report_category%", "%report_status%",
-				 "%report_gamemode%", "%report_location%", "%report_world%", "%report_uuid%", "%report_server_name%" ->
-					true;
-			default -> false;
-		};
-	}
-
 	private @NotNull String getValueForField(@NotNull String fieldValue, String username, String world, String location, String gamemode, Integer category, String message, String serverName) {
+		Player player = Bukkit.getPlayer(username);
+
+		if (player != null && PlaceholderAPI.containsPlaceholders(fieldValue)) {
+			fieldValue = PlaceholderAPI.setPlaceholders(player, fieldValue);
+		}
+
 		Map<String, String> replacements = new HashMap<>();
 		replacements.put("%report_username%", username);
 		replacements.put("%report_uuid%", getUserIDFromAPI(username));

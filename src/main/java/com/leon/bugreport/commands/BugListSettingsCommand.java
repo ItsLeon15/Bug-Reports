@@ -25,7 +25,7 @@ public class BugListSettingsCommand implements CommandExecutor {
 					+ "This command can only be run by a player.");
 			return true;
 		}
-		if (player.hasPermission("bugreport.admin")) {
+		if (player.hasPermission("bugreport.admin") || player.hasPermission("bugreport.settings")) {
 			player.openInventory(getSettingsGUI());
 		} else {
 			player.sendMessage(pluginColor + pluginTitle + " "

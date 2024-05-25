@@ -38,6 +38,10 @@ language selector and more!
 
 - bugreport.admin - **Allows a user to access the buglist command**.
 - bugreport.notify - **Let a player be notified every time a bug report is sent**.
+- bugreport.archived - **Allows the player to access the archived bug reports**.
+- bugreport.settings - **Allows the player to access and change the settings of the plugin**.
+- bugreport.list - **Allows the player to access the list of bug reports**.
+- bugreport.use - **Allows the player to use the bug report command**. Can be enabled/disabled in the config.yml under **use-bug-report-permission: true**.
 
 ## Bug List GUI
 
@@ -62,6 +66,8 @@ Bug Report now supports Placeholder API, the keys for Bug Report is the followin
 - %bugreports_totalArchivedBugReports% - (**Returns the total amount of archived bug reports**)
 - %bugreports_totalNonArchivedBugReports% - (**Returns the total amount of non-archived bug reports**)
 
+External Placeholders via PlaceholderAPI are also supported in the DiscordEmbedFields.
+
 ## Discord Support
 
 - If you need any support or have features you want to be added to Bug Report, you can join the Discord
@@ -81,6 +87,10 @@ language: en_US
 
 update-checker: true
 update-checker-join: true
+<<<<<<< main
+auto-update: false
+=======
+>>>>>>> main
 
 # # Available placeholders:
 #
@@ -97,6 +107,13 @@ discordIncludeDate: true
 
 serverName: ""
 
+<<<<<<< main
+
+# Placeholders via PlaceholderAPI are allowed to be used in the discordEmbedFields.
+# E.g: You can create a field with the biome of the player, where the bugreport was created.
+# Choose for the value: "%player_biome%" (without ""). This works with any other Placeholder supported by PlaceholderAPI.
+=======
+>>>>>>> main
 discordEmbedFields:
   - name: "Username"
     id: 1
@@ -137,7 +154,6 @@ discordEmbedFields:
 
 useTitleInsteadOfMessage: false
 enablePlayerHeads: true
-refreshPlayerHeadCache: 1d # Default, 1m, 1h, 1d, 1w, 1mo, 1y
 
 max-reports-per-player: 50 # 0 = unlimited
 report-confirmation-message: Thanks for submitting a report!

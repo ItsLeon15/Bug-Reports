@@ -26,7 +26,7 @@ public class BugListCommand implements CommandExecutor {
 			return true;
 		}
 
-		if (!player.hasPermission("bugreport.admin")) {
+		if (!player.hasPermission("bugreport.admin") || !player.hasPermission("bugreport.list")) {
 			if (args.length == 0) {
 				player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
 						+ "You don't have permission to use this command.");
