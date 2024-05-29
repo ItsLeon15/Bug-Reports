@@ -720,22 +720,32 @@ public class BugReportManager implements Listener {
 					HandlerList.unregisterAll(this);
 				}
 				case "Archive" -> {
-					playButtonClickSound(player);
+					if (player.hasPermission("bugreport.archive") || player.hasPermission("bugreport.admin")) {
+						playButtonClickSound(player);
 
-					if (BugReportManager.debugMode)
-						plugin.getLogger().info("Archiving bug report #" + reportIDGUI + "...");
+						if (BugReportManager.debugMode)
+							plugin.getLogger().info("Archiving bug report #" + reportIDGUI + "...");
 
-					Bukkit.getPluginManager().registerEvents(new BugReportConfirmationGUI.BugReportConfirmationListener(gui, reportIDGUI, isArchivedDetails), plugin);
-					BugReportConfirmationGUI.openConfirmationGUI(player, true, bugReportID);
+						Bukkit.getPluginManager().registerEvents(new BugReportConfirmationGUI.BugReportConfirmationListener(gui, reportIDGUI, isArchivedDetails), plugin);
+						BugReportConfirmationGUI.openConfirmationGUI(player, true, bugReportID);
+					} else {
+						player.closeInventory();
+						player.sendMessage(pluginColor + pluginTitle + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + " You don't have permission to archive bug reports!");
+					}
 				}
 				case "Delete" -> {
-					playButtonClickSound(player);
+					if (player.hasPermission("bugreport.delete") || player.hasPermission("bugreport.admin")) {
+						playButtonClickSound(player);
 
-					if (BugReportManager.debugMode)
-						plugin.getLogger().info("Opening confirmation GUI for deletion on Bug Report #" + reportIDGUI + "...");
+						if (BugReportManager.debugMode)
+							plugin.getLogger().info("Opening confirmation GUI for deletion on Bug Report #" + reportIDGUI + "...");
 
-					Bukkit.getPluginManager().registerEvents(new BugReportConfirmationGUI.BugReportConfirmationListener(gui, reportIDGUI, isArchivedDetails), plugin);
-					BugReportConfirmationGUI.openConfirmationGUI(player, false, bugReportID);
+						Bukkit.getPluginManager().registerEvents(new BugReportConfirmationGUI.BugReportConfirmationListener(gui, reportIDGUI, isArchivedDetails), plugin);
+						BugReportConfirmationGUI.openConfirmationGUI(player, false, bugReportID);
+					} else {
+						player.closeInventory();
+						player.sendMessage(pluginColor + pluginTitle + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + " You don't have permission to delete bug reports!");
+					}
 				}
 				case "Location (Click to teleport)" -> {
 					playButtonClickSound(player);

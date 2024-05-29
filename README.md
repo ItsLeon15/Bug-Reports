@@ -41,8 +41,14 @@ language selector and more!
 - bugreport.archived - **Allows the player to access the archived bug reports**.
 - bugreport.settings - **Allows the player to access and change the settings of the plugin**.
 - bugreport.list - **Allows the player to access the list of bug reports**.
+<<<<<<< HEAD
 - bugreport.use - **Allows the player to use the bug report command**. Can be enabled/disabled in the config.yml under *
   *use-bug-report-permission: true**.
+=======
+- bugreport.use - **Allows the player to use the bug report command**. Can be enabled/disabled in the config.yml under **use-bug-report-permission: true**.
+- bugreport.archive - **Allows the player to archive bug reports**.
+- bugreport.delete - **Allows the player to delete bug reports**.
+>>>>>>> 9732d620f9261dfdf9fc736b8c3ed54b666c803a
 
 ## Bug List GUI
 
