@@ -270,7 +270,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 				player.sendMessage(returnStartingMessage(ChatColor.GREEN) + getValueFromLanguageFile("bugReportConfirmationMessage", "Bug report submitted successfully!"));
 			}
 		} else {
-			player.sendMessage("You don't have permission to use this command.");
+			player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + "You don't have permission to use this command!");
 		}
 
 		return true;
