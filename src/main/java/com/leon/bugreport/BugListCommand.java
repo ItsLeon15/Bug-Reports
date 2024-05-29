@@ -25,7 +25,7 @@ public class BugListCommand implements CommandExecutor {
 					+ "This command can only be run by a player.");
 			return true;
 		}
-		if (!player.hasPermission("bugreport.admin") || !player.hasPermission("bugreport.list")) {
+		if (player.hasPermission("bugreport.admin") || player.hasPermission("bugreport.list")) {
 
 			if (args.length == 0) {
 				BugReportManager.setCurrentPage(player, 1);
