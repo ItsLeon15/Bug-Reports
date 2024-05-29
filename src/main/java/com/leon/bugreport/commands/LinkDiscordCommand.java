@@ -9,59 +9,51 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import static com.leon.bugreport.BugReportManager.endingPluginTitleColor;
-import static com.leon.bugreport.BugReportManager.pluginColor;
-import static com.leon.bugreport.BugReportManager.pluginTitle;
-
-import java.util.Objects;
+import static com.leon.bugreport.BugReportManager.returnStartingMessage;
 
 public class LinkDiscordCommand implements CommandExecutor {
-    private final BugReportManager reportManager;
+	private final BugReportManager reportManager;
 
-    public LinkDiscordCommand(BugReportManager reportManager) {
-        this.reportManager = reportManager;
-    }
+	public LinkDiscordCommand(BugReportManager reportManager) {
+		this.reportManager = reportManager;
+	}
 
-    @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage("Only players can use this command.");
-            return true;
-        }
+	@Override
+	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+		if (!(sender instanceof Player player)) {
+			sender.sendMessage("Only players can use this command.");
+			return true;
+		}
 
-        if (player.hasPermission("bugreport.admin")) {
-            if (args.length < 1) {
-                player.sendMessage(pluginColor + pluginTitle + " "
-                        + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
-                        + "Usage: /buglinkdiscord <webhook URL>");
-                return true;
-            }
+		if (player.hasPermission("bugreport.admin")) {
+			if (args.length < 1) {
+				player.sendMessage(returnStartingMessage(ChatColor.RED)
+						+ "Usage: /buglinkdiscord <webhook URL>");
+				return true;
+			}
 
-            String webhookURL = args[0];
+			String webhookURL = args[0];
 
-            if (!isWebhookURLValid(webhookURL)) {
-                player.sendMessage(pluginColor + pluginTitle + " "
-                        + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
-                        + "Invalid webhook URL.");
-                return true;
-            }
+			if (!isWebhookURLValid(webhookURL)) {
+				player.sendMessage(returnStartingMessage(ChatColor.RED)
+						+ "Invalid webhook URL.");
+				return true;
+			}
 
-            reportManager.setWebhookURL(webhookURL);
+			reportManager.setWebhookURL(webhookURL);
 
-            player.sendMessage(pluginColor + pluginTitle + " "
-                    + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN)
-                    + "Webhook URL has been set successfully.");
-        } else {
-            player.sendMessage(pluginColor + pluginTitle + " "
-                    + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
-                    + "You don't have permission to use this command.");
-        }
+			player.sendMessage(returnStartingMessage(ChatColor.GREEN)
+					+ "Webhook URL has been set successfully.");
+		} else {
+			player.sendMessage(returnStartingMessage(ChatColor.RED)
+					+ "You don't have permission to use this command.");
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    @Contract(pure = true)
-    private boolean isWebhookURLValid(@NotNull String webhookURL) {
-        return webhookURL.matches("^https://(canary\\.)?discord\\.com/api/webhooks/[0-9]+/[a-zA-Z0-9-_]+$");
-    }
+	@Contract(pure = true)
+	private boolean isWebhookURLValid(@NotNull String webhookURL) {
+		return webhookURL.matches("^https://(canary\\.)?discord\\.com/api/webhooks/[0-9]+/[a-zA-Z0-9-_]+$");
+	}
 }

@@ -361,7 +361,7 @@ public class bugreportGUI {
 
 	public static void setupDefaultGUI(Inventory gui, Player player, String report, Integer reportIDGUI, Boolean isArchivedGUI) {
 		if (report == null) {
-			player.sendMessage(pluginColor + pluginTitle + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + " Error 101: Report is null. Please report this to the plugin developer.");
+			player.sendMessage(returnStartingMessage(ChatColor.RED) + " Error 101: Report is null. Please report this to the plugin developer.");
 			return;
 		}
 

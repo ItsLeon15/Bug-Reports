@@ -24,27 +24,26 @@ public class BugListCommand implements CommandExecutor {
 	@Override
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
 		if (!(sender instanceof Player player)) {
-			sender.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
+			sender.sendMessage(returnStartingMessage(ChatColor.RED)
 					+ "This command can only be run by a player.");
 			return true;
 		}
 
 		if (!player.hasPermission("bugreport.admin") || !player.hasPermission("bugreport.list")) {
 			if (args.length == 0) {
-				player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
+				player.sendMessage(returnStartingMessage(ChatColor.RED)
 						+ "You don't have permission to use this command.");
 				return true;
 			}
 
 			if (args[0].equalsIgnoreCase("help")) {
-				player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) + "Commands:");
+				player.sendMessage(returnStartingMessage(ChatColor.GREEN) + "Commands:");
 				player.sendMessage(ChatColor.GOLD + "/bugreport <Message>" + ChatColor.WHITE + " - " + ChatColor.GRAY + "Submits a bug report.");
 				player.sendMessage(ChatColor.GOLD + "/bugreport help" + ChatColor.WHITE + " - " + ChatColor.GRAY + "Displays this help message.");
 				return true;
 			}
 
-			player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) +
-					"You don't have permission to use this command.");
+			player.sendMessage(returnStartingMessage(ChatColor.RED) + "You don't have permission to use this command.");
 			return true;
 		}
 
@@ -99,14 +98,12 @@ public class BugListCommand implements CommandExecutor {
 		plugin.reloadConfig();
 		BugReportDatabase.reloadConnection();
 
-		player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN)
-				+ "The plugin has been reloaded.");
+		player.sendMessage(returnStartingMessage(ChatColor.GREEN) + "The plugin has been reloaded.");
 	}
 
 	private void returnDebugCommand(Player player, String @NotNull [] args) {
 		if (args.length < 2) {
-			player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
-					+ "Please enter a number between 0 and 1.");
+			player.sendMessage(returnStartingMessage(ChatColor.RED) + "Please enter a number between 0 and 1.");
 			return;
 		}
 
@@ -114,15 +111,12 @@ public class BugListCommand implements CommandExecutor {
 			int debugMode = Integer.parseInt(args[1]);
 			if (debugMode >= 0 && debugMode <= 1) {
 				BugReportManager.setDebugMode(debugMode);
-				player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN)
-						+ "Debug mode set to " + debugMode + ".");
+				player.sendMessage(returnStartingMessage(ChatColor.GREEN) + "Debug mode set to " + debugMode + ".");
 			} else {
-				player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
-						+ "Please enter a number between 0 and 1.");
+				player.sendMessage(returnStartingMessage(ChatColor.RED) + "Please enter a number between 0 and 1.");
 			}
 		} catch (NumberFormatException e) {
-			player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
-					+ "Please enter a valid number.");
+			player.sendMessage(returnStartingMessage(ChatColor.RED) + "Please enter a valid number.");
 		}
 	}
 

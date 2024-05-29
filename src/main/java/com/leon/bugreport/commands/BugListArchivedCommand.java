@@ -9,9 +9,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Objects;
-
-import static com.leon.bugreport.BugReportManager.*;
+import static com.leon.bugreport.BugReportManager.localCurrentPage;
+import static com.leon.bugreport.BugReportManager.returnStartingMessage;
 
 public class BugListArchivedCommand implements CommandExecutor {
 
@@ -21,7 +20,7 @@ public class BugListArchivedCommand implements CommandExecutor {
 	@Override
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
 		if (!(sender instanceof Player player)) {
-			sender.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + "This command can only be run by a player.");
+			sender.sendMessage(returnStartingMessage(ChatColor.RED) + "This command can only be run by a player.");
 			return true;
 		}
 
@@ -30,7 +29,7 @@ public class BugListArchivedCommand implements CommandExecutor {
 			Inventory bugReportGUI = BugReportManager.getArchivedBugReportsGUI(localCurrentPage, player);
 			player.openInventory(bugReportGUI);
 		} else {
-			player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + "You don't have permission to use this command.");
+			player.sendMessage(returnStartingMessage(ChatColor.RED) + "You don't have permission to use this command.");
 		}
 
 		return true;

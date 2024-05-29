@@ -59,8 +59,7 @@ public class BugReportConfirmationGUI {
 	public void archiveReport(@NotNull Player player, @NotNull Integer reportIDGUI, @NotNull Boolean isArchivedDetails) {
 		BugReportDatabase.updateBugReportArchive(reportIDGUI, 1);
 		player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI(localCurrentPage, player) : getBugReportGUI(localCurrentPage, player));
-		player.sendMessage(pluginColor + pluginTitle
-				+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
+		player.sendMessage(returnStartingMessage(ChatColor.RED)
 				+ " Bug Report #" + reportIDGUI + " has been archived.");
 	}
 
@@ -73,8 +72,7 @@ public class BugReportConfirmationGUI {
 		bugReports.put(playerId, reports);
 
 		player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI(localCurrentPage, player) : getBugReportGUI(localCurrentPage, player));
-		player.sendMessage(pluginColor + pluginTitle
-				+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
+		player.sendMessage(returnStartingMessage(ChatColor.RED)
 				+ " Bug Report #" + reportIDGUI + " has been deleted.");
 	}
 
@@ -91,9 +89,9 @@ public class BugReportConfirmationGUI {
 			boolean isDeletedDetails = customDisplayName.startsWith("Delete Bug Report");
 
 			if (!isArchivedDetails && !isDeletedDetails) {
-				plugin.getLogger().warning("Something went wrong with the languages.yml file. Please remove the file and restart the server.");
+				plugin.getLogger().warning("Something went wrong with the languages folder. Please remove the file and restart the server.");
 				plugin.getLogger().warning("If the issue persists, please contact the developer.");
-				logErrorMessage("Something went wrong with the languages.yml file.");
+				logErrorMessage("Something went wrong with the languages folder.");
 				return;
 			}
 

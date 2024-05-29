@@ -265,12 +265,11 @@ public class BugReportSettings {
 		private static void setLanguage(String languageCode, String languageName, @NotNull Player player) {
 			player.closeInventory();
 			if (checkForKey("useTitleInsteadOfMessage", true)) {
-				player.sendTitle(pluginColor + pluginTitle,
+				player.sendTitle(returnStartingMessage(ChatColor.GREEN),
 						BugReportLanguage.getValueFromLanguageFile("languageSetTo", "Language set to %language%")
 								.replace("%language%", languageName), 10, 70, 20);
 			} else {
-				player.sendMessage(pluginColor + pluginTitle + " " +
-						Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN)
+				player.sendMessage(returnStartingMessage(ChatColor.GREEN)
 						+ BugReportLanguage.getValueFromLanguageFile("languageSetTo", "Language set to %language%")
 						.replace("%language%", languageName));
 			}
@@ -339,7 +338,7 @@ public class BugReportSettings {
 						Integer statusID = (Integer) statusMap.get("id");
 						BugReportDatabase.updateReportStatus(newReportIDGUI, statusID);
 
-						player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "The status of the report has been updated to " + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ".");
+						player.sendMessage(returnStartingMessage(ChatColor.YELLOW) + "The status of the report has been updated to " + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ".");
 						player.closeInventory();
 					}
 				}
@@ -388,16 +387,16 @@ public class BugReportSettings {
 
 						player.closeInventory();
 						if (config.getBoolean("useTitleInsteadOfMessage")) {
-							player.sendTitle(pluginColor + pluginTitle, BugReportLanguage.getValueFromLanguageFile("enterMaxReportsPerPlayer", "Enter the max reports a player can submit. Or type 'cancel' to cancel"), 10, 70, 20);
+							player.sendTitle(returnStartingMessage(ChatColor.YELLOW), BugReportLanguage.getValueFromLanguageFile("enterMaxReportsPerPlayer", "Enter the max reports a player can submit. Or type 'cancel' to cancel"), 10, 70, 20);
 						} else {
-							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + BugReportLanguage.getValueFromLanguageFile("enterMaxReportsPerPlayer", "Enter the max reports a player can submit. Or type 'cancel' to cancel"));
+							player.sendMessage(returnStartingMessage(ChatColor.YELLOW) + BugReportLanguage.getValueFromLanguageFile("enterMaxReportsPerPlayer", "Enter the max reports a player can submit. Or type 'cancel' to cancel"));
 						}
 						setMaxReportsClickMap.put(player.getUniqueId(), String.valueOf(true));
 						setMaxReportsClickMap.put(player.getUniqueId(), customItemDisplayName);
 					}
 					case "Set Report Cooldown" -> {
 						player.closeInventory();
-						player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "Enter the cooldown between reports in seconds. Or type 'cancel' to cancel.");
+						player.sendMessage(returnStartingMessage(ChatColor.YELLOW) + "Enter the cooldown between reports in seconds. Or type 'cancel' to cancel.");
 
 						setReportCooldownClickMap.put(player.getUniqueId(), String.valueOf(true));
 						setReportCooldownClickMap.put(player.getUniqueId(), customItemDisplayName);
@@ -572,7 +571,7 @@ public class BugReportSettings {
 								playButtonClickSound(player);
 
 								player.closeInventory();
-								player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "Type 'confirm' to delete the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
+								player.sendMessage(returnStartingMessage(ChatColor.YELLOW) + "Type 'confirm' to delete the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
 
 								removeStatusClickMap.put(player.getUniqueId(), String.valueOf(true));
 								removeStatusClickMap.put(player.getUniqueId(), statusName);
@@ -589,7 +588,7 @@ public class BugReportSettings {
 							playButtonClickSound(player);
 
 							player.closeInventory();
-							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "Type the new name for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
+							player.sendMessage(returnStartingMessage(ChatColor.YELLOW) + "Type the new name for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
 
 							renameStatusClickMap.put(player.getUniqueId(), String.valueOf(true));
 							renameStatusClickMap.put(player.getUniqueId(), statusName);
@@ -605,7 +604,7 @@ public class BugReportSettings {
 							playButtonClickSound(player);
 							player.closeInventory();
 
-							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "Type the new material for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
+							player.sendMessage(returnStartingMessage(ChatColor.YELLOW) + "Type the new material for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
 							setNewMaterialStatusClickMap.put(player.getUniqueId(), String.valueOf(true));
 							setNewMaterialStatusClickMap.put(player.getUniqueId(), statusName);
 						}
@@ -620,7 +619,7 @@ public class BugReportSettings {
 							playButtonClickSound(player);
 
 							player.closeInventory();
-							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "Type the new color for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
+							player.sendMessage(returnStartingMessage(ChatColor.YELLOW) + "Type the new color for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
 
 							setNewColorStatusClickMap.put(player.getUniqueId(), String.valueOf(true));
 							setNewColorStatusClickMap.put(player.getUniqueId(), statusName);
@@ -637,7 +636,7 @@ public class BugReportSettings {
 							playButtonClickSound(player);
 
 							player.closeInventory();
-							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + "Type the new description for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
+							player.sendMessage(returnStartingMessage(ChatColor.YELLOW) + "Type the new description for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
 
 							setNewDescriptionStatusClickMap.put(player.getUniqueId(), String.valueOf(true));
 							setNewDescriptionStatusClickMap.put(player.getUniqueId(), statusName);
@@ -827,9 +826,9 @@ public class BugReportSettings {
 			}
 
 			if (checkForKey("useTitleInsteadOfMessage", true)) {
-				player.sendTitle(pluginColor + pluginTitle, message, 10, 70, 20);
+				player.sendTitle(returnStartingMessage(ChatColor.GREEN), message, 10, 70, 20);
 			} else {
-				player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) + message);
+				player.sendMessage(returnStartingMessage(ChatColor.GREEN) + message);
 			}
 		}
 
@@ -872,19 +871,18 @@ public class BugReportSettings {
 									maxReports = Integer.parseInt(value);
 								} catch (NumberFormatException e) {
 									if (checkForKey("useTitleInsteadOfMessage", true)) {
-										player.sendTitle(pluginColor + pluginTitle, BugReportLanguage.getValueFromLanguageFile("enterValidNumber", "Please enter a valid number"), 10, 70, 20);
+										player.sendTitle(returnStartingMessage(ChatColor.RED), BugReportLanguage.getValueFromLanguageFile("enterValidNumber", "Please enter a valid number"), 10, 70, 20);
 									} else {
-										player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + BugReportLanguage.getValueFromLanguageFile("enterValidNumber", "Please enter a valid number"));
+										player.sendMessage(returnStartingMessage(ChatColor.RED) + BugReportLanguage.getValueFromLanguageFile("enterValidNumber", "Please enter a valid number"));
 									}
 									return;
 								}
 								config.set("max-reports-per-player", maxReports);
 								saveConfig();
 								if (checkForKey("useTitleInsteadOfMessage", true)) {
-									player.sendTitle(pluginColor + pluginTitle, BugReportLanguage.getValueFromLanguageFile("maxReportsPerPlayerSuccessMessage", "Max reports per player has been set to %amount%").replace("%amount%", String.valueOf(maxReports)), 10, 70, 20);
+									player.sendTitle(returnStartingMessage(ChatColor.GREEN), BugReportLanguage.getValueFromLanguageFile("maxReportsPerPlayerSuccessMessage", "Max reports per player has been set to %amount%").replace("%amount%", String.valueOf(maxReports)), 10, 70, 20);
 								} else {
-									player.sendMessage(pluginColor + pluginTitle + " "
-											+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN)
+									player.sendMessage(returnStartingMessage(ChatColor.GREEN)
 											+ BugReportLanguage.getValueFromLanguageFile("maxReportsPerPlayerSuccessMessage", "Max reports per player has been set to %amount%")
 											.replace("%amount%", String.valueOf(maxReports)));
 								}
@@ -892,12 +890,12 @@ public class BugReportSettings {
 								value = value.substring(0, 1).toUpperCase() + value.substring(1).toLowerCase();
 								String customDisplayName = BugReportLanguage.getEnglishValueFromValue(value);
 								if (customDisplayName.contains("Cancel")) {
-									player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) + BugReportLanguage.getValueFromLanguageFile("buttonNames.cancelled", "Cancelled"));
+									player.sendMessage(returnStartingMessage(ChatColor.GREEN) + BugReportLanguage.getValueFromLanguageFile("buttonNames.cancelled", "Cancelled"));
 								} else {
 									if (checkForKey("useTitleInsteadOfMessage", true)) {
-										player.sendTitle(pluginColor + pluginTitle, BugReportLanguage.getValueFromLanguageFile("enterValidNumber", "Please enter a valid number"), 10, 70, 20);
+										player.sendTitle(returnStartingMessage(ChatColor.RED), BugReportLanguage.getValueFromLanguageFile("enterValidNumber", "Please enter a valid number"), 10, 70, 20);
 									} else {
-										player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + BugReportLanguage.getValueFromLanguageFile("enterValidNumber", "Please enter a valid number"));
+										player.sendMessage(returnStartingMessage(ChatColor.RED) + BugReportLanguage.getValueFromLanguageFile("enterValidNumber", "Please enter a valid number"));
 									}
 								}
 							}
@@ -911,9 +909,9 @@ public class BugReportSettings {
 						reportCooldown = Integer.parseInt(value);
 					} catch (NumberFormatException e) {
 						if (checkForKey("useTitleInsteadOfMessage", true)) {
-							player.sendTitle(pluginColor + pluginTitle, BugReportLanguage.getValueFromLanguageFile("enterValidNumber", "Please enter a valid number"), 10, 70, 20);
+							player.sendTitle(returnStartingMessage(ChatColor.RED), BugReportLanguage.getValueFromLanguageFile("enterValidNumber", "Please enter a valid number"), 10, 70, 20);
 						} else {
-							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + BugReportLanguage.getValueFromLanguageFile("enterValidNumber", "Please enter a valid number"));
+							player.sendMessage(returnStartingMessage(ChatColor.RED) + BugReportLanguage.getValueFromLanguageFile("enterValidNumber", "Please enter a valid number"));
 						}
 						return;
 					}
@@ -921,9 +919,9 @@ public class BugReportSettings {
 					config.set("report-cooldown", reportCooldown);
 					saveConfig();
 					if (checkForKey("useTitleInsteadOfMessage", true)) {
-						player.sendTitle(pluginColor + pluginTitle, BugReportLanguage.getValueFromLanguageFile("reportCooldownSuccessMessage", "Report cooldown has been set to %time% seconds").replace("%time%", String.valueOf(reportCooldown)), 10, 70, 20);
+						player.sendTitle(returnStartingMessage(ChatColor.GREEN), BugReportLanguage.getValueFromLanguageFile("reportCooldownSuccessMessage", "Report cooldown has been set to %time% seconds").replace("%time%", String.valueOf(reportCooldown)), 10, 70, 20);
 					} else {
-						player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) + BugReportLanguage.getValueFromLanguageFile("reportCooldownSuccessMessage", "Report cooldown has been set to %time% seconds").replace("%time%", String.valueOf(reportCooldown)));
+						player.sendMessage(returnStartingMessage(ChatColor.GREEN) + BugReportLanguage.getValueFromLanguageFile("reportCooldownSuccessMessage", "Report cooldown has been set to %time% seconds").replace("%time%", String.valueOf(reportCooldown)));
 					}
 				});
 			}
@@ -1001,9 +999,9 @@ public class BugReportSettings {
 
 					if (!checkIfChatColorIsValid(value)) {
 						if (checkForKey("useTitleInsteadOfMessage", true)) {
-							player.sendTitle(pluginColor + pluginTitle, BugReportLanguage.getValueFromLanguageFile("invalidColor", "Invalid color. Please enter a valid color"), 10, 70, 20);
+							player.sendTitle(returnStartingMessage(ChatColor.RED), BugReportLanguage.getValueFromLanguageFile("invalidColor", "Invalid color. Please enter a valid color"), 10, 70, 20);
 						} else {
-							player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + BugReportLanguage.getValueFromLanguageFile("invalidColor", "Invalid color. Please enter a valid color"));
+							player.sendMessage(returnStartingMessage(ChatColor.RED) + BugReportLanguage.getValueFromLanguageFile("invalidColor", "Invalid color. Please enter a valid color"));
 						}
 						return;
 					}

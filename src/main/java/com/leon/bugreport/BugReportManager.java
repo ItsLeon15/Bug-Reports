@@ -24,6 +24,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -96,6 +97,11 @@ public class BugReportManager implements Listener {
 			return input;
 		}
 		return null;
+	}
+
+	@Contract(pure = true)
+	public static @NotNull String returnStartingMessage(ChatColor defaultColor) {
+		return pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, defaultColor);
 	}
 
 	public static boolean checkCategoryConfig() {
@@ -515,7 +521,7 @@ public class BugReportManager implements Listener {
 		if (config.getBoolean("enableBugReportNotifications", true)) {
 			if (BugReportManager.debugMode)
 				plugin.getLogger().info("Sending bug report notification to online players...");
-			String defaultMessage = pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GRAY) + BugReportLanguage.getValueFromLanguageFile("bugReportNotificationMessage", "A new bug report has been submitted by %player%!").replace("%player%", ChatColor.AQUA + playerName + ChatColor.GRAY);
+			String defaultMessage = returnStartingMessage(ChatColor.GRAY) + BugReportLanguage.getValueFromLanguageFile("bugReportNotificationMessage", "A new bug report has been submitted by %player%!").replace("%player%", ChatColor.AQUA + playerName + ChatColor.GRAY);
 
 			for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
 				if (onlinePlayer.hasPermission("bugreport.notify")) {
@@ -606,7 +612,7 @@ public class BugReportManager implements Listener {
 				case "Back" -> {
 					int currentPage = getCurrentPage(player);
 					if (currentPage > 1) {
-						if (TitleText.startsWith("Bug Report Details - ")) {
+						if (TitleText.startsWith("Bug Report Details - ") || TitleText.startsWith("Bug Report - " + BugReportLanguage.getValueFromLanguageFile("buttonNames.statusSelection", "Status Selection"))) {
 							playButtonClickSound(player);
 							player.openInventory(isArchivedGUI ? getArchivedBugReportsGUI(currentPage, player) : getBugReportGUI(currentPage, player));
 						} else {
@@ -709,7 +715,7 @@ public class BugReportManager implements Listener {
 					if (BugReportManager.debugMode)
 						plugin.getLogger().info("Unarchiving bug report #" + reportIDGUI + "...");
 					player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI(localCurrentPage, player) : getBugReportGUI(localCurrentPage, player));
-					player.sendMessage(pluginColor + pluginTitle + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.YELLOW) + " Bug Report #" + reportIDGUI + " has been unarchived.");
+					player.sendMessage(returnStartingMessage(ChatColor.YELLOW) + " Bug Report #" + reportIDGUI + " has been unarchived.");
 
 					HandlerList.unregisterAll(this);
 				}
@@ -737,16 +743,16 @@ public class BugReportManager implements Listener {
 						plugin.getLogger().info("Teleporting to the location of bug report #" + reportIDGUI + "...");
 
 					if (checkForKey("useTitleInsteadOfMessage", true)) {
-						player.sendTitle(pluginColor + pluginTitle, Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) + " Teleporting to the location of Bug Report #" + reportIDGUI + "." + "." + ".", 10, 70, 20);
+						player.sendTitle(returnStartingMessage(ChatColor.GREEN) + " Teleporting to the location of Bug Report #" + reportIDGUI + "." + "." + ".", " ", 10, 70, 20);
 					} else {
-						player.sendMessage(pluginColor + pluginTitle + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) + " Teleporting to the location of Bug Report #" + reportIDGUI + ".");
+						player.sendMessage(returnStartingMessage(ChatColor.GREEN) + " Teleporting to the location of Bug Report #" + reportIDGUI + ".");
 					}
 
 					Location teleportLocation = BugReportDatabase.getBugReportLocation(reportIDGUI);
 					if (teleportLocation != null) {
 						player.teleport(teleportLocation, PlayerTeleportEvent.TeleportCause.PLUGIN);
 					} else {
-						player.sendMessage(pluginColor + pluginTitle + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + " The location of Bug Report #" + reportIDGUI + " is not available.");
+						player.sendMessage(returnStartingMessage(ChatColor.RED) + " The location of Bug Report #" + reportIDGUI + " is not available.");
 						player.closeInventory();
 					}
 				}
