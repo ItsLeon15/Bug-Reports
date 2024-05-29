@@ -27,26 +27,22 @@ public class LinkDiscordCommand implements CommandExecutor {
 
 		if (player.hasPermission("bugreport.admin")) {
 			if (args.length < 1) {
-				player.sendMessage(returnStartingMessage(ChatColor.RED)
-						+ "Usage: /buglinkdiscord <webhook URL>");
+				player.sendMessage(returnStartingMessage(ChatColor.RED) + "Usage: /buglinkdiscord <webhook URL>");
 				return true;
 			}
 
 			String webhookURL = args[0];
 
 			if (!isWebhookURLValid(webhookURL)) {
-				player.sendMessage(returnStartingMessage(ChatColor.RED)
-						+ "Invalid webhook URL.");
+				player.sendMessage(returnStartingMessage(ChatColor.RED) + "Invalid webhook URL.");
 				return true;
 			}
 
 			reportManager.setWebhookURL(webhookURL);
 
-			player.sendMessage(returnStartingMessage(ChatColor.GREEN)
-					+ "Webhook URL has been set successfully.");
+			player.sendMessage(returnStartingMessage(ChatColor.GREEN) + "Webhook URL has been set successfully.");
 		} else {
-			player.sendMessage(returnStartingMessage(ChatColor.RED)
-					+ "You don't have permission to use this command.");
+			player.sendMessage(returnStartingMessage(ChatColor.RED) + "You don't have permission to use this command.");
 		}
 
 		return true;

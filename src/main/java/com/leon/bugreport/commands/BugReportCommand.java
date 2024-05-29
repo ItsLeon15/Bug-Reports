@@ -1,6 +1,5 @@
 package com.leon.bugreport.commands;
 
-import com.leon.bugreport.BugReportLanguage;
 import com.leon.bugreport.BugReportManager;
 import com.leon.bugreport.Category;
 import org.bukkit.Bukkit;
@@ -28,6 +27,7 @@ import java.util.*;
 
 import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
 import static com.leon.bugreport.BugReportDatabase.getStaticUUID;
+import static com.leon.bugreport.BugReportLanguage.getValueFromLanguageFile;
 import static com.leon.bugreport.BugReportManager.*;
 import static org.bukkit.ChatColor.*;
 
@@ -142,7 +142,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 			List<String> pages = bookMeta.getPages();
 			String content = String.join(" ", pages);
 			reportManager.submitBugReport(player, content, null);
-			player.sendMessage(returnStartingMessage(ChatColor.GREEN) + BugReportLanguage.getValueFromLanguageFile("bugReportConfirmationMessage", "Bug report submitted successfully!"));
+			player.sendMessage(returnStartingMessage(ChatColor.GREEN) + getValueFromLanguageFile("bugReportConfirmationMessage", "Bug report submitted successfully!"));
 
 			new BukkitRunnable() {
 				@Override
@@ -232,7 +232,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 
 			if (config.getBoolean("enablePluginReportCategories", true)) {
 				if (!BugReportManager.checkCategoryConfig()) {
-					player.sendMessage(returnStartingMessage(ChatColor.RED) + BugReportLanguage.getValueFromLanguageFile("bugReportCategoriesNotConfiguredMessage", "Bug report categories are not configured"));
+					player.sendMessage(returnStartingMessage(ChatColor.RED) + getValueFromLanguageFile("bugReportCategoriesNotConfiguredMessage", "Bug report categories are not configured"));
 					return true;
 				}
 				openCategorySelectionGUI(player);
@@ -249,9 +249,9 @@ public class BugReportCommand implements CommandExecutor, Listener {
 				int reportsLeft = maxReports - getReportCount(player.getUniqueId());
 				if (reportsLeft <= 0) {
 					if (checkForKey("useTitleInsteadOfMessage", true)) {
-						player.sendTitle(RED + BugReportLanguage.getValueFromLanguageFile("maxReportsPerPlayerMessage", "You have reached the maximum amount of reports you can submit"), "", 10, 70, 25);
+						player.sendTitle(RED + getValueFromLanguageFile("maxReportsPerPlayerMessage", "You have reached the maximum amount of reports you can submit"), "", 10, 70, 25);
 					} else {
-						player.sendMessage(returnStartingMessage(ChatColor.RED) + BugReportLanguage.getValueFromLanguageFile("maxReportsPerPlayerMessage", "You have reached the maximum amount of reports you can submit"));
+						player.sendMessage(returnStartingMessage(ChatColor.RED) + getValueFromLanguageFile("maxReportsPerPlayerMessage", "You have reached the maximum amount of reports you can submit"));
 					}
 					return true;
 				}
@@ -265,9 +265,9 @@ public class BugReportCommand implements CommandExecutor, Listener {
 				throw new RuntimeException(e);
 			}
 			if (checkForKey("useTitleInsteadOfMessage", true)) {
-				player.sendTitle(GREEN + BugReportLanguage.getValueFromLanguageFile("bugReportConfirmationMessage", "Bug report submitted successfully!"), "", 10, 70, 25);
+				player.sendTitle(GREEN + getValueFromLanguageFile("bugReportConfirmationMessage", "Bug report submitted successfully!"), "", 10, 70, 25);
 			} else {
-				player.sendMessage(returnStartingMessage(ChatColor.GREEN) + BugReportLanguage.getValueFromLanguageFile("bugReportConfirmationMessage", "Bug report submitted successfully!"));
+				player.sendMessage(returnStartingMessage(ChatColor.GREEN) + getValueFromLanguageFile("bugReportConfirmationMessage", "Bug report submitted successfully!"));
 			}
 		} else {
 			player.sendMessage("You don't have permission to use this command.");
@@ -335,9 +335,9 @@ public class BugReportCommand implements CommandExecutor, Listener {
 			categorySelectionMap.put(player.getUniqueId(), selectedCategory.getId());
 			player.closeInventory();
 			if (checkForKey("useTitleInsteadOfMessage", true)) {
-				player.sendTitle(YELLOW + BugReportLanguage.getValueFromLanguageFile("enterBugReportMessageCategory", "Please enter your bug report in chat. Type 'cancel' to cancel"), "", 10, 70, 120);
+				player.sendTitle(YELLOW + getValueFromLanguageFile("enterBugReportMessageCategory", "Please enter your bug report in chat. Type 'cancel' to cancel"), "", 10, 70, 120);
 			} else {
-				player.sendMessage(returnStartingMessage(ChatColor.YELLOW) + BugReportLanguage.getValueFromLanguageFile("enterBugReportMessageCategory", "Please enter your bug report in chat. Type 'cancel' to cancel"));
+				player.sendMessage(returnStartingMessage(ChatColor.YELLOW) + getValueFromLanguageFile("enterBugReportMessageCategory", "Please enter your bug report in chat. Type 'cancel' to cancel"));
 			}
 		} else {
 			player.sendMessage(returnStartingMessage(ChatColor.RED) + "Something went wrong while selecting the category");
@@ -359,18 +359,18 @@ public class BugReportCommand implements CommandExecutor, Listener {
 
 		if (message.equalsIgnoreCase("cancel")) {
 			if (checkForKey("useTitleInsteadOfMessage", true)) {
-				player.sendTitle(RED + BugReportLanguage.getValueFromLanguageFile("cancelledBugReportMessage", "Bug report cancelled"), "", 10, 70, 25);
+				player.sendTitle(RED + getValueFromLanguageFile("cancelledBugReportMessage", "Bug report cancelled"), "", 10, 70, 25);
 			} else {
-				player.sendMessage(returnStartingMessage(ChatColor.RED) + BugReportLanguage.getValueFromLanguageFile("cancelledBugReportMessage", "Bug report cancelled"));
+				player.sendMessage(returnStartingMessage(ChatColor.RED) + getValueFromLanguageFile("cancelledBugReportMessage", "Bug report cancelled"));
 			}
 			return;
 		}
 
 		reportManager.submitBugReport(player, message, categoryId);
 		if (checkForKey("useTitleInsteadOfMessage", true)) {
-			player.sendTitle(GREEN + BugReportLanguage.getValueFromLanguageFile("bugReportConfirmationMessage", "Bug report submitted successfully!"), "", 10, 70, 25);
+			player.sendTitle(GREEN + getValueFromLanguageFile("bugReportConfirmationMessage", "Bug report submitted successfully!"), "", 10, 70, 25);
 		} else {
-			player.sendMessage(returnStartingMessage(ChatColor.GREEN) + BugReportLanguage.getValueFromLanguageFile("bugReportConfirmationMessage", "Bug report submitted successfully!"));
+			player.sendMessage(returnStartingMessage(ChatColor.GREEN) + getValueFromLanguageFile("bugReportConfirmationMessage", "Bug report submitted successfully!"));
 		}
 	}
 

@@ -326,7 +326,9 @@ public class BugReportDatabase {
 
 	public static @NotNull Map<UUID, List<String>> loadBugReports() {
 		Map<UUID, List<String>> bugReports = new HashMap<>();
-		if (BugReportManager.debugMode) plugin.getLogger().info("Loading bug reports");
+		if (debugMode) {
+			plugin.getLogger().info("Loading bug reports");
+		}
 
 		try (Connection connection = dataSource.getConnection()) {
 			PreparedStatement statement = connection.prepareStatement("SELECT * FROM bug_reports ORDER BY report_id ASC");
@@ -369,7 +371,9 @@ public class BugReportDatabase {
 				bugReports.put(getStaticUUID(), reports);
 			}
 
-			if (BugReportManager.debugMode) plugin.getLogger().info("Loaded " + bugReports.size() + " bug reports");
+			if (debugMode) {
+				plugin.getLogger().info("Loaded " + bugReports.size() + " bug reports");
+			}
 
 			resultSet.close();
 			statement.close();
@@ -434,7 +438,9 @@ public class BugReportDatabase {
 	}
 
 	public static void updateReportStatus(int reportIDGUI, int statusID) {
-		if (BugReportManager.debugMode) plugin.getLogger().info("Updating report status for report ID " + reportIDGUI);
+		if (debugMode) {
+			plugin.getLogger().info("Updating report status for report ID " + reportIDGUI);
+		}
 		try (Connection connection = dataSource.getConnection()) {
 			try (PreparedStatement statement = connection.prepareStatement("UPDATE bug_reports SET status = ? WHERE report_id = ?")) {
 				statement.setInt(1, statusID);
@@ -461,7 +467,7 @@ public class BugReportDatabase {
 			}
 			reports.set(existingHeaderPosition, newHeader.toString().trim());
 			bugReports.put(getStaticUUID(), reports);
-			if (BugReportManager.debugMode)
+			if (debugMode)
 				plugin.getLogger().info("Updated report status for report ID " + reportIDGUI);
 		} catch (Exception e) {
 			plugin.getLogger().severe("Failed to update bug report status.");
@@ -470,7 +476,7 @@ public class BugReportDatabase {
 	}
 
 	public static void updateBugReportArchive(int reportIndex, int archived) {
-		if (BugReportManager.debugMode)
+		if (debugMode)
 			plugin.getLogger().info("Updating bug report archive status for report ID " + reportIndex);
 		try (Connection connection = dataSource.getConnection()) {
 			PreparedStatement statement = connection.prepareStatement("UPDATE bug_reports SET archived = ? WHERE report_id = ?");
@@ -499,7 +505,7 @@ public class BugReportDatabase {
 			}
 			reports.set(existingHeaderPosition, newHeader.toString().trim());
 			bugReports.put(getStaticUUID(), reports);
-			if (BugReportManager.debugMode)
+			if (debugMode)
 				plugin.getLogger().info("Updated bug report archive status for report ID " + reportIndex);
 		} catch (Exception e) {
 			plugin.getLogger().severe("Failed to update bug report archive status.");
@@ -508,13 +514,17 @@ public class BugReportDatabase {
 	}
 
 	public static void deleteBugReport(int reportIndex) {
-		if (BugReportManager.debugMode) plugin.getLogger().info("Deleting bug report for report ID " + reportIndex);
+		if (debugMode) {
+			plugin.getLogger().info("Deleting bug report for report ID " + reportIndex);
+		}
 		try (Connection connection = dataSource.getConnection()) {
 			PreparedStatement statement = connection.prepareStatement("DELETE FROM bug_reports WHERE report_id = ?");
 			statement.setInt(1, reportIndex);
 			statement.executeUpdate();
 			statement.close();
-			if (BugReportManager.debugMode) plugin.getLogger().info("Deleted bug report for report ID " + reportIndex);
+			if (debugMode) {
+				plugin.getLogger().info("Deleted bug report for report ID " + reportIndex);
+			}
 
 			loadBugReports();
 		} catch (Exception e) {

@@ -58,14 +58,12 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 		}
 
 		try {
-			if (BugReportManager.debugMode) plugin.getLogger().info("Hooking into Plan");
 			PlanHook.getInstance().hookIntoPlan();
 		} catch (NoClassDefFoundError planIsNotInstalled) {
 			// Ignore catch
 		}
 
 		if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
-			if (BugReportManager.debugMode) plugin.getLogger().info("Hooking into PlaceholderAPI");
 			new BugPlaceholders(this).register();
 		}
 
@@ -96,8 +94,6 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 
 	@Override
 	public void onDisable() {
-		if (BugReportManager.debugMode) plugin.getLogger().info("Disabling Bug Report");
-
 		bugReports.clear();
 		try {
 			dataSource.close();
@@ -115,7 +111,9 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 	}
 
 	private int compareVersions(@NotNull String version1, @NotNull String version2) {
-		if (BugReportManager.debugMode) plugin.getLogger().info("Comparing versions: " + version1 + " and " + version2);
+		if (debugMode) {
+			plugin.getLogger().info("Comparing versions: " + version1 + " and " + version2);
+		}
 		String[] parts1 = version1.split("\\.");
 		String[] parts2 = version2.split("\\.");
 
@@ -191,11 +189,10 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 	}
 
 	private void registerCommands() {
-		if (BugReportManager.debugMode) plugin.getLogger().info("Registering commands");
 		BugReportCommand bugReportCommandExecutor = new BugReportCommand(reportManager);
 		UniversalTabCompleter universalTabCompleter = new UniversalTabCompleter();
 
-		Objects.requireNonNull(getCommand("buglistarchived")).setExecutor(new BugListArchivedCommand(reportManager));
+		Objects.requireNonNull(getCommand("buglistarchived")).setExecutor(new BugListArchivedCommand());
 		Objects.requireNonNull(getCommand("buglistsettings")).setExecutor(new BugListSettingsCommand(reportManager));
 		Objects.requireNonNull(getCommand("buglinkdiscord")).setExecutor(new LinkDiscordCommand(reportManager));
 
@@ -208,7 +205,6 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 	}
 
 	private void registerListeners() {
-		if (BugReportManager.debugMode) plugin.getLogger().info("Registering listeners");
 		getServer().getPluginManager().registerEvents(new BugReportSettings.BugReportSettingsListener(), this);
 		getServer().getPluginManager().registerEvents(new BugReportManager.BugReportListener(), this);
 		getServer().getPluginManager().registerEvents(new BugReportCommand(reportManager), this);

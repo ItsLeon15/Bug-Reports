@@ -1,6 +1,5 @@
 package com.leon.bugreport.gui;
 
-import com.leon.bugreport.BugReportLanguage;
 import com.leon.bugreport.keys.guiTextures;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -20,6 +19,7 @@ import java.util.*;
 
 import static com.leon.bugreport.API.DataSource.getPlayerHead;
 import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
+import static com.leon.bugreport.BugReportLanguage.getValueFromLanguageFile;
 import static com.leon.bugreport.BugReportManager.*;
 import static com.leon.bugreport.BugReportSettings.createCustomPlayerHead;
 
@@ -39,10 +39,10 @@ public class bugreportGUI {
 			put("BugReportLocation", "Location " + ChatColor.BOLD + "(Click to teleport)");
 			put("BugReportGamemode", "Gamemode");
 			put("BugReportServerName", "Server Name");
-			put("BugReportUnArchive", BugReportLanguage.getValueFromLanguageFile("buttonNames.unarchive", "Unarchive"));
-			put("BugReportArchive", BugReportLanguage.getValueFromLanguageFile("buttonNames.archive", "Archive"));
-			put("BugReportBack", BugReportLanguage.getValueFromLanguageFile("buttonNames.back", "Back"));
-			put("BugReportDelete", BugReportLanguage.getValueFromLanguageFile("buttonNames.delete", "Delete"));
+			put("BugReportUnArchive", getValueFromLanguageFile("buttonNames.unarchive", "Unarchive"));
+			put("BugReportArchive", getValueFromLanguageFile("buttonNames.archive", "Archive"));
+			put("BugReportBack", getValueFromLanguageFile("buttonNames.back", "Back"));
+			put("BugReportDelete", getValueFromLanguageFile("buttonNames.delete", "Delete"));
 		}
 	};
 
@@ -54,10 +54,10 @@ public class bugreportGUI {
 	}
 
 	public static void updateBugReportItems() {
-		bugReportItems.put("BugReportUnArchive", BugReportLanguage.getValueFromLanguageFile("buttonNames.unarchive", "Unarchive"));
-		bugReportItems.put("BugReportArchive", BugReportLanguage.getValueFromLanguageFile("buttonNames.archive", "Archive"));
-		bugReportItems.put("BugReportBack", BugReportLanguage.getValueFromLanguageFile("buttonNames.back", "Back"));
-		bugReportItems.put("BugReportDelete", BugReportLanguage.getValueFromLanguageFile("buttonNames.delete", "Delete"));
+		bugReportItems.put("BugReportUnArchive", getValueFromLanguageFile("buttonNames.unarchive", "Unarchive"));
+		bugReportItems.put("BugReportArchive", getValueFromLanguageFile("buttonNames.archive", "Archive"));
+		bugReportItems.put("BugReportBack", getValueFromLanguageFile("buttonNames.back", "Back"));
+		bugReportItems.put("BugReportDelete", getValueFromLanguageFile("buttonNames.delete", "Delete"));
 	}
 
 	private static @Nullable YamlConfiguration loadGUIConfig() {
@@ -326,11 +326,10 @@ public class bugreportGUI {
 			case "BugReportLocation" -> "Location";
 			case "BugReportGamemode" -> "Gamemode";
 			case "BugReportServerName" -> "Server Name";
-			case "BugReportUnArchive" ->
-					BugReportLanguage.getValueFromLanguageFile("buttonNames.unarchive", "Unarchive");
-			case "BugReportArchive" -> BugReportLanguage.getValueFromLanguageFile("buttonNames.archive", "Archive");
-			case "BugReportBack" -> BugReportLanguage.getValueFromLanguageFile("buttonNames.back", "Back");
-			case "BugReportDelete" -> BugReportLanguage.getValueFromLanguageFile("buttonNames.delete", "Delete");
+			case "BugReportUnArchive" -> getValueFromLanguageFile("buttonNames.unarchive", "Unarchive");
+			case "BugReportArchive" -> getValueFromLanguageFile("buttonNames.archive", "Archive");
+			case "BugReportBack" -> getValueFromLanguageFile("buttonNames.back", "Back");
+			case "BugReportDelete" -> getValueFromLanguageFile("buttonNames.delete", "Delete");
 			default -> bugReportItemKey.replace("BugReport", "");
 		};
 	}
@@ -466,10 +465,10 @@ public class bugreportGUI {
 		ItemStack timestampItem = createInfoItem(Material.CLOCK, ChatColor.GOLD + "Timestamp", ChatColor.WHITE + timestampToDate, false);
 		ItemStack locationItem = createInfoItem(Material.COMPASS, ChatColor.GOLD + locationTitle, ChatColor.WHITE + location, false);
 		ItemStack gamemodeItem = createInfoItem(Material.DIAMOND_SWORD, ChatColor.GOLD + "Gamemode", ChatColor.WHITE + gamemode, false);
-		ItemStack backButton = createButton(Material.BARRIER, ChatColor.RED + BugReportLanguage.getValueFromLanguageFile("buttonNames.back", "Back"));
-		ItemStack archiveButton = createCustomPlayerHead(guiTextures.archiveTexture, ChatColor.YELLOW + BugReportLanguage.getValueFromLanguageFile("buttonNames.archive", "Archive"), 16);
-		ItemStack unarchiveButton = createCustomPlayerHead(guiTextures.unarchiveTexture, ChatColor.YELLOW + BugReportLanguage.getValueFromLanguageFile("buttonNames.unarchive", "Unarchive"), 17);
-		ItemStack deleteButton = createCustomPlayerHead(guiTextures.deleteTexture, ChatColor.YELLOW + BugReportLanguage.getValueFromLanguageFile("buttonNames.delete", "Delete"), 18);
+		ItemStack backButton = createButton(Material.BARRIER, ChatColor.RED + getValueFromLanguageFile("buttonNames.back", "Back"));
+		ItemStack archiveButton = createCustomPlayerHead(guiTextures.archiveTexture, ChatColor.YELLOW + getValueFromLanguageFile("buttonNames.archive", "Archive"), 16);
+		ItemStack unarchiveButton = createCustomPlayerHead(guiTextures.unarchiveTexture, ChatColor.YELLOW + getValueFromLanguageFile("buttonNames.unarchive", "Unarchive"), 17);
+		ItemStack deleteButton = createCustomPlayerHead(guiTextures.deleteTexture, ChatColor.YELLOW + getValueFromLanguageFile("buttonNames.delete", "Delete"), 18);
 
 		for (int i = 0; i < gui.getSize(); i++) {
 			gui.setItem(i, emptyItem);

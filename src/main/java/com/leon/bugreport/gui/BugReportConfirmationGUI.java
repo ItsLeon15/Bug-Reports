@@ -2,7 +2,6 @@ package com.leon.bugreport.gui;
 
 import com.leon.bugreport.BugReportDatabase;
 import com.leon.bugreport.BugReportLanguage;
-import com.leon.bugreport.BugReportManager;
 import com.leon.bugreport.keys.guiTextures;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -82,7 +81,9 @@ public class BugReportConfirmationGUI {
 		public void onInventoryClick(@NotNull InventoryClickEvent event) {
 			String displayName = ChatColor.stripColor(event.getView().getTitle());
 
-			if (BugReportManager.debugMode) plugin.getLogger().info("Clicked inventory: " + displayName);
+			if (debugMode) {
+				plugin.getLogger().info("Clicked inventory: " + displayName);
+			}
 
 			String customDisplayName = BugReportLanguage.getEnglishValueFromValue(displayName);
 			boolean isArchivedDetails = customDisplayName.startsWith("Archive Bug Report");
@@ -116,15 +117,21 @@ public class BugReportConfirmationGUI {
 			String itemDisplayName = itemMeta.getDisplayName();
 			String customItemDisplayName = BugReportLanguage.getEnglishValueFromValue(ChatColor.stripColor(itemDisplayName));
 
-			if (BugReportManager.debugMode) plugin.getLogger().info("Clicked item: " + customItemDisplayName);
+			if (debugMode) {
+				plugin.getLogger().info("Clicked item: " + customItemDisplayName);
+			}
 
 			if (isArchivedDetails) {
-				if (BugReportManager.debugMode) plugin.getLogger().info("Opening archived confirmation GUI.");
+				if (debugMode) {
+					plugin.getLogger().info("Opening archived confirmation GUI.");
+				}
 				switch (customItemDisplayName) {
 					case "Archive" -> {
 						playButtonClickSound(player);
 
-						if (BugReportManager.debugMode) plugin.getLogger().info("Archiving report: " + reportIDGUI);
+						if (debugMode) {
+							plugin.getLogger().info("Archiving report: " + reportIDGUI);
+						}
 						new BugReportConfirmationGUI().archiveReport(player, reportIDGUI, true);
 
 						player.openInventory(fromArchivedGUI ? getArchivedBugReportsGUI(localCurrentPage, player) : getBugReportGUI(localCurrentPage, player));
@@ -134,19 +141,25 @@ public class BugReportConfirmationGUI {
 					case "Back" -> {
 						playButtonClickSound(player);
 
-						if (BugReportManager.debugMode) plugin.getLogger().info("Going back to bug reports.");
+						if (debugMode) {
+							plugin.getLogger().info("Going back to bug reports.");
+						}
 						returnFromConfirmationGUI(player, false);
 					}
 				}
 			}
 
 			if (isDeletedDetails) {
-				if (BugReportManager.debugMode) plugin.getLogger().info("Opening delete confirmation GUI.");
+				if (debugMode) {
+					plugin.getLogger().info("Opening delete confirmation GUI.");
+				}
 				switch (customItemDisplayName) {
 					case "Delete" -> {
 						playButtonClickSound(player);
 
-						if (BugReportManager.debugMode) plugin.getLogger().info("Deleting report: " + reportIDGUI);
+						if (debugMode) {
+							plugin.getLogger().info("Deleting report: " + reportIDGUI);
+						}
 						new BugReportConfirmationGUI().deleteReport(player, reportIDGUI, isArchivedDetails);
 
 						player.openInventory(fromArchivedGUI ? getArchivedBugReportsGUI(localCurrentPage, player) : getBugReportGUI(localCurrentPage, player));
@@ -156,7 +169,9 @@ public class BugReportConfirmationGUI {
 					case "Back" -> {
 						playButtonClickSound(player);
 
-						if (BugReportManager.debugMode) plugin.getLogger().info("Going back to archived reports.");
+						if (debugMode) {
+							plugin.getLogger().info("Going back to archived reports.");
+						}
 						returnFromConfirmationGUI(player, false);
 					}
 				}

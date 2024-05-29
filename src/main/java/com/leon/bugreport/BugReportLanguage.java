@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import static com.leon.bugreport.BugReportManager.debugMode;
+
 public class BugReportLanguage {
 	public static final List<String> languageCodes = List.of("en_US", "es_ES", "de_DE", "fr_FR", "it_IT", "pt_BR", "ru_RU", "zh_CN", "zh_TW");
 	private static File enLangTempFile;
@@ -131,7 +133,9 @@ public class BugReportLanguage {
 			plugin.getLogger().warning("Language file '" + languageCode + ".yml' not found.");
 		}
 
-		if (BugReportManager.debugMode) plugin.getLogger().info("Loaded " + langConfig.size() + " language keys.");
+		if (debugMode) {
+			plugin.getLogger().info("Loaded " + langConfig.size() + " language keys.");
+		}
 	}
 
 	private static boolean isFileEmpty(@NotNull File file) {

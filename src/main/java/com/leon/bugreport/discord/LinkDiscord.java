@@ -115,13 +115,8 @@ public class LinkDiscord {
 
 			String value = getValueForField(detailValue, username, world, location, gamemode, category, message, serverName);
 
-			if (value != null) {
-				Boolean inline = detail.getInline();
-				embedObject.addField(name, value, inline);
-			} else {
-				plugin.getLogger().warning("Invalid placeholder value: " + detailValue + ". Skipping this field.");
-				logErrorMessage("Invalid placeholder value: " + detailValue + ". Skipping this field.");
-			}
+			Boolean inline = detail.getInline();
+			embedObject.addField(name, value, inline);
 		}
 
 		sendEmptyEmbedOrDefault(username, embedObject);

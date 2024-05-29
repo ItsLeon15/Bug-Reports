@@ -1,6 +1,5 @@
 package com.leon.bugreport.commands;
 
-import com.leon.bugreport.BugReportManager;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -9,12 +8,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 
-import static com.leon.bugreport.BugReportManager.localCurrentPage;
-import static com.leon.bugreport.BugReportManager.returnStartingMessage;
+import static com.leon.bugreport.BugReportManager.*;
 
 public class BugListArchivedCommand implements CommandExecutor {
 
-	public BugListArchivedCommand(BugReportManager reportManager) {
+	public BugListArchivedCommand() {
 	}
 
 	@Override
@@ -25,8 +23,8 @@ public class BugListArchivedCommand implements CommandExecutor {
 		}
 
 		if (player.hasPermission("bugreport.admin") || player.hasPermission("bugreport.archived")) {
-			BugReportManager.setCurrentPage(player, 1);
-			Inventory bugReportGUI = BugReportManager.getArchivedBugReportsGUI(localCurrentPage, player);
+			setCurrentPage(player, 1);
+			Inventory bugReportGUI = getArchivedBugReportsGUI(localCurrentPage, player);
 			player.openInventory(bugReportGUI);
 		} else {
 			player.sendMessage(returnStartingMessage(ChatColor.RED) + "You don't have permission to use this command.");
