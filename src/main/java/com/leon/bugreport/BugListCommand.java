@@ -25,42 +25,43 @@ public class BugListCommand implements CommandExecutor {
 					+ "This command can only be run by a player.");
 			return true;
 		}
-
 		if (!player.hasPermission("bugreport.admin") || !player.hasPermission("bugreport.list")) {
+
 			if (args.length == 0) {
-				player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
-						+ "You don't have permission to use this command.");
+				BugReportManager.setCurrentPage(player, 1);
+				Inventory bugReportGUI = BugReportManager.getBugReportGUI(player);
+				player.openInventory(bugReportGUI);
 				return true;
 			}
 
-			if (args[0].equalsIgnoreCase("help")) {
-				player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) + "Commands:");
-				player.sendMessage(ChatColor.GOLD + "/bugreport <Message>" + ChatColor.WHITE + " - " + ChatColor.GRAY + "Submits a bug report.");
-				player.sendMessage(ChatColor.GOLD + "/bugreport help" + ChatColor.WHITE + " - " + ChatColor.GRAY + "Displays this help message.");
-				return true;
+			switch (args[0].toLowerCase()) {
+				case "help" -> returnHelpCommand(player);
+				case "reload" -> returnReloadCommand(player);
+				case "debug" -> returnDebugCommand(player, args);
+				case "version" -> returnVersionCommand(player);
+				default -> returnDefaultCommand(player);
 			}
 
-			player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) +
-					"You don't have permission to use this command.");
 			return true;
 		}
 
 		if (args.length == 0) {
-			BugReportManager.setCurrentPage(player, 1);
-			Inventory bugReportGUI = BugReportManager.getBugReportGUI(player);
-			player.openInventory(bugReportGUI);
+			player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
+					+ "You don't have permission to use this command.");
 			return true;
 		}
 
-		switch (args[0].toLowerCase()) {
-			case "help" -> returnHelpCommand(player);
-			case "reload" -> returnReloadCommand(player);
-			case "debug" -> returnDebugCommand(player, args);
-			case "version" -> returnVersionCommand(player);
-			default -> returnDefaultCommand(player);
+		if (args[0].equalsIgnoreCase("help")) {
+			player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) + "Commands:");
+			player.sendMessage(ChatColor.GOLD + "/bugreport <Message>" + ChatColor.WHITE + " - " + ChatColor.GRAY + "Submits a bug report.");
+			player.sendMessage(ChatColor.GOLD + "/bugreport help" + ChatColor.WHITE + " - " + ChatColor.GRAY + "Displays this help message.");
+			return true;
 		}
 
+		player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) +
+				"You don't have permission to use this command.");
 		return true;
+
 	}
 
 	private void returnHelpCommand(Player player) {

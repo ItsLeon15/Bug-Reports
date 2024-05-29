@@ -24,6 +24,12 @@ permissions:
   bugreport.use:
     description: Allows the player to use the bug report command
     default: op
+  bugreport.archive:
+    description: Allows the player to archive bug reports
+    default: op
+  bugreport.delete:
+    description: Allows the player to delete bug reports
+    default: op
 
 
 

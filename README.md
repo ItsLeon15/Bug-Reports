@@ -42,6 +42,8 @@ language selector and more!
 - bugreport.settings - **Allows the player to access and change the settings of the plugin**.
 - bugreport.list - **Allows the player to access the list of bug reports**.
 - bugreport.use - **Allows the player to use the bug report command**. Can be enabled/disabled in the config.yml under **use-bug-report-permission: true**.
+- bugreport.archive - **Allows the player to archive bug reports**.
+- bugreport.delete - **Allows the player to delete bug reports**.
 
 ## Bug List GUI
 
