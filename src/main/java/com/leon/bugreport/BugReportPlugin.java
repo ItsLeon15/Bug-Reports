@@ -3,14 +3,15 @@ package com.leon.bugreport;
 import com.leon.bugreport.API.CacheCleanupListener;
 import com.leon.bugreport.commands.*;
 import com.leon.bugreport.expansions.BugPlaceholders;
+import com.leon.bugreport.extensions.Metrics;
 import com.leon.bugreport.extensions.PlanHook;
 import com.leon.bugreport.listeners.ItemDropEvent;
 import com.leon.bugreport.listeners.ReportListener;
 import com.leon.bugreport.listeners.UpdateChecker;
-import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -189,14 +190,20 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 	}
 
 	private void registerCommands() {
+		if (BugReportManager.debugMode) plugin.getLogger().info("Registering commands");
+
+		this.saveDefaultConfig();
+		FileConfiguration config = this.getConfig();
+
 		BugReportCommand bugReportCommandExecutor = new BugReportCommand(reportManager);
-		UniversalTabCompleter universalTabCompleter = new UniversalTabCompleter();
+		UniversalTabCompleter universalTabCompleter = new UniversalTabCompleter(reportManager, config);
 
 		Objects.requireNonNull(getCommand("buglistarchived")).setExecutor(new BugListArchivedCommand());
 		Objects.requireNonNull(getCommand("buglistsettings")).setExecutor(new BugListSettingsCommand(reportManager));
 		Objects.requireNonNull(getCommand("buglinkdiscord")).setExecutor(new LinkDiscordCommand(reportManager));
 
 		PluginCommand bugReportCommand = Objects.requireNonNull(this.getCommand("bugreport"));
+		bugReportCommand.setTabCompleter(universalTabCompleter);
 		bugReportCommand.setExecutor(bugReportCommandExecutor);
 
 		PluginCommand bugListCommand = Objects.requireNonNull(this.getCommand("buglist"));

@@ -158,6 +158,7 @@ public class BugReportManager implements Listener {
 				put("enablePluginReportCategories", false);
 				put("enablePluginReportBook", false);
 				put("enableBugReportNotifications", true);
+				put("bug-category-tab-complete", true);
 				put("language", "en_US");
 				put("update-checker", true);
 				put("update-checker-join", true);
