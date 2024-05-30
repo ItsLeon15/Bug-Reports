@@ -4,6 +4,7 @@ enableDiscordWebhook: false
 enablePluginReportCategories: false
 enablePluginReportBook: false
 enableBugReportNotifications: true
+bug-category-tab-complete: true
 
 language: en_US
 
