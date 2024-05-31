@@ -158,6 +158,7 @@ public class BugReportManager implements Listener {
 				put("enablePluginReportCategories", false);
 				put("enablePluginReportBook", false);
 				put("enableBugReportNotifications", true);
+				put("bug-category-tab-complete", true);
 				put("language", "en_US");
 				put("update-checker", true);
 				put("update-checker-join", true);
@@ -173,6 +174,7 @@ public class BugReportManager implements Listener {
 				put("refreshPlayerHeadCache", "1d");
 				put("max-reports-per-player", 50);
 				put("report-confirmation-message", "Thanks for submitting a report!");
+				put("bug-report-cooldown", 0);
 				put("pluginColor", "Yellow");
 				put("pluginTitle", "[Bug Report]");
 			}
