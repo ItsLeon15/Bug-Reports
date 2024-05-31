@@ -174,6 +174,7 @@ public class BugReportManager implements Listener {
 				put("refreshPlayerHeadCache", "1d");
 				put("max-reports-per-player", 50);
 				put("report-confirmation-message", "Thanks for submitting a report!");
+				put("bug-report-cooldown", 0);
 				put("pluginColor", "Yellow");
 				put("pluginTitle", "[Bug Report]");
 			}
@@ -637,7 +638,7 @@ public class BugReportManager implements Listener {
 				case "Back" -> {
 					int currentPage = getCurrentPage(player);
 					if (currentPage > 1) {
-						if (TitleText.startsWith("Bug Report Details - ") || TitleText.startsWith("Bug Report - " + getValueFromLanguageFile("buttonNames.statusSelection", "Status Selection"))) {
+						if (TitleText.startsWith("Bug Report Details - ") || TitleText.startsWith("Bug Report - " + getEnglishValueFromValue("buttonNames.statusSelection"))) {
 							playButtonClickSound(player);
 							player.openInventory(isArchivedGUI ? getArchivedBugReportsGUI(currentPage, player) : getBugReportGUI(currentPage, player));
 						} else {

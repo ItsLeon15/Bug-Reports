@@ -67,7 +67,7 @@ public class BugListCommand implements CommandExecutor {
 
 	}
 
-	private void returnHelpCommand(Player player) {
+	static void returnHelpCommand(Player player) {
 		String commandFormat = ChatColor.GOLD + "/%s" + ChatColor.WHITE + " - " + ChatColor.GRAY + "%s\n";
 
 		StringBuilder messageBuilder = new StringBuilder();
