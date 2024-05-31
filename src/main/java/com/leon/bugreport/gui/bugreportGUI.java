@@ -29,16 +29,16 @@ public class bugreportGUI {
 		private static final long serialVersionUID = 2870322851221649721L;
 
 		{
-			put("BugReporter", "Username");
-			put("BugReportUUID", "UUID");
-			put("BugReportWorld", "World");
-			put("BugReportMessage", "Full Message");
-			put("BugReportCategory", "Category ID");
-			put("BugReportStatus", "Status (Click to change)");
-			put("BugReportTimestamp", "Timestamp");
-			put("BugReportLocation", "Location " + ChatColor.BOLD + "(Click to teleport)");
-			put("BugReportGamemode", "Gamemode");
-			put("BugReportServerName", "Server Name");
+			put("BugReporter", getValueFromLanguageFile("buttonNames.bugReportDetailsUsername", "Username"));
+			put("BugReportUUID", getValueFromLanguageFile("buttonNames.bugReportDetailsUUID", "UUID"));
+			put("BugReportWorld", getValueFromLanguageFile("buttonNames.bugReportDetailsWorld", "World"));
+			put("BugReportMessage", getValueFromLanguageFile("buttonNames.bugReportDetailsFullMessage", "Full Message"));
+			put("BugReportCategory", getValueFromLanguageFile("buttonNames.bugReportDetailsCategory", "Category ID"));
+			put("BugReportStatus", getValueFromLanguageFile("buttonNames.bugReportDetailsStatus", "Status") + " (Click to change)");
+			put("BugReportTimestamp", getValueFromLanguageFile("buttonNames.bugReportDetailsTimestamp", "Timestamp"));
+			put("BugReportLocation", getValueFromLanguageFile("buttonNames.bugReportDetailsLocation", "Location") + ChatColor.BOLD + " (Click to teleport)");
+			put("BugReportGamemode", getValueFromLanguageFile("buttonNames.bugReportDetailsGamemode", "Gamemode"));
+			put("BugReportServerName", getValueFromLanguageFile("buttonNames.bugReportDetailsServerName", "Server Name"));
 			put("BugReportUnArchive", getValueFromLanguageFile("buttonNames.unarchive", "Unarchive"));
 			put("BugReportArchive", getValueFromLanguageFile("buttonNames.archive", "Archive"));
 			put("BugReportBack", getValueFromLanguageFile("buttonNames.back", "Back"));
@@ -237,11 +237,7 @@ public class bugreportGUI {
 				String categoryID = reportDetails.getOrDefault("Category ID", "N/A");
 				if (!"N/A".equals(categoryID)) {
 					List<Map<?, ?>> categoryList = config.getMapList("reportCategories");
-					ref.detailValue = categoryList.stream()
-							.filter(categoryMap -> categoryID.equals(String.valueOf(categoryMap.get("id"))))
-							.map(categoryMap -> (String) categoryMap.get("name"))
-							.findFirst()
-							.orElse("Unknown Category");
+					ref.detailValue = categoryList.stream().filter(categoryMap -> categoryID.equals(String.valueOf(categoryMap.get("id")))).map(categoryMap -> (String) categoryMap.get("name")).findFirst().orElse("Unknown Category");
 				}
 			}
 			case "BugReporter" -> {
@@ -315,23 +311,38 @@ public class bugreportGUI {
 	 */
 	@Contract(pure = true)
 	private static String deriveReportDetailKey(@NotNull String bugReportItemKey) {
-		return switch (bugReportItemKey) {
-			case "BugReporter" -> "Username";
-			case "BugReportUUID" -> "UUID";
-			case "BugReportWorld" -> "World";
-			case "BugReportMessage" -> "Full Message";
-			case "BugReportCategory" -> "Category ID";
-			case "BugReportStatus" -> "Status (Click to change)";
-			case "BugReportTimestamp" -> "Timestamp";
-			case "BugReportLocation" -> "Location";
-			case "BugReportGamemode" -> "Gamemode";
-			case "BugReportServerName" -> "Server Name";
-			case "BugReportUnArchive" -> getValueFromLanguageFile("buttonNames.unarchive", "Unarchive");
-			case "BugReportArchive" -> getValueFromLanguageFile("buttonNames.archive", "Archive");
-			case "BugReportBack" -> getValueFromLanguageFile("buttonNames.back", "Back");
-			case "BugReportDelete" -> getValueFromLanguageFile("buttonNames.delete", "Delete");
-			default -> bugReportItemKey.replace("BugReport", "");
-		};
+		switch (bugReportItemKey) {
+			case "BugReporter":
+				return getValueFromLanguageFile("buttonNames.bugReportDetailsUsername", "Username");
+			case "BugReportUUID":
+				return getValueFromLanguageFile("buttonNames.bugReportDetailsUUID", "UUID");
+			case "BugReportWorld":
+				return getValueFromLanguageFile("buttonNames.bugReportDetailsWorld", "World");
+			case "BugReportMessage":
+				return getValueFromLanguageFile("buttonNames.bugReportDetailsFullMessage", "Full Message");
+			case "BugReportCategory":
+				return getValueFromLanguageFile("buttonNames.bugReportDetailsCategory", "Category ID");
+			case "BugReportStatus":
+				return getValueFromLanguageFile("buttonNames.bugReportDetailsStatus", "Status") + " (Click to change)";
+			case "BugReportTimestamp":
+				return getValueFromLanguageFile("buttonNames.bugReportDetailsTimestamp", "Timestamp");
+			case "BugReportLocation":
+				return getValueFromLanguageFile("buttonNames.bugReportDetailsLocation", "Location") + ChatColor.BOLD + " (Click to teleport)";
+			case "BugReportGamemode":
+				return getValueFromLanguageFile("buttonNames.bugReportDetailsGamemode", "Gamemode");
+			case "BugReportServerName":
+				return getValueFromLanguageFile("buttonNames.bugReportDetailsServerName", "Server Name");
+			case "BugReportUnArchive":
+				return getValueFromLanguageFile("buttonNames.unarchive", "Unarchive");
+			case "BugReportArchive":
+				return getValueFromLanguageFile("buttonNames.archive", "Archive");
+			case "BugReportBack":
+				return getValueFromLanguageFile("buttonNames.back", "Back");
+			case "BugReportDelete":
+				return getValueFromLanguageFile("buttonNames.delete", "Delete");
+			default:
+				return bugReportItemKey.replace("BugReport", "");
+		}
 	}
 
 	/**
@@ -405,12 +416,7 @@ public class bugreportGUI {
 		ItemStack statusItem = null;
 
 		if (status == null) {
-			statusItem = createInfoItem(
-					isArchivedGUI ? Material.RED_DYE : Material.LIME_DYE,
-					ChatColor.GOLD + "Status (Click to change)",
-					ChatColor.WHITE + (isArchivedGUI ? "Archived" : "Open"),
-					false
-			);
+			statusItem = createInfoItem(isArchivedGUI ? Material.RED_DYE : Material.LIME_DYE, ChatColor.GOLD + "Status (Click to change)", ChatColor.WHITE + (isArchivedGUI ? "Archived" : "Open"), false);
 		} else {
 			List<Map<?, ?>> statuses = config.getMapList("statuses");
 			boolean statusFound = false;
@@ -421,12 +427,7 @@ public class bugreportGUI {
 					Material stautsMaterial = isArchivedGUI ? Material.RED_DYE : Material.LIME_DYE;
 					ChatColor statusChatColor = isArchivedGUI ? ChatColor.RED : ChatColor.GREEN;
 
-					statusItem = createInfoItem(
-							stautsMaterial,
-							statusChatColor + "Status (Click to change)",
-							statusChatColor + status,
-							false
-					);
+					statusItem = createInfoItem(stautsMaterial, statusChatColor + "Status (Click to change)", statusChatColor + status, false);
 					statusFound = true;
 					break;
 				}
@@ -441,24 +442,14 @@ public class bugreportGUI {
 						statusMaterial = statusMaterial.replace("MINECRAFT:", "");
 					}
 
-					statusItem = createInfoItem(
-							Material.valueOf(statusMaterial),
-							statusChatColor + "Status (Click to change)",
-							statusChatColor + statusName,
-							false
-					);
+					statusItem = createInfoItem(Material.valueOf(statusMaterial), statusChatColor + "Status (Click to change)", statusChatColor + statusName, false);
 					statusFound = true;
 					break;
 				}
 			}
 
 			if (!statusFound) {
-				statusItem = createInfoItem(
-						Material.BARRIER,
-						ChatColor.GOLD + "Status (Click to change)",
-						ChatColor.GOLD + "Unknown",
-						false
-				);
+				statusItem = createInfoItem(Material.BARRIER, ChatColor.GOLD + "Status (Click to change)", ChatColor.GOLD + "Unknown", false);
 			}
 		}
 

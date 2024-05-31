@@ -221,10 +221,7 @@ public class BugReportManager implements Listener {
 		int totalPages = Math.max(1, (int) Math.ceil((double) filteredReports.size() / itemsPerPage));
 		int currentPage = Math.max(1, Math.min(testCurrentPage, totalPages));
 
-		Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW
-				+ (showArchived ? "Archived Bugs" : "Bug " + "Report") + " - "
-				+ Objects.requireNonNull(getValueFromLanguageFile("buttonNames.pageInfo", "Page %currentPage% of %totalPages%"))
-				.replace("%currentPage%", String.valueOf(currentPage)).replace("%totalPages%", String.valueOf(totalPages)));
+		Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + (showArchived ? "Archived Bugs" : "Bug " + "Report") + " - " + Objects.requireNonNull(getValueFromLanguageFile("buttonNames.pageInfo", "Page %currentPage% of %totalPages%")).replace("%currentPage%", String.valueOf(currentPage)).replace("%totalPages%", String.valueOf(totalPages)));
 
 		int startIndex = (currentPage - 1) * itemsPerPage;
 		int endIndex = Math.min(startIndex + itemsPerPage, filteredReports.size());
@@ -236,9 +233,7 @@ public class BugReportManager implements Listener {
 			String firstLine = report.split("\n")[0];
 			String username = firstLine.split(": ")[1];
 
-			ItemStack playerHead = config.getBoolean("enablePlayerHeads")
-					? getPlayerHead(username)
-					: createInfoItem(Material.ENCHANTED_BOOK, ChatColor.GOLD + "Username", ChatColor.WHITE + username, false);
+			ItemStack playerHead = config.getBoolean("enablePlayerHeads") ? getPlayerHead(username) : createInfoItem(Material.ENCHANTED_BOOK, ChatColor.GOLD + "Username", ChatColor.WHITE + username, false);
 
 			ItemStack reportItem = new ItemStack(playerHead);
 
@@ -636,7 +631,7 @@ public class BugReportManager implements Listener {
 				case "Back" -> {
 					int currentPage = getCurrentPage(player);
 					if (currentPage > 1) {
-						if (TitleText.startsWith("Bug Report Details - ") || TitleText.startsWith("Bug Report - " + getValueFromLanguageFile("buttonNames.statusSelection", "Status Selection"))) {
+						if (TitleText.startsWith("Bug Report Details - ")) {
 							playButtonClickSound(player);
 							player.openInventory(isArchivedGUI ? getArchivedBugReportsGUI(currentPage, player) : getBugReportGUI(currentPage, player));
 						} else {
@@ -717,22 +712,44 @@ public class BugReportManager implements Listener {
 			String itemName = itemMeta.getDisplayName();
 			String customDisplayName = getEnglishValueFromValue(itemName);
 
-			if (Objects.requireNonNull(customDisplayName).contains("(Click to change)")) {
+			if (debugMode) {
+				plugin.getLogger().info("Clicked item: " + customDisplayName);
+			}
+
+			if (customDisplayName == null || customDisplayName.equals(" ")) {
+				return;
+			}
+
+			if (customDisplayName.contains("(Click to change)")) {
 				playButtonClickSound(player);
 				player.openInventory(BugReportSettings.getStatusSelectionGUI(reportIDGUI));
 			}
 
-			if (debugMode) {
-				plugin.getLogger().info("Clicked item: " + customDisplayName);
+			if (customDisplayName.contains("(Click to teleport)")) {
+				playButtonClickSound(player);
+				if (debugMode) {
+					plugin.getLogger().info("Teleporting to the location of bug report #" + reportIDGUI + "...");
+				}
+
+				if (checkForKey("useTitleInsteadOfMessage", true)) {
+					player.sendTitle(returnStartingMessage(ChatColor.GREEN) + " Teleporting to the location of Bug Report #" + reportIDGUI + "." + "." + ".", " ", 10, 70, 20);
+				} else {
+					player.sendMessage(returnStartingMessage(ChatColor.GREEN) + " Teleporting to the location of Bug Report #" + reportIDGUI + ".");
+				}
+
+				Location teleportLocation = BugReportDatabase.getBugReportLocation(reportIDGUI);
+				if (teleportLocation != null) {
+					player.teleport(teleportLocation, PlayerTeleportEvent.TeleportCause.PLUGIN);
+				} else {
+					player.sendMessage(returnStartingMessage(ChatColor.RED) + " The location of Bug Report #" + reportIDGUI + " is not available.");
+					player.closeInventory();
+				}
 			}
 
 			switch (customDisplayName) {
 				case "Back" -> {
 					playButtonClickSound(player);
-					player.openInventory(isArchivedDetails
-							? getArchivedBugReportsGUI(localCurrentPage, player)
-							: getBugReportGUI(localCurrentPage, player)
-					);
+					player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI(localCurrentPage, player) : getBugReportGUI(localCurrentPage, player));
 				}
 				case "Unarchive" -> {
 					playButtonClickSound(player);
@@ -773,29 +790,6 @@ public class BugReportManager implements Listener {
 						player.closeInventory();
 						player.sendMessage(returnStartingMessage(ChatColor.RED) + " You don't have permission to delete bug reports!");
 					}
-				}
-				case "Location (Click to teleport)" -> {
-					playButtonClickSound(player);
-					if (debugMode) {
-						plugin.getLogger().info("Teleporting to the location of bug report #" + reportIDGUI + "...");
-					}
-
-					if (checkForKey("useTitleInsteadOfMessage", true)) {
-						player.sendTitle(returnStartingMessage(ChatColor.GREEN) + " Teleporting to the location of Bug Report #" + reportIDGUI + "." + "." + ".", " ", 10, 70, 20);
-					} else {
-						player.sendMessage(returnStartingMessage(ChatColor.GREEN) + " Teleporting to the location of Bug Report #" + reportIDGUI + ".");
-					}
-
-					Location teleportLocation = BugReportDatabase.getBugReportLocation(reportIDGUI);
-					if (teleportLocation != null) {
-						player.teleport(teleportLocation, PlayerTeleportEvent.TeleportCause.PLUGIN);
-					} else {
-						player.sendMessage(returnStartingMessage(ChatColor.RED) + " The location of Bug Report #" + reportIDGUI + " is not available.");
-						player.closeInventory();
-					}
-				}
-				default -> {
-					return;
 				}
 			}
 

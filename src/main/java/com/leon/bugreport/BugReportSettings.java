@@ -315,7 +315,7 @@ public class BugReportSettings {
 
 			String customDisplayName = getEnglishValueFromValue(displayName);
 
-			if (Objects.requireNonNull(customDisplayName).contains("Status Selection")) {
+			if (customDisplayName.contains("Status Selection")) {
 				event.setCancelled(true);
 
 				Player player = (Player) event.getWhoClicked();
@@ -336,8 +336,9 @@ public class BugReportSettings {
 
 				String itemDisplayName = itemMeta.getDisplayName();
 				String customItemDisplayName = ChatColor.stripColor(itemDisplayName);
+				String englishItemDisplayName = getEnglishValueFromValue(customItemDisplayName);
 
-				if (customItemDisplayName.equals("Back")) {
+				if (englishItemDisplayName.equals("Back")) {
 					playButtonClickSound(player);
 
 					List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
