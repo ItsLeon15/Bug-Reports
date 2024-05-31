@@ -638,7 +638,7 @@ public class BugReportManager implements Listener {
 				case "Back" -> {
 					int currentPage = getCurrentPage(player);
 					if (currentPage > 1) {
-						if (TitleText.startsWith("Bug Report Details - ") || TitleText.startsWith("Bug Report - " + getEnglishValueFromValue("buttonNames.statusSelection"))) {
+						if (TitleText.startsWith("Bug Report Details - ")) {
 							playButtonClickSound(player);
 							player.openInventory(isArchivedGUI ? getArchivedBugReportsGUI(currentPage, player) : getBugReportGUI(currentPage, player));
 						} else {
