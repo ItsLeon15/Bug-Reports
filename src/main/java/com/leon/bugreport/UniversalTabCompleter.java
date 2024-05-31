@@ -40,6 +40,8 @@ public class UniversalTabCompleter implements TabCompleter {
 							completions.add(category.getName());
 						}
 					}
+				} else {
+					completions.add("help");
 				}
 			}
 		}

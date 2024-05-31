@@ -34,6 +34,7 @@ import static org.bukkit.ChatColor.*;
 public class BugReportCommand implements CommandExecutor, Listener {
 	private final BugReportManager reportManager;
 	private final Map<UUID, Integer> categorySelectionMap;
+	private final Map<UUID, Long> lastCommandUsage = new HashMap<>();
 
 	public BugReportCommand(BugReportManager reportManager) {
 		this.reportManager = reportManager;
@@ -204,6 +205,26 @@ public class BugReportCommand implements CommandExecutor, Listener {
 			return true;
 		}
 
+		int cooldown = config.getInt("bug-report-cooldown", 0);
+		if (cooldown > 0) {
+			long currentTime = System.currentTimeMillis();
+			long lastUsage = lastCommandUsage.getOrDefault(player.getUniqueId(), 0L);
+			long timeElapsed = (currentTime - lastUsage) / 1000; // Convert to seconds
+
+			if (timeElapsed < cooldown) {
+				long timeLeft = cooldown - timeElapsed;
+				player.sendMessage(returnStartingMessage(ChatColor.RED) + "You must wait " + timeLeft + " seconds before using this command again.");
+				return true;
+			}
+		}
+
+		if (args.length == 0 || args[0].equalsIgnoreCase("help")) {
+			player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) + "Commands:");
+			player.sendMessage(ChatColor.GOLD + "/bugreport <Message>" + ChatColor.WHITE + " - " + ChatColor.GRAY + "Submits a bug report.");
+			player.sendMessage(ChatColor.GOLD + "/bugreport help" + ChatColor.WHITE + " - " + ChatColor.GRAY + "Displays this help message.");
+			return true;
+		}
+
 		if (player.hasPermission("bugreport.use") || player.hasPermission("bugreport.admin")) {
 			if (config.getBoolean("enablePluginReportBook", true)) {
 				ItemStack bugReportBook = new ItemStack(Material.WRITABLE_BOOK);
@@ -227,6 +248,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 				String message = pluginColor + pluginTitle + " " + ChatColor.YELLOW + "Bug Report book added to your inventory\n" + pluginColor + pluginTitle + " " + ChatColor.YELLOW + "Write your bug report in the book and sign it to submit";
 
 				player.sendMessage(message);
+				lastCommandUsage.put(player.getUniqueId(), System.currentTimeMillis());
 				return true;
 			}
 
@@ -236,6 +258,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 					return true;
 				}
 				openCategorySelectionGUI(player);
+				lastCommandUsage.put(player.getUniqueId(), System.currentTimeMillis());
 				return true;
 			}
 
@@ -264,11 +287,13 @@ public class BugReportCommand implements CommandExecutor, Listener {
 				logErrorMessage("Failed to submit bug report");
 				throw new RuntimeException(e);
 			}
+
 			if (checkForKey("useTitleInsteadOfMessage", true)) {
 				player.sendTitle(GREEN + getValueFromLanguageFile("bugReportConfirmationMessage", "Bug report submitted successfully!"), "", 10, 70, 25);
 			} else {
 				player.sendMessage(returnStartingMessage(ChatColor.GREEN) + getValueFromLanguageFile("bugReportConfirmationMessage", "Bug report submitted successfully!"));
 			}
+			lastCommandUsage.put(player.getUniqueId(), System.currentTimeMillis());
 		} else {
 			player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + "You don't have permission to use this command!");
 		}
