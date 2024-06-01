@@ -51,6 +51,9 @@ public class BugPlaceholders extends PlaceholderExpansion {
 			case "totalNonArchivedBugReports" -> {
 				return String.valueOf(loadNonArchivedBugReportCount());
 			}
+			case "totalDeletedBugReports" -> {
+				return String.valueOf(loadDeletedBugReportCount());
+			}
 			default -> {
 				return null;
 			}

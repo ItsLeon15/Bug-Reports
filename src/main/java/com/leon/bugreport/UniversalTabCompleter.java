@@ -35,9 +35,13 @@ public class UniversalTabCompleter implements TabCompleter {
 		} else if (command.getName().equalsIgnoreCase("bugreport")) {
 			if (args.length == 1) {
 				if (sender.hasPermission("bugreport.admin") || sender.hasPermission("bugreport.use")) {
-					if (config.getBoolean("bug-category-tab-complete", true)) {
+					if (config.getBoolean("bug-category-tab-complete", true) && config.getBoolean("enablePluginReportCategories", true)) {
 						for (Category category : bugReportManager.getReportCategories()) {
-							completions.add(category.getName());
+							String categoryName = category.getName();
+							if (categoryName.contains(" ")) {
+								categoryName = categoryName.replace(" ", "-");
+								completions.add(categoryName);
+							}
 						}
 					}
 				} else {

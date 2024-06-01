@@ -112,12 +112,7 @@ public class BugReportDatabase {
 				String locationString = resultSet.getString("Location");
 				if (locationString != null) {
 					String[] locationSplit = locationString.split(",");
-					return new Location(
-							Bukkit.getWorld(locationSplit[0]),
-							Double.parseDouble(locationSplit[1]),
-							Double.parseDouble(locationSplit[2]),
-							Double.parseDouble(locationSplit[3])
-					);
+					return new Location(Bukkit.getWorld(locationSplit[0]), Double.parseDouble(locationSplit[1]), Double.parseDouble(locationSplit[2]), Double.parseDouble(locationSplit[3]));
 				}
 			}
 			statement.close();
@@ -166,6 +161,21 @@ public class BugReportDatabase {
 			plugin.getLogger().warning("Invalid database type. Please use 'local' or 'mysql'.");
 			logErrorMessage("Invalid database type. Please use 'local' or 'mysql'.");
 		}
+	}
+
+	public static long loadDeletedBugReportCount() {
+		try (Connection connection = dataSource.getConnection();
+			 PreparedStatement statement = connection.prepareStatement("SELECT total_deleted FROM bugreport_analytics");
+			 ResultSet resultSet = statement.executeQuery()) {
+
+			if (resultSet.next()) {
+				return resultSet.getLong("total_deleted");
+			}
+		} catch (SQLException e) {
+			plugin.getLogger().severe(e.getMessage());
+			logErrorMessage(e.getMessage());
+		}
+		return 0;
 	}
 
 	public static long loadBugReportCountForPlayer(@NotNull UUID playerID) {
@@ -251,8 +261,7 @@ public class BugReportDatabase {
 		List<BugReportPair<String, String>> reports = new ArrayList<>();
 		try (Connection connection = dataSource.getConnection()) {
 			String sql = "SELECT username, message FROM bug_reports";
-			try (PreparedStatement statement = connection.prepareStatement(sql);
-				 ResultSet resultSet = statement.executeQuery()) {
+			try (PreparedStatement statement = connection.prepareStatement(sql); ResultSet resultSet = statement.executeQuery()) {
 				while (resultSet.next()) {
 					String username = resultSet.getString("username");
 					String message = resultSet.getString("message");
@@ -349,20 +358,7 @@ public class BugReportDatabase {
 				String status = resultSet.getString("status");
 
 				List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
-				reports.add(
-						"Username: " + username + "\n" +
-								"UUID: " + playerId + "\n" +
-								"World: " + world + "\n" +
-								"Full Message: " + fullMessage + "\n" +
-								"Header: " + header + "\n" +
-								"Archived: " + archived + "\n" +
-								"Report ID: " + report_id + "\n" +
-								"Timestamp: " + timestamp + "\n" +
-								"Location: " + location + "\n" +
-								"Gamemode: " + gamemode + "\n" +
-								"Status: " + status + "\n" +
-								"Server Name: " + serverName
-				);
+				reports.add("Username: " + username + "\n" + "UUID: " + playerId + "\n" + "World: " + world + "\n" + "Full Message: " + fullMessage + "\n" + "Header: " + header + "\n" + "Archived: " + archived + "\n" + "Report ID: " + report_id + "\n" + "Timestamp: " + timestamp + "\n" + "Location: " + location + "\n" + "Gamemode: " + gamemode + "\n" + "Status: " + status + "\n" + "Server Name: " + serverName);
 
 				if (Bukkit.getPluginManager().isPluginEnabled("Plan")) {
 					PlanHook.getInstance().updateHook(playerId, username);
@@ -431,6 +427,7 @@ public class BugReportDatabase {
 		try (Connection connection = dataSource.getConnection()) {
 			connection.createStatement().execute("CREATE TABLE IF NOT EXISTS bug_reports(rowid INTEGER, player_id TEXT, header TEXT, message TEXT, username TEXT, world TEXT, archived INTEGER DEFAULT 0, report_id INTEGER, timestamp BIGINT, status TEXT, serverName TEXT)");
 			connection.createStatement().execute("CREATE TABLE IF NOT EXISTS player_data(player_id TEXT, last_login_timestamp BIGINT DEFAULT 0)");
+			connection.createStatement().execute("CREATE TABLE IF NOT EXISTS bugreport_analytics(total_deleted INTEGER DEFAULT 0)");
 		} catch (Exception e) {
 			plugin.getLogger().severe("Failed to create tables.");
 			plugin.getLogger().severe(e.getMessage());
@@ -450,10 +447,7 @@ public class BugReportDatabase {
 
 			List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
 
-			String existingHeader = reports.stream()
-					.filter(reportString -> reportString.contains("Report ID: " + reportIDGUI))
-					.findFirst()
-					.orElse(null);
+			String existingHeader = reports.stream().filter(reportString -> reportString.contains("Report ID: " + reportIDGUI)).findFirst().orElse(null);
 			int existingHeaderPosition = reports.indexOf(existingHeader);
 			String[] lines = existingHeader != null ? existingHeader.split("\n") : new String[0];
 			StringBuilder newHeader = new StringBuilder();
@@ -467,8 +461,9 @@ public class BugReportDatabase {
 			}
 			reports.set(existingHeaderPosition, newHeader.toString().trim());
 			bugReports.put(getStaticUUID(), reports);
-			if (debugMode)
+			if (debugMode) {
 				plugin.getLogger().info("Updated report status for report ID " + reportIDGUI);
+			}
 		} catch (Exception e) {
 			plugin.getLogger().severe("Failed to update bug report status.");
 			plugin.getLogger().severe(e.getMessage());
@@ -476,8 +471,9 @@ public class BugReportDatabase {
 	}
 
 	public static void updateBugReportArchive(int reportIndex, int archived) {
-		if (debugMode)
+		if (debugMode) {
 			plugin.getLogger().info("Updating bug report archive status for report ID " + reportIndex);
+		}
 		try (Connection connection = dataSource.getConnection()) {
 			PreparedStatement statement = connection.prepareStatement("UPDATE bug_reports SET archived = ? WHERE report_id = ?");
 			statement.setInt(1, archived);
@@ -487,10 +483,7 @@ public class BugReportDatabase {
 			loadBugReports();
 
 			List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
-			String existingHeader = reports.stream()
-					.filter(reportString -> reportString.contains("Report ID: " + reportIndex))
-					.findFirst()
-					.orElse(null);
+			String existingHeader = reports.stream().filter(reportString -> reportString.contains("Report ID: " + reportIndex)).findFirst().orElse(null);
 			int existingHeaderPosition = reports.indexOf(existingHeader);
 
 			String[] lines = existingHeader != null ? existingHeader.split("\n") : new String[0];
@@ -505,8 +498,9 @@ public class BugReportDatabase {
 			}
 			reports.set(existingHeaderPosition, newHeader.toString().trim());
 			bugReports.put(getStaticUUID(), reports);
-			if (debugMode)
+			if (debugMode) {
 				plugin.getLogger().info("Updated bug report archive status for report ID " + reportIndex);
+			}
 		} catch (Exception e) {
 			plugin.getLogger().severe("Failed to update bug report archive status.");
 			plugin.getLogger().severe(e.getMessage());
@@ -518,20 +512,48 @@ public class BugReportDatabase {
 			plugin.getLogger().info("Deleting bug report for report ID " + reportIndex);
 		}
 		try (Connection connection = dataSource.getConnection()) {
-			PreparedStatement statement = connection.prepareStatement("DELETE FROM bug_reports WHERE report_id = ?");
-			statement.setInt(1, reportIndex);
-			statement.executeUpdate();
-			statement.close();
-			if (debugMode) {
-				plugin.getLogger().info("Deleted bug report for report ID " + reportIndex);
+			try (PreparedStatement statement = connection.prepareStatement("DELETE FROM bug_reports WHERE report_id = ?")) {
+				statement.setInt(1, reportIndex);
+				int rowsAffected = statement.executeUpdate();
+				if (debugMode) {
+					plugin.getLogger().info("Deleted bug report rows affected: " + rowsAffected);
+				}
 			}
 
-			loadBugReports();
-		} catch (Exception e) {
-			plugin.getLogger().severe("Failed to delete bug report.");
+			int totalDeleted = 0;
+			try (PreparedStatement bugreportAnalytics = connection.prepareStatement("SELECT total_deleted FROM bugreport_analytics");
+				 ResultSet resultSet = bugreportAnalytics.executeQuery()) {
+				if (resultSet.next()) {
+					totalDeleted = resultSet.getInt("total_deleted");
+				}
+			}
+
+			if (totalDeleted > 0) {
+				try (PreparedStatement analyticsStatement = connection.prepareStatement("UPDATE bugreport_analytics SET total_deleted = ?")) {
+					analyticsStatement.setInt(1, totalDeleted + 1);
+					int updateRowsAffected = analyticsStatement.executeUpdate();
+					if (debugMode) {
+						plugin.getLogger().info("Updated total_deleted, rows affected: " + updateRowsAffected);
+						plugin.getLogger().info("Updated bug report total deleted to " + (totalDeleted + 1));
+					}
+				}
+			} else {
+				try (PreparedStatement insertStatement = connection.prepareStatement("INSERT INTO bugreport_analytics (total_deleted) VALUES (?)")) {
+					insertStatement.setInt(1, 1);
+					int insertRowsAffected = insertStatement.executeUpdate();
+					if (debugMode) {
+						plugin.getLogger().info("Inserted initial bug report total_deleted value of 1, rows affected: " + insertRowsAffected);
+					}
+				}
+			}
+		} catch (SQLException e) {
+			plugin.getLogger().severe("Failed to delete bug report or update analytics.");
 			plugin.getLogger().severe(e.getMessage());
 		}
+
+		loadBugReports();
 	}
+
 
 	private void makeAllHeadersEqualReport_ID() {
 		try (Connection connection = dataSource.getConnection()) {

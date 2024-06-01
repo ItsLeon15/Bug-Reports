@@ -21,6 +21,33 @@ public class BugListCommand implements CommandExecutor {
 	public BugListCommand() {
 	}
 
+	static void returnHelpCommand(Player player) {
+		String commandFormat = ChatColor.GOLD + "/%s" + ChatColor.WHITE + " - " + ChatColor.GRAY + "%s\n";
+
+		StringBuilder messageBuilder = new StringBuilder();
+		messageBuilder.append(pluginColor).append(pluginTitle).append(" ")
+				.append(Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN))
+				.append("Admin Commands:\n");
+
+		String[][] commands = new String[][]{
+				{"bugreport", "Submits a bug report."},
+				{"buglist", "Opens the buglist GUI."},
+				{"buglist help", "Displays this help message."},
+				{"buglist reload", "Reloads the plugin and config."},
+				{"buglist debug <0/1>", "Sets the debug mode."},
+				{"buglist version", "Displays the plugin version."},
+				{"buglistarchived", "Opens the buglist archived GUI."},
+				{"buglistsettings", "Opens the buglist settings GUI."},
+				{"buglinkdiscord", "Links Bug Report to a Discord channel."}
+		};
+
+		for (String[] helpCommand : commands) {
+			messageBuilder.append(String.format(commandFormat, helpCommand[0], helpCommand[1]));
+		}
+
+		player.sendMessage(String.valueOf(messageBuilder));
+	}
+
 	@Override
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
 		if (!(sender instanceof Player player)) {
@@ -28,8 +55,7 @@ public class BugListCommand implements CommandExecutor {
 					+ "This command can only be run by a player.");
 			return true;
 		}
-		if (player.hasPermission("bugreport.admin") || player.hasPermission("bugreport.list")) {
-
+		if (player.hasPermission("bugreport.admin") || player.hasPermission("bugreport.list") || player.isOp()) {
 			if (args.length == 0) {
 				BugReportManager.setCurrentPage(player, 1);
 				Inventory bugReportGUI = BugReportManager.getBugReportGUI(1, player);
@@ -65,33 +91,6 @@ public class BugListCommand implements CommandExecutor {
 				"You don't have permission to use this command.");
 		return true;
 
-	}
-
-	static void returnHelpCommand(Player player) {
-		String commandFormat = ChatColor.GOLD + "/%s" + ChatColor.WHITE + " - " + ChatColor.GRAY + "%s\n";
-
-		StringBuilder messageBuilder = new StringBuilder();
-		messageBuilder.append(pluginColor).append(pluginTitle).append(" ")
-				.append(Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN))
-				.append("Admin Commands:\n");
-
-		String[][] commands = new String[][]{
-				{"bugreport", "Submits a bug report."},
-				{"buglist", "Opens the buglist GUI."},
-				{"buglist help", "Displays this help message."},
-				{"buglist reload", "Reloads the plugin and config."},
-				{"buglist debug <0/1>", "Sets the debug mode."},
-				{"buglist version", "Displays the plugin version."},
-				{"buglistarchived", "Opens the buglist archived GUI."},
-				{"buglistsettings", "Opens the buglist settings GUI."},
-				{"buglinkdiscord", "Links Bug Report to a Discord channel."}
-		};
-
-		for (String[] helpCommand : commands) {
-			messageBuilder.append(String.format(commandFormat, helpCommand[0], helpCommand[1]));
-		}
-
-		player.sendMessage(String.valueOf(messageBuilder));
 	}
 
 	private void returnReloadCommand(@NotNull Player player) {
