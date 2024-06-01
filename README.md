@@ -67,6 +67,7 @@ Bug Report now supports Placeholder API, the keys for Bug Report is the followin
 - %bugreports_totalBugReports% - (**Returns the total amount of bug reports**)
 - %bugreports_totalArchivedBugReports% - (**Returns the total amount of archived bug reports**)
 - %bugreports_totalNonArchivedBugReports% - (**Returns the total amount of non-archived bug reports**)
+- %bugreports_totalDeletedBugReports% - (**Returns the total amount of deleted bug reports**)
 
 External Placeholders via PlaceholderAPI are also supported in the DiscordEmbedFields.
 
