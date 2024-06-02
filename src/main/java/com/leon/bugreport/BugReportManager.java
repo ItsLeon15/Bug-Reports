@@ -569,7 +569,7 @@ public class BugReportManager implements Listener {
 			}
 		}
 
-		if (getServer().getMessenger().isIncomingChannelRegistered((Plugin) this, "BungeeCord")) {
+		if (getServer().getMessenger().isIncomingChannelRegistered(BugReportPlugin.getPlugin(), "BungeeCord")) {
 			PluginMessageListener.sendPluginMessage(player);
 		}
 
