@@ -24,7 +24,7 @@ discordEnableThumbnail: true
 discordEnableUserAuthor: true
 discordIncludeDate: true
 
-serverName: "MyServer" # YOU ARE NOT ALLOWED TO USE SPACES, e.g. My Server -> MyServer
+serverName: "My Server"
 
 enableBungeeCordSendMessage: true
 enableBungeeCordReceiveMessage: true

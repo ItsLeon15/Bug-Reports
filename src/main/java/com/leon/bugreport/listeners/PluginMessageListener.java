@@ -30,8 +30,8 @@ public class PluginMessageListener implements org.bukkit.plugin.messaging.Plugin
             ByteArrayOutputStream msgbytes = new ByteArrayOutputStream();
             DataOutputStream msgout = new DataOutputStream(msgbytes);
             try {
-                msgout.writeUTF(player.getName() + " " + server);
-                msgout.writeShort(12);
+                msgout.writeUTF(player.getName() + ";" + server);
+                msgout.writeShort(1);
             } catch (IOException exception) {
                 exception.printStackTrace();
             }
@@ -44,6 +44,7 @@ public class PluginMessageListener implements org.bukkit.plugin.messaging.Plugin
             System.out.println("Message sent.");
         }
     }
+
 
     @Override
     public void onPluginMessageReceived(String channel, Player player, byte[] message) {
@@ -63,11 +64,9 @@ public class PluginMessageListener implements org.bukkit.plugin.messaging.Plugin
                     in.readFully(msgbytes);
 
                     DataInputStream msgin = new DataInputStream(new ByteArrayInputStream(msgbytes));
-                    String somedata = msgin.readUTF();
+                    String data = msgin.readUTF();
                     short somenumber = msgin.readShort();
-                    System.out.println(somedata + " " + somenumber);
-
-                    String[] dataParts = somedata.split(" ");
+                    String[] dataParts = data.split(";");
                     if (dataParts.length >= 2) {
                         String playerName = dataParts[0];
                         String serverName = dataParts[1];
