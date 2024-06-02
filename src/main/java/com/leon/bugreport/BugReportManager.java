@@ -157,7 +157,7 @@ public class BugReportManager implements Listener {
 			{
 				put("webhookURL", "https://discord.com/api/webhooks/");
 				put("enableDiscordWebhook", true);
-				put("enablePluginReportCategoriesGUI", true);
+				put("enablePluginReportCategoriesGUI", false);
 				put("enablePluginReportCategoriesTabComplete", false);
 				put("enablePluginReportBook", false);
 				put("enableBugReportNotifications", true);
