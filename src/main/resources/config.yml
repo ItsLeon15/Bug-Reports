@@ -1,10 +1,12 @@
 webhookURL: https://discord.com/api/webhooks/
 
 enableDiscordWebhook: false
-enablePluginReportCategories: false
 enablePluginReportBook: false
 enableBugReportNotifications: true
-bug-category-tab-complete: true
+
+# Either one of them has to be true, they both can not be true at the same time
+enablePluginReportCategoriesGUI: true # Set to true if you want a category selection GUI after doing /bugreport
+enablePluginReportCategoriesTabComplete: false # Set to true if you want a category tab completion after doing /bugreport. No GUI will open
 
 language: en_US
 
