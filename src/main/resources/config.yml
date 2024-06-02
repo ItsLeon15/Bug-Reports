@@ -24,7 +24,7 @@ discordEnableThumbnail: true
 discordEnableUserAuthor: true
 discordIncludeDate: true
 
-serverName: ""
+serverName: "MyServer" # YOU ARE NOT ALLOWED TO USE SPACES, e.g. My Server -> MyServer
 
 # Placeholders via PlaceholderAPI are allowed to be used in the discordEmbedFields.
 # E.g: You can create a field with the biome of the player, where the bugreport was created.
