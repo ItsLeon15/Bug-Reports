@@ -171,6 +171,8 @@ public class BugReportManager implements Listener {
 				put("discordEnableThumbnail", true);
 				put("discordEnableUserAuthor", true);
 				put("discordIncludeDate", true);
+				put("discordEnableCustomMessage", true);
+				put("discordCustomMessage", "This is a custom message!");
 				put("enableBungeeCordSendMessage", true);
 				put("enableBungeeCordReceiveMessage", true);
 				put("useTitleInsteadOfMessage", false);

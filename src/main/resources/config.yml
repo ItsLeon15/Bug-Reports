@@ -23,6 +23,8 @@ discordEmbedThumbnail: https://www.spigotmc.org/data/resource_icons/110/110732.j
 discordEnableThumbnail: true
 discordEnableUserAuthor: true
 discordIncludeDate: true
+discordEnableCustomMessage: true
+discordCustomMessage: "This is a custom message!"
 
 enableBungeeCordSendMessage: true
 enableBungeeCordReceiveMessage: true

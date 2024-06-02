@@ -56,6 +56,8 @@ public class LinkDiscord {
 		String discordEnableThumbnail = config.getString("discordEnableThumbnail");
 		String discordEmbedThumbnail = config.getString("discordEmbedThumbnail");
 		String userAuthorURL = "https://crafatar.com/avatars/" + getUserIDFromAPI(username);
+		String discordEnableCustomMessage = config.getString("discordEnableCustomMessage");
+		String discordCustomMessage = config.getString("discordCustomMessage");
 
 		if (Objects.equals(discordEnableUserAuthor, "true")) {
 			embedObject.setAuthor(username, userAuthorURL, userAuthorURL);
@@ -67,6 +69,10 @@ public class LinkDiscord {
 
 		if (Objects.equals(discordEnableThumbnail, "true")) {
 			embedObject.setThumbnail(discordEmbedThumbnail);
+		}
+
+		if (Objects.equals(discordEnableCustomMessage, "true")) {
+			embedObject.setDescription(discordCustomMessage);
 		}
 
 		sendEmbed(embedObject);
