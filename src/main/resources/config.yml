@@ -25,6 +25,7 @@ discordEmbedThumbnail: https://www.spigotmc.org/data/resource_icons/110/110732.j
 discordEnableThumbnail: true
 discordEnableUserAuthor: true
 discordIncludeDate: true
+discordCustomMessage: "<@role_id/user_id>, a new report has been made!" # Change the "role_id/user_id" to an actual role id or user id to ping this role or person upon creation of a bug report
 
 # If you want to ping a role or a member, you can add them here. You can add multiple roles and members.
 # The role or member will be pinged in the message you set in discordPingMessage.
@@ -78,40 +79,44 @@ database:
 # E.g: You can create a field with the biome of the player, where the bugreport was created.
 # Choose for the value: "%player_biome%" (without ""). This works with any other Placeholder supported by PlaceholderAPI.
 discordEmbedFields:
-  - name: "Username"
+  - name: "Custom Message"
     id: 1
+    value: "%report_custom_message%"
+    inline: true
+  - name: "Username"
+    id: 2
     value: "%report_username%"
     inline: true
   - name: "UUID"
-    id: 2
+    id: 3
     value: "%report_uuid%"
     inline: true
   - name: "World"
-    id: 3
+    id: 5
     value: "%report_world%"
     inline: true
   - name: "Location (X, Y, Z)"
-    id: 4
+    id: 5
     value: "%report_location%"
     inline: true
   - name: "Gamemode"
-    id: 5
+    id: 6
     value: "%report_gamemode%"
     inline: true
   - name: "Status"
-    id: 6
+    id: 7
     value: "%report_status%"
     inline: true
   - name: "Category"
-    id: 7
+    id: 8
     value: "%report_category%"
     inline: true
   - name: "Sever Name"
-    id: 8
+    id: 9
     value: "%report_server_name%"
     inline: true
   - name: "Full Message"
-    id: 9
+    id: 10
     value: "%report_full_message%"
     inline: false
 

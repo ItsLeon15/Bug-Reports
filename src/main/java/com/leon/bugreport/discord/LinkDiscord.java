@@ -73,7 +73,7 @@ public class LinkDiscord {
 		sendEmbed(embedObject);
 	}
 
-	public void sendBugReport(String message, String world, String username, String location, String gamemode, Integer category, String serverName) {
+	public void sendBugReport(String custommessage, String message, String world, String username, String location, String gamemode, Integer category, String serverName) {
 		if (webhookURL == null || webhookURL.isEmpty()) {
 			plugin.getLogger().info("Webhook URL is not configured. Bug report not sent to Discord.");
 			return;
@@ -92,10 +92,10 @@ public class LinkDiscord {
 			return;
 		}
 
-		sendDiscordMessageEmbedFull(message, world, username, location, gamemode, category, serverName, discordEmbedFields);
+		sendDiscordMessageEmbedFull(custommessage, message, world, username, location, gamemode, category, serverName, discordEmbedFields);
 	}
 
-	private void sendDiscordMessageEmbedFull(String message, String world, String username, String location, String gamemode, Integer category, String serverName, @NotNull List<Map<?, ?>> discordEmbedFields) {
+	private void sendDiscordMessageEmbedFull(String custommessage, String message, String world, String username, String location, String gamemode, Integer category, String serverName, @NotNull List<Map<?, ?>> discordEmbedFields) {
 		List<DiscordEmbedDetails> discordDetails = new ArrayList<>();
 
 		for (Map<?, ?> field : discordEmbedFields) {
@@ -114,7 +114,7 @@ public class LinkDiscord {
 			String name = detail.getName();
 			String detailValue = detail.getValue();
 
-			String value = getValueForField(detailValue, username, world, location, gamemode, category, message, serverName);
+			String value = getValueForField(custommessage, detailValue, username, world, location, gamemode, category, message, serverName);
 
 			Boolean inline = detail.getInline();
 			embedObject.addField(name, value, inline);
@@ -123,7 +123,7 @@ public class LinkDiscord {
 		sendEmptyEmbedOrDefault(username, embedObject);
 	}
 
-	private @NotNull String getValueForField(@NotNull String fieldValue, String username, String world, String location, String gamemode, Integer category, String message, String serverName) {
+	private @NotNull String getValueForField(String custommessage, @NotNull String fieldValue, String username, String world, String location, String gamemode, Integer category, String message, String serverName) {
 		Player player = Bukkit.getPlayer(username);
 
 		if (player != null && PlaceholderAPI.containsPlaceholders(fieldValue)) {
@@ -131,6 +131,7 @@ public class LinkDiscord {
 		}
 
 		Map<String, String> replacements = new HashMap<>();
+		replacements.put("%report_custom_message%", custommessage);
 		replacements.put("%report_username%", username);
 		replacements.put("%report_uuid%", getUserIDFromAPI(username));
 		replacements.put("%report_world%", world);
