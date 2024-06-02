@@ -25,16 +25,12 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.Serial;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static com.leon.bugreport.API.DataSource.getPlayerHead;
@@ -62,7 +58,6 @@ public class BugReportManager implements Listener {
 	private static BugReportDatabase database;
 	private final List<Category> reportCategories;
 	private final LinkDiscord discord;
-	public boolean isBungeeCordNetwork;
 
 	public BugReportManager(Plugin plugin) throws Exception {
 		BugReportManager.plugin = plugin;
@@ -169,19 +164,20 @@ public class BugReportManager implements Listener {
 				put("language", "en_US");
 				put("update-checker", true);
 				put("update-checker-join", true);
-				put("discordEmbedTitle", "New Bug Report");
 				put("discordEmbedColor", "Yellow");
+				put("discordEmbedTitle", "New Bug Report");
 				put("discordEmbedFooter", "Bug Report V0.12.2");
 				put("discordEmbedThumbnail", "https://www.spigotmc.org/data/resource_icons/110/110732.jpg");
 				put("discordEnableThumbnail", true);
 				put("discordEnableUserAuthor", true);
 				put("discordIncludeDate", true);
-				put("serverName", "MyServer");
 				put("enableBungeeCordSendMessage", true);
 				put("enableBungeeCordReceiveMessage", true);
 				put("useTitleInsteadOfMessage", false);
 				put("enablePlayerHeads", true);
 				put("refreshPlayerHeadCache", "1d");
+				put("metrics", true);
+				put("serverName", "My Server");
 				put("max-reports-per-player", 50);
 				put("report-confirmation-message", "Thanks for submitting a report!");
 				put("bug-report-cooldown", 0);
@@ -573,8 +569,8 @@ public class BugReportManager implements Listener {
 			}
 		}
 
-		if (getServer().getMessenger().isIncomingChannelRegistered(BugReportPlugin.getPlugin(), "BungeeCord")) {
-            PluginMessageListener.sendPluginMessage(player);
+		if (getServer().getMessenger().isIncomingChannelRegistered((Plugin) this, "BungeeCord")) {
+			PluginMessageListener.sendPluginMessage(player);
 		}
 
 		Bukkit.getScheduler().runTask(plugin, () -> {

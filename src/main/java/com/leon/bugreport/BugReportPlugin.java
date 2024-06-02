@@ -7,7 +7,7 @@ import com.leon.bugreport.extensions.PlanHook;
 import com.leon.bugreport.listeners.ItemDropEvent;
 import com.leon.bugreport.listeners.ReportListener;
 import com.leon.bugreport.listeners.UpdateChecker;
-import com.leon.bugreport.extensions.Metrics;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.PluginCommand;
@@ -17,9 +17,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -50,6 +48,10 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 			}
 		}
 		return newReports;
+	}
+
+	public static BugReportPlugin getPlugin() {
+		return (BugReportPlugin) plugin;
 	}
 
 	@Override
@@ -90,7 +92,10 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 		registerListeners();
 
 		new BugReportLanguage(this);
-		Metrics metrics = new Metrics(this, 18974);
+
+		if (getConfig().getBoolean("metrics")) {
+			new Metrics(this, 18974);
+		}
 
 		generateNewYML();
 	}
@@ -107,10 +112,6 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 
 		this.getServer().getMessenger().unregisterOutgoingPluginChannel(this);
 		this.getServer().getMessenger().unregisterIncomingPluginChannel(this);
-	}
-
-	public static BugReportPlugin getPlugin() {
-		return (BugReportPlugin) plugin;
 	}
 
 	@EventHandler
