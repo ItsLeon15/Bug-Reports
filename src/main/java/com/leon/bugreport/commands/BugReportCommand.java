@@ -218,13 +218,6 @@ public class BugReportCommand implements CommandExecutor, Listener {
 			}
 		}
 
-		if (args.length == 0 || args[0].equalsIgnoreCase("help")) {
-			player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) + "Commands:");
-			player.sendMessage(ChatColor.GOLD + "/bugreport <Message>" + ChatColor.WHITE + " - " + ChatColor.GRAY + "Submits a bug report.");
-			player.sendMessage(ChatColor.GOLD + "/bugreport help" + ChatColor.WHITE + " - " + ChatColor.GRAY + "Displays this help message.");
-			return true;
-		}
-
 		if (player.hasPermission("bugreport.use") || player.hasPermission("bugreport.admin")) {
 			if (config.getBoolean("enablePluginReportBook", true)) {
 				ItemStack bugReportBook = new ItemStack(Material.WRITABLE_BOOK);
@@ -251,8 +244,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 				lastCommandUsage.put(player.getUniqueId(), System.currentTimeMillis());
 				return true;
 			}
-
-			if (config.getBoolean("enablePluginReportCategories", true)) {
+			if (config.getBoolean("enablePluginReportCategoriesGUI", true)) {
 				if (!BugReportManager.checkCategoryConfig()) {
 					player.sendMessage(returnStartingMessage(ChatColor.RED) + getValueFromLanguageFile("bugReportCategoriesNotConfiguredMessage", "Bug report categories are not configured"));
 					return true;
@@ -296,6 +288,13 @@ public class BugReportCommand implements CommandExecutor, Listener {
 			lastCommandUsage.put(player.getUniqueId(), System.currentTimeMillis());
 		} else {
 			player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED) + "You don't have permission to use this command!");
+		}
+
+		if (args.length == 0 || args[0].equalsIgnoreCase("help")) {
+			player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) + "Commands:");
+			player.sendMessage(ChatColor.GOLD + "/bugreport <Message>" + ChatColor.WHITE + " - " + ChatColor.GRAY + "Submits a bug report.");
+			player.sendMessage(ChatColor.GOLD + "/bugreport help" + ChatColor.WHITE + " - " + ChatColor.GRAY + "Displays this help message.");
+			return true;
 		}
 
 		return true;

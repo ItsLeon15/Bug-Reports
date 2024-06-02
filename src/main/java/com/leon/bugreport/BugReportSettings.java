@@ -118,7 +118,7 @@ public class BugReportSettings {
 	}
 
 	private static boolean getCategorySelectionToggle() {
-		return config.getBoolean("enablePluginReportCategories");
+		return config.getBoolean("enablePluginReportCategoriesGUI");
 	}
 
 	private static void setCategorySelectionToggle(@NotNull Player player) {
@@ -128,7 +128,7 @@ public class BugReportSettings {
 			plugin.getLogger().info("Category Selection toggle clicked by " + player.getName());
 		}
 		boolean toggle = getCategorySelectionToggle();
-		config.set("enablePluginReportCategories", !toggle);
+		config.set("enablePluginReportCategoriesGUI", !toggle);
 		saveConfig();
 		player.getOpenInventory().setItem(21, toggle
 				? createButton(Material.GRAY_DYE, ChatColor.RED + getValueFromLanguageFile("buttonNames.false", "Off"))

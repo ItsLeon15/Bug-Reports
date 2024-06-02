@@ -9,6 +9,9 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.leon.bugreport.BugReportManager.debugMode;
+import static com.leon.bugreport.BugReportManager.plugin;
+
 public class UniversalTabCompleter implements TabCompleter {
 
 	private final BugReportManager bugReportManager;
@@ -33,23 +36,28 @@ public class UniversalTabCompleter implements TabCompleter {
 				completions.add("help");
 			}
 		} else if (command.getName().equalsIgnoreCase("bugreport")) {
-			if (args.length == 1) {
-				if (sender.hasPermission("bugreport.admin") || sender.hasPermission("bugreport.use")) {
-					if (config.getBoolean("bug-category-tab-complete", true) && config.getBoolean("enablePluginReportCategories", true)) {
+			if (config.getBoolean("enablePluginReportCategoriesGUI") && !config.getBoolean("enablePluginReportCategoriesTabComplete")) {
+				if (debugMode) {
+					plugin.getLogger().info("No tab-completion for categories.");
+				}
+			} else if (config.getBoolean("enablePluginReportCategoriesGUI") && config.getBoolean("enablePluginReportCategoriesTabComplete")) {
+				plugin.getLogger().warning("enablePluginReportCategoriesGUI and enablePluginReportCategoriesTabComplete are both true! Either one of them has to be true or both false. Using GUI now.");
+			} else if (!config.getBoolean("enablePluginReportCategoriesGUI") && config.getBoolean("enablePluginReportCategoriesTabComplete")) {
+				if (args.length == 1) {
+					if (sender.hasPermission("bugreport.admin") || sender.hasPermission("bugreport.use")) {
 						for (Category category : bugReportManager.getReportCategories()) {
 							String categoryName = category.getName();
 							if (categoryName.contains(" ")) {
 								categoryName = categoryName.replace(" ", "-");
-								completions.add(categoryName);
 							}
+							completions.add(categoryName);
 						}
+					} else {
+						completions.add("help");
 					}
-				} else {
-					completions.add("help");
 				}
 			}
 		}
-
 		return completions;
 	}
 }

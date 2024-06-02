@@ -157,7 +157,8 @@ public class BugReportManager implements Listener {
 			{
 				put("webhookURL", "https://discord.com/api/webhooks/");
 				put("enableDiscordWebhook", true);
-				put("enablePluginReportCategories", false);
+				put("enablePluginReportCategoriesGUI", false);
+				put("enablePluginReportCategoriesTabComplete", false);
 				put("enablePluginReportBook", false);
 				put("enableBugReportNotifications", true);
 				put("bug-category-tab-complete", true);
@@ -569,7 +570,7 @@ public class BugReportManager implements Listener {
 			}
 		}
 
-		if (getServer().getMessenger().isIncomingChannelRegistered((Plugin) this, "BungeeCord")) {
+		if (getServer().getMessenger().isIncomingChannelRegistered(BugReportPlugin.getPlugin(), "BungeeCord")) {
 			PluginMessageListener.sendPluginMessage(player);
 		}
 
