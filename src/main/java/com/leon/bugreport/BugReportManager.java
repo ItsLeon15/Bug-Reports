@@ -177,6 +177,8 @@ public class BugReportManager implements Listener {
 				put("discordEnableUserAuthor", true);
 				put("discordIncludeDate", true);
 				put("serverName", "MyServer");
+				put("enableBungeeCordSendMessage", true);
+				put("enableBungeeCordReceiveMessage", true);
 				put("useTitleInsteadOfMessage", false);
 				put("enablePlayerHeads", true);
 				put("refreshPlayerHeadCache", "1d");
@@ -571,11 +573,7 @@ public class BugReportManager implements Listener {
 			}
 		}
 
-		System.out.println("cehcking");
-		checkifOnline();
-
-
-		if (isBungeeCordNetwork) {
+		if (getServer().getMessenger().isIncomingChannelRegistered((Plugin) this, "BungeeCord")) {
             PluginMessageListener.sendPluginMessage(player);
 		}
 
@@ -583,19 +581,6 @@ public class BugReportManager implements Listener {
 			ReportCreatedEvent reportEvent = new ReportCreatedEvent(header);
 			getServer().getPluginManager().callEvent(reportEvent);
 		});
-	}
-
-	public void checkifOnline() {
-		try {
-			Socket s = new Socket();
-			s.connect(new InetSocketAddress(getServer().getIp(), getServer().getPort()), 15);
-			s.close();
-			isBungeeCordNetwork = true;
-			System.out.println("ISBNGE");
-		} catch (Exception e) {
-			isBungeeCordNetwork = false;
-			System.out.println("ISNOTVBUNGE");
-		}
 	}
 
 	public static class BugReportListener implements Listener {
