@@ -7,7 +7,7 @@ import com.leon.bugreport.extensions.PlanHook;
 import com.leon.bugreport.listeners.ItemDropEvent;
 import com.leon.bugreport.listeners.ReportListener;
 import com.leon.bugreport.listeners.UpdateChecker;
-import org.bstats.bukkit.Metrics;
+import com.leon.bugreport.extensions.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.PluginCommand;
@@ -17,7 +17,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -102,6 +104,13 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 			plugin.getLogger().warning("Failed to close database connection.");
 			logErrorMessage("Failed to close database connection.");
 		}
+
+		this.getServer().getMessenger().unregisterOutgoingPluginChannel(this);
+		this.getServer().getMessenger().unregisterIncomingPluginChannel(this);
+	}
+
+	public static BugReportPlugin getPlugin() {
+		return (BugReportPlugin) plugin;
 	}
 
 	@EventHandler
@@ -218,6 +227,10 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 		getServer().getPluginManager().registerEvents(new ItemDropEvent(), this);
 		getServer().getPluginManager().registerEvents(new ReportListener(), this);
 		getServer().getPluginManager().registerEvents(this, this);
+
+		this.getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
+		this.getServer().getMessenger().registerIncomingPluginChannel(this, "BungeeCord", new com.leon.bugreport.listeners.PluginMessageListener());
+
 		new CacheCleanupListener();
 	}
 }

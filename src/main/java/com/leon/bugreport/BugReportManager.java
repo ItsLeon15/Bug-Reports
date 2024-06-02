@@ -3,6 +3,7 @@ package com.leon.bugreport;
 import com.leon.bugreport.discord.LinkDiscord;
 import com.leon.bugreport.extensions.PlanHook;
 import com.leon.bugreport.gui.BugReportConfirmationGUI;
+import com.leon.bugreport.listeners.PluginMessageListener;
 import com.leon.bugreport.listeners.ReportCreatedEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -24,12 +25,16 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.Serial;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static com.leon.bugreport.API.DataSource.getPlayerHead;
@@ -41,6 +46,7 @@ import static com.leon.bugreport.BugReportSettings.getSettingsGUI;
 import static com.leon.bugreport.commands.BugReportCommand.getChatColorByCode;
 import static com.leon.bugreport.commands.BugReportCommand.stringColorToColorCode;
 import static com.leon.bugreport.gui.bugreportGUI.openBugReportDetailsGUI;
+import static org.bukkit.Bukkit.getServer;
 
 public class BugReportManager implements Listener {
 	public static Map<UUID, List<String>> bugReports;
@@ -56,6 +62,7 @@ public class BugReportManager implements Listener {
 	private static BugReportDatabase database;
 	private final List<Category> reportCategories;
 	private final LinkDiscord discord;
+	public boolean isBungeeCordNetwork;
 
 	public BugReportManager(Plugin plugin) throws Exception {
 		BugReportManager.plugin = plugin;
@@ -169,6 +176,9 @@ public class BugReportManager implements Listener {
 				put("discordEnableThumbnail", true);
 				put("discordEnableUserAuthor", true);
 				put("discordIncludeDate", true);
+				put("serverName", "MyServer");
+				put("enableBungeeCordSendMessage", true);
+				put("enableBungeeCordReceiveMessage", true);
 				put("useTitleInsteadOfMessage", false);
 				put("enablePlayerHeads", true);
 				put("refreshPlayerHeadCache", "1d");
@@ -562,9 +572,14 @@ public class BugReportManager implements Listener {
 				logErrorMessage("Error sending bug report to Discord: " + e.getMessage());
 			}
 		}
+
+		if (getServer().getMessenger().isIncomingChannelRegistered((Plugin) this, "BungeeCord")) {
+            PluginMessageListener.sendPluginMessage(player);
+		}
+
 		Bukkit.getScheduler().runTask(plugin, () -> {
 			ReportCreatedEvent reportEvent = new ReportCreatedEvent(header);
-			Bukkit.getServer().getPluginManager().callEvent(reportEvent);
+			getServer().getPluginManager().callEvent(reportEvent);
 		});
 	}
 
