@@ -1,8 +1,10 @@
 package com.leon.bugreport.discord;
 
+import com.leon.bugreport.BugReportPlugin;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -13,6 +15,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 import java.util.*;
+import java.util.logging.Logger;
 
 import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
 import static com.leon.bugreport.BugReportManager.config;
@@ -26,6 +29,8 @@ public class LinkDiscord {
 	private static final String EMBED_THUMBNAIL = "https://www.spigotmc.org/data/resource_icons/110/110732.jpg";
 	private static final Color EMBED_COLOR = Color.YELLOW;
 	private String webhookURL;
+
+	private static boolean errorLogged = false;
 
 	public LinkDiscord(String webhookURL) {
 		this.webhookURL = webhookURL;
@@ -249,7 +254,6 @@ public class LinkDiscord {
 			connection.setRequestProperty("User-Agent", "BugReport/0.12.3");
 			connection.setConnectTimeout(5000);
 			connection.setReadTimeout(5000);
-			connection.setDoOutput(true);
 
 			BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 			String inputLine;
@@ -258,9 +262,13 @@ public class LinkDiscord {
 			}
 			in.close();
 			connection.disconnect();
+			errorLogged = false;
 		} catch (Exception e) {
-			plugin.getLogger().warning("Error getting UUID from API: " + e.getMessage());
-			logErrorMessage("Error getting UUID from API: " + e.getMessage());
+			if (!errorLogged) {
+				BugReportPlugin.getPlugin().getLogger().warning("Error getting UUID from API: " + e.getMessage());
+				logErrorMessage("Error getting UUID from API: " + e.getMessage());
+				errorLogged = true;
+			}
 			return "Unknown UUID";
 		}
 
