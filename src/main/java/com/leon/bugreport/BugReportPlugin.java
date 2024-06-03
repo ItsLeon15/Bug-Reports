@@ -29,6 +29,7 @@ import static com.leon.bugreport.BugReportManager.*;
 import static com.leon.bugreport.gui.bugreportGUI.generateNewYML;
 
 public class BugReportPlugin extends JavaPlugin implements Listener {
+	private static BugReportPlugin instance;
 	private final UpdateChecker updateChecker = new UpdateChecker(this, 110732);
 	private BugReportManager reportManager;
 
@@ -51,7 +52,7 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 	}
 
 	public static BugReportPlugin getPlugin() {
-		return (BugReportPlugin) plugin;
+		return instance;
 	}
 
 	@Override
@@ -90,6 +91,8 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 
 		registerCommands();
 		registerListeners();
+
+		instance = this;
 
 		new BugReportLanguage(this);
 
