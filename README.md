@@ -82,9 +82,12 @@ Example Config
 webhookURL: https://discord.com/api/webhooks/
 
 enableDiscordWebhook: false
-enablePluginReportCategories: false
 enablePluginReportBook: false
 enableBugReportNotifications: true
+
+# Either one of them has to be true, they both can not be true at the same time
+enablePluginReportCategoriesGUI: false # Set to true if you want a category selection GUI after doing /bugreport
+enablePluginReportCategoriesTabComplete: false # Set to true if you want a category tab completion after doing /bugreport. No GUI will open
 
 language: en_US
 
@@ -103,10 +106,55 @@ discordEmbedThumbnail: https://www.spigotmc.org/data/resource_icons/110/110732.j
 discordEnableThumbnail: true
 discordEnableUserAuthor: true
 discordIncludeDate: true
-discordEnableCustomMessage: true
-discordCustomMessage: "This is a custom message!"
 
-serverName: ""
+# If you want to ping a role or a member, you can add them here. You can add multiple roles and members.
+# The role or member will be pinged in the message you set in discordPingMessage.
+# You don't need to add the "<@" or "<@&" characters to the role or member. They will be added automatically.
+discordPingMessage: A new Bug Report has been submitted
+discordEnablePing: true
+
+discordPingMembers:
+  - ''
+discordPingRoles:
+  - ''
+
+enableBungeeCordSendMessage: true
+enableBungeeCordReceiveMessage: true
+
+useTitleInsteadOfMessage: false
+enablePlayerHeads: true
+refreshPlayerHeadCache: 1d # Default, 1m, 1h, 1d, 1w, 1mo, 1y
+
+metrics: true # Enables metrics
+
+serverName: "My Server"
+
+max-reports-per-player: 50 # 0 = unlimited
+report-confirmation-message: Thanks for submitting a report!
+bug-report-cooldown: 0 # 0 = disabled
+
+# # Available placeholders:
+#
+# Aqua, Black, Blue, Dark_Aqua, Dark_Blue
+# Dark_Gray, Dark_Green, Dark_Purple, Dark_Red
+# Gold, Gray, Green, Light_Purple, Red, White, Yellow
+pluginColor: Yellow
+
+# You are able to use & for color codes such as "&8[&6Bug Report&8]&9".
+# For a list of color codes, visit https://htmlcolorcodes.com/minecraft-color-codes (Format Codes will NOT work!)
+# This will override the pluginColor option.
+pluginTitle: '[Bug Report]'
+
+# This can either be "mysql" or "local".
+# If you choose "mysql", you must fill out the database section below.
+# If you choose "local", no configuration is required.
+databaseType: local
+database:
+  host: localhost
+  port: 3306
+  database: database
+  username: root
+  password: password
 
 # Placeholders via PlaceholderAPI are allowed to be used in the discordEmbedFields.
 # E.g: You can create a field with the biome of the player, where the bugreport was created.
@@ -148,36 +196,6 @@ discordEmbedFields:
     id: 9
     value: "%report_full_message%"
     inline: false
-
-useTitleInsteadOfMessage: false
-enablePlayerHeads: true
-refreshPlayerHeadCache: 1d # Default, 1m, 1h, 1d, 1w, 1mo, 1y
-
-max-reports-per-player: 50 # 0 = unlimited
-report-confirmation-message: Thanks for submitting a report!
-
-# # Available placeholders:
-#
-# Aqua, Black, Blue, Dark_Aqua, Dark_Blue
-# Dark_Gray, Dark_Green, Dark_Purple, Dark_Red
-# Gold, Gray, Green, Light_Purple, Red, White, Yellow
-pluginColor: Yellow
-
-# You are able to use & for color codes such as "&8[&6Bug Report&8]&9".
-# For a list of color codes, visit https://htmlcolorcodes.com/minecraft-color-codes (Format Codes will NOT work!)
-# This will override the pluginColor option.
-pluginTitle: '[Bug Report]'
-
-# This can either be "mysql" or "local".
-# If you choose "mysql", you must fill out the database section below.
-# If you choose "local", no configuration is required.
-databaseType: local
-database:
-  host: localhost
-  port: 3306
-  database: database
-  username: root
-  password: password
 
 reportCategories:
   - name: Plugin Bug

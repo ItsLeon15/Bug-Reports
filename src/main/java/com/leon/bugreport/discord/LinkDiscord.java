@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -56,8 +57,6 @@ public class LinkDiscord {
 		String discordEnableThumbnail = config.getString("discordEnableThumbnail");
 		String discordEmbedThumbnail = config.getString("discordEmbedThumbnail");
 		String userAuthorURL = "https://crafatar.com/avatars/" + getUserIDFromAPI(username);
-		String discordEnableCustomMessage = config.getString("discordEnableCustomMessage");
-		String discordCustomMessage = config.getString("discordCustomMessage");
 
 		if (Objects.equals(discordEnableUserAuthor, "true")) {
 			embedObject.setAuthor(username, userAuthorURL, userAuthorURL);
@@ -69,10 +68,6 @@ public class LinkDiscord {
 
 		if (Objects.equals(discordEnableThumbnail, "true")) {
 			embedObject.setThumbnail(discordEmbedThumbnail);
-		}
-
-		if (Objects.equals(discordEnableCustomMessage, "true")) {
-			embedObject.setDescription(discordCustomMessage);
 		}
 
 		sendEmbed(embedObject);
@@ -157,12 +152,78 @@ public class LinkDiscord {
 		DiscordWebhook webhook = new DiscordWebhook(webhookURL);
 		webhook.addEmbed(embedObject);
 
-		try {
-			webhook.execute();
-		} catch (Exception e) {
-			plugin.getLogger().warning("Error sending bug report to Discord: " + e.getMessage());
-			logErrorMessage("Error sending bug report to Discord: " + e.getMessage());
+		if (config.getBoolean("discordEnablePing")) {
+			try {
+				List<String> discordPingMembers = config.getStringList("discordPingMembers");
+				List<String> discordPingRoles = config.getStringList("discordPingRoles");
+
+				StringBuilder membersToPing = new StringBuilder();
+				StringBuilder rolesToPing = new StringBuilder();
+
+				if (discordPingMembers != null && !discordPingMembers.isEmpty()) {
+					for (String member : discordPingMembers) {
+						String trimmedMember = member.trim();
+						if (!trimmedMember.isEmpty() && !trimmedMember.equals("<@>") && !trimmedMember.equals("@")) {
+							if (!trimmedMember.startsWith("<@")) {
+								membersToPing.append("<@").append(trimmedMember).append(">");
+							} else {
+								membersToPing.append(trimmedMember);
+							}
+							membersToPing.append(" ");
+						}
+					}
+				}
+
+				if (discordPingRoles != null && !discordPingRoles.isEmpty()) {
+					for (String role : discordPingRoles) {
+						String trimmedRole = role.trim();
+						if (!trimmedRole.isEmpty() && !trimmedRole.equals("<@&>") && !trimmedRole.equals("&")) {
+							if (!trimmedRole.startsWith("<@&")) {
+								rolesToPing.append("<@&").append(trimmedRole).append(">");
+							} else {
+								rolesToPing.append(trimmedRole);
+							}
+							rolesToPing.append(" ");
+						}
+					}
+				}
+
+				StringBuilder content = new StringBuilder();
+				if (rolesToPing.length() > 0 && rolesToPing.toString().contains("<@&") && rolesToPing.toString().contains(">")) {
+					content.append(rolesToPing.toString().trim()).append(" ");
+				}
+				if (membersToPing.length() > 0 && membersToPing.toString().contains("<@") && membersToPing.toString().contains(">")) {
+					content.append(membersToPing.toString().trim()).append(" ");
+				}
+
+				if (content.length() > 0) {
+					if (config.getString("discordPingMessage") != null && !config.getString("discordPingMessage").isEmpty()) {
+						content.insert(0, config.getString("discordPingMessage") + " ");
+					}
+
+					webhook.setContent(content.toString().trim());
+				}
+			} catch (Exception e) {
+				throwException("Error sending additional pings to Discord: " + e.getMessage());
+			} finally {
+				try {
+					webhook.execute();
+				} catch (IOException e) {
+					throwException("Error sending bug report to Discord: " + e.getMessage());
+				}
+			}
+		} else {
+			try {
+				webhook.execute();
+			} catch (IOException e) {
+				throwException("Error sending bug report to Discord: " + e.getMessage());
+			}
 		}
+	}
+
+	private void throwException(String message) {
+		plugin.getLogger().warning(message);
+		logErrorMessage(message);
 	}
 
 	private String getCategoryName(Integer category) {

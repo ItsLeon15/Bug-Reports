@@ -25,8 +25,17 @@ discordEmbedThumbnail: https://www.spigotmc.org/data/resource_icons/110/110732.j
 discordEnableThumbnail: true
 discordEnableUserAuthor: true
 discordIncludeDate: true
-discordEnableCustomMessage: true
-discordCustomMessage: "This is a custom message!"
+
+# If you want to ping a role or a member, you can add them here. You can add multiple roles and members.
+# The role or member will be pinged in the message you set in discordPingMessage.
+# You don't need to add the "<@" or "<@&" characters to the role or member. They will be added automatically.
+discordPingMessage: A new Bug Report has been submitted
+discordEnablePing: true
+
+discordPingMembers:
+  - ''
+discordPingRoles:
+  - ''
 
 enableBungeeCordSendMessage: true
 enableBungeeCordReceiveMessage: true
@@ -35,11 +44,10 @@ useTitleInsteadOfMessage: false
 enablePlayerHeads: true
 refreshPlayerHeadCache: 1d # Default, 1m, 1h, 1d, 1w, 1mo, 1y
 
-metrics: true # Enables metrics
-
+metrics: true # Enables or disables metrics
 serverName: "My Server"
 
-max-reports-per-player: 50 # 0 = unlimited
+max-reports-per-player: 25 # 0 = unlimited
 report-confirmation-message: Thanks for submitting a report!
 bug-report-cooldown: 0 # 0 = disabled
 
