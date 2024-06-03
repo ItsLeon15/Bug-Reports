@@ -7,7 +7,7 @@ import com.leon.bugreport.extensions.PlanHook;
 import com.leon.bugreport.listeners.ItemDropEvent;
 import com.leon.bugreport.listeners.ReportListener;
 import com.leon.bugreport.listeners.UpdateChecker;
-import org.bstats.bukkit.Metrics;
+import import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.PluginCommand;
@@ -31,6 +31,7 @@ import static com.leon.bugreport.gui.bugreportGUI.generateNewYML;
 public class BugReportPlugin extends JavaPlugin implements Listener {
 	private final UpdateChecker updateChecker = new UpdateChecker(this, 110732);
 	private BugReportManager reportManager;
+	private static BugReportPlugin instance;
 
 	@NotNull
 	private static List<String> getNewReports(@NotNull List<String> reports, long lastLoginTimestamp) {
@@ -51,7 +52,7 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 	}
 
 	public static BugReportPlugin getPlugin() {
-		return (BugReportPlugin) plugin;
+		return instance;
 	}
 
 	@Override
@@ -87,6 +88,8 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 				}
 			});
 		}
+
+		instance = this;
 
 		registerCommands();
 		registerListeners();
