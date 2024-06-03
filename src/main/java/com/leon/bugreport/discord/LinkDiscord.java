@@ -254,6 +254,7 @@ public class LinkDiscord {
 			connection.setRequestProperty("User-Agent", "BugReport/0.12.3");
 			connection.setConnectTimeout(5000);
 			connection.setReadTimeout(5000);
+			connection.setDoOutput(true);
 
 			BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 			String inputLine;
