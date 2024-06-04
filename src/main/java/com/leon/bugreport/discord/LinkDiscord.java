@@ -4,7 +4,6 @@ import com.leon.bugreport.BugReportPlugin;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -15,7 +14,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 import java.util.*;
-import java.util.logging.Logger;
 
 import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
 import static com.leon.bugreport.BugReportManager.config;
@@ -28,9 +26,8 @@ public class LinkDiscord {
 	private static final String EMBED_FOOTER_TEXT = "Bug Report V0.12.3";
 	private static final String EMBED_THUMBNAIL = "https://www.spigotmc.org/data/resource_icons/110/110732.jpg";
 	private static final Color EMBED_COLOR = Color.YELLOW;
-	private String webhookURL;
-
 	private static boolean errorLogged = false;
+	private String webhookURL;
 
 	public LinkDiscord(String webhookURL) {
 		this.webhookURL = webhookURL;
@@ -100,7 +97,16 @@ public class LinkDiscord {
 		sendDiscordMessageEmbedFull(message, world, username, location, gamemode, category, serverName, discordEmbedFields);
 	}
 
-	private void sendDiscordMessageEmbedFull(String message, String world, String username, String location, String gamemode, Integer category, String serverName, @NotNull List<Map<?, ?>> discordEmbedFields) {
+	private void sendDiscordMessageEmbedFull(
+			String message,
+			String world,
+			String username,
+			String location,
+			String gamemode,
+			Integer category,
+			String serverName,
+			@NotNull List<Map<?, ?>> discordEmbedFields
+	) {
 		List<DiscordEmbedDetails> discordDetails = new ArrayList<>();
 
 		for (Map<?, ?> field : discordEmbedFields) {
@@ -128,7 +134,16 @@ public class LinkDiscord {
 		sendEmptyEmbedOrDefault(username, embedObject);
 	}
 
-	private @NotNull String getValueForField(@NotNull String fieldValue, String username, String world, String location, String gamemode, Integer category, String message, String serverName) {
+	private @NotNull String getValueForField(
+			@NotNull String fieldValue,
+			String username,
+			String world,
+			String location,
+			String gamemode,
+			Integer category,
+			String message,
+			String serverName
+	) {
 		Player player = Bukkit.getPlayer(username);
 
 		if (player != null && PlaceholderAPI.containsPlaceholders(fieldValue)) {
@@ -165,7 +180,7 @@ public class LinkDiscord {
 				StringBuilder membersToPing = new StringBuilder();
 				StringBuilder rolesToPing = new StringBuilder();
 
-				if (discordPingMembers != null && !discordPingMembers.isEmpty()) {
+				if (!discordPingMembers.isEmpty()) {
 					for (String member : discordPingMembers) {
 						String trimmedMember = member.trim();
 						if (!trimmedMember.isEmpty() && !trimmedMember.equals("<@>") && !trimmedMember.equals("@")) {
@@ -179,7 +194,7 @@ public class LinkDiscord {
 					}
 				}
 
-				if (discordPingRoles != null && !discordPingRoles.isEmpty()) {
+				if (!discordPingRoles.isEmpty()) {
 					for (String role : discordPingRoles) {
 						String trimmedRole = role.trim();
 						if (!trimmedRole.isEmpty() && !trimmedRole.equals("<@&>") && !trimmedRole.equals("&")) {
@@ -194,14 +209,14 @@ public class LinkDiscord {
 				}
 
 				StringBuilder content = new StringBuilder();
-				if (rolesToPing.length() > 0 && rolesToPing.toString().contains("<@&") && rolesToPing.toString().contains(">")) {
+				if (!rolesToPing.isEmpty() && rolesToPing.toString().contains("<@&") && rolesToPing.toString().contains(">")) {
 					content.append(rolesToPing.toString().trim()).append(" ");
 				}
-				if (membersToPing.length() > 0 && membersToPing.toString().contains("<@") && membersToPing.toString().contains(">")) {
+				if (!membersToPing.isEmpty() && membersToPing.toString().contains("<@") && membersToPing.toString().contains(">")) {
 					content.append(membersToPing.toString().trim()).append(" ");
 				}
 
-				if (content.length() > 0) {
+				if (!content.isEmpty()) {
 					if (config.getString("discordPingMessage") != null && !config.getString("discordPingMessage").isEmpty()) {
 						content.insert(0, config.getString("discordPingMessage") + " ");
 					}
