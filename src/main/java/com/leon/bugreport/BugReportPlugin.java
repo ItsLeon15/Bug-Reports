@@ -31,6 +31,7 @@ import static com.leon.bugreport.gui.bugreportGUI.generateNewYML;
 public class BugReportPlugin extends JavaPlugin implements Listener {
 	private static BugReportPlugin instance;
 	private final UpdateChecker updateChecker = new UpdateChecker(this, 110732);
+	private final Set<UUID> notifiedPlayers = new HashSet<>();
 	private BugReportManager reportManager;
 
 	@NotNull
@@ -157,11 +158,15 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 	public void onPlayerJoin(@NotNull PlayerJoinEvent event) {
 		for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
 			if (onlinePlayer.isOp() || onlinePlayer.hasPermission("bugreport.notify")) {
+				UUID playerId = onlinePlayer.getUniqueId();
+
 				if (!config.getBoolean("enableBugReportNotifications")) {
 					continue;
 				}
 
-				UUID playerId = onlinePlayer.getUniqueId();
+				if (notifiedPlayers.contains(playerId)) {
+					return;
+				}
 
 				long lastLoginTimestamp = BugReportDatabase.getPlayerLastLoginTimestamp(playerId);
 
@@ -198,6 +203,8 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 				} else {
 					onlinePlayer.sendMessage(message.toString());
 				}
+
+				notifiedPlayers.add(playerId);
 			}
 		}
 	}
