@@ -45,11 +45,11 @@ public class BugReportCommand implements CommandExecutor, Listener {
 	@Contract(pure = true)
 	public static ChatColor stringColorToColorCode(String color) {
 		if (debugMode) {
-			ErrorClass.throwDebug("BugReportCommand: Starting stringColorToColorCode", "debug");
+			ErrorClass.throwDebug("BugReportCommand: Starting stringColorToColorCode");
 		}
 		if (color == null) {
 			if (debugMode) {
-				ErrorClass.throwDebug("BugReportCommand: stringColorToColorCode returned null (White)", "debug");
+				ErrorClass.throwWarning("BugReportCommand: stringColorToColorCode returned null (White)");
 			}
 			return WHITE;
 		}
@@ -76,7 +76,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 
 	public static @NotNull Boolean checkIfChatColorIsValid(@NotNull String chatColor) {
 		if (debugMode) {
-			ErrorClass.throwDebug("BugReportCommand: Starting checkIfChatColorIsValid", "debug");
+			ErrorClass.throwDebug("BugReportCommand: Starting checkIfChatColorIsValid");
 		}
 		return switch (chatColor.toUpperCase()) {
 			case "AQUA", "BLACK", "BLUE", "DARK_AQUA", "DARK_BLUE", "DARK_GRAY", "DARK_GREEN", "DARK_PURPLE",
@@ -88,7 +88,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 	@Contract(pure = true)
 	public static ChatColor getChatColorByCode(@NotNull String colorCode) {
 		if (debugMode) {
-			ErrorClass.throwDebug("BugReportCommand: Starting getChatColorByCode", "debug");
+			ErrorClass.throwDebug("BugReportCommand: Starting getChatColorByCode");
 		}
 		return switch (colorCode) {
 			case "§0" -> ChatColor.BLACK;
@@ -120,7 +120,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 	@Contract(pure = true)
 	public static java.awt.Color chatColorToColor(ChatColor color) {
 		if (debugMode) {
-			ErrorClass.throwDebug("BugReportCommand: Starting chatColorToColor", "debug");
+			ErrorClass.throwDebug("BugReportCommand: Starting chatColorToColor");
 		}
 		if (color == null) {
 			return java.awt.Color.WHITE;
@@ -149,7 +149,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 	@EventHandler
 	public void onBookEdit(@NotNull PlayerEditBookEvent event) {
 		if (debugMode) {
-			ErrorClass.throwDebug("BugReportCommand: Triggered PlayerEditBookEvent", "debug");
+			ErrorClass.throwDebug("BugReportCommand: Triggered PlayerEditBookEvent");
 		}
 		Player player = event.getPlayer();
 		BookMeta bookMeta = event.getNewBookMeta();
@@ -181,9 +181,9 @@ public class BugReportCommand implements CommandExecutor, Listener {
 						}
 					}
 					if (!foundAndRemoved) {
-						ErrorClass.throwDebug("Logging: Failed to find and remove book for player " + player.getName(), "warning");
+						ErrorClass.throwError("Error 013: BugReportCommand - Failed to find and remove book for player " + player.getName());
 					} else {
-						ErrorClass.throwDebug("Logging: Removed book for player " + player.getName(), "debug");
+						ErrorClass.throwDebug("Logging: Removed book for player " + player.getName());
 					}
 				}
 			}.runTaskLater(plugin, 1L);
@@ -192,7 +192,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 
 	private void doubleCheckIfBookWasRemoved(Player player) {
 		if (debugMode) {
-			ErrorClass.throwDebug("BugReportCommand: Starting doubleCheckIfBookWasRemoved", "debug");
+			ErrorClass.throwDebug("BugReportCommand: Starting doubleCheckIfBookWasRemoved");
 		}
 		new BukkitRunnable() {
 			@Override
@@ -210,9 +210,9 @@ public class BugReportCommand implements CommandExecutor, Listener {
 					}
 				}
 				if (foundBook) {
-					ErrorClass.throwDebug("Logging: Failed to remove book for player " + player.getName(), "warning");
+					ErrorClass.throwWarning("Error 014: Failed to remove book for player " + player.getName());
 				} else {
-					ErrorClass.throwDebug("Logging: Removed book for player " + player.getName(), "debug");
+					ErrorClass.throwDebug("Logging: Removed book for player " + player.getName());
 				}
 			}
 		}.runTaskLater(plugin, 20L);
@@ -221,7 +221,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 	@Override
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
 		if (debugMode) {
-			ErrorClass.throwDebug("BugReportCommand: Triggered /bugreport command", "debug");
+			ErrorClass.throwError("BugReportCommand: Triggered /bugreport command");
 		}
 		if (!(sender instanceof Player player)) {
 			sender.sendMessage("This command can only be run by a player.");
@@ -243,7 +243,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 
 		if (player.hasPermission("bugreport.use") || player.hasPermission("bugreport.admin")) {
 			if (debugMode) {
-				ErrorClass.throwDebug("BugReportCommand: User has passed permission check", "debug");
+				ErrorClass.throwDebug("BugReportCommand: User has passed permission check");
 			}
 			if (config.getBoolean("enablePluginReportBook", true)) {
 				ItemStack bugReportBook = new ItemStack(Material.WRITABLE_BOOK);
@@ -301,7 +301,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 			try {
 				reportManager.submitBugReport(player, String.join(" ", args), null);
 			} catch (Exception e) {
-				ErrorClass.throwDebug("Failed to submit bug report", "warning");
+				ErrorClass.throwError("Error 015: BugReportCommand - Failed to submit bug report");
 				throw new RuntimeException(e);
 			}
 
@@ -327,7 +327,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 
 	private int getReportCount(UUID playerId) {
 		if (debugMode) {
-			ErrorClass.throwDebug("BugReportCommand: Starting getReportCount", "debug");
+			ErrorClass.throwDebug("BugReportCommand: Starting getReportCount");
 		}
 		int count = 0;
 		List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
@@ -341,7 +341,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 
 	private void openCategorySelectionGUI(Player player) {
 		if (debugMode) {
-			ErrorClass.throwDebug("BugReportCommand: Starting openCategorySelectionGUI", "debug");
+			ErrorClass.throwDebug("BugReportCommand: Starting openCategorySelectionGUI");
 		}
 		Inventory gui = Bukkit.createInventory(null, 9, YELLOW + "Bug Report Categories");
 
@@ -358,7 +358,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onInventoryClick(@NotNull InventoryClickEvent event) {
 		if (debugMode) {
-			ErrorClass.throwDebug("BugReportCommand: Triggered InventoryClickEvent", "debug");
+			ErrorClass.throwDebug("BugReportCommand: Triggered InventoryClickEvent");
 		}
 		if (!event.getView().getTitle().equals(YELLOW + "Bug Report Categories")) {
 			return;
@@ -405,7 +405,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onPlayerChat(@NotNull AsyncPlayerChatEvent event) {
 		if (debugMode) {
-			ErrorClass.throwDebug("BugReportCommand: Triggered AsyncPlayerChatEvent", "debug");
+			ErrorClass.throwDebug("BugReportCommand: Triggered AsyncPlayerChatEvent");
 		}
 		Player player = event.getPlayer();
 		Integer categoryId = categorySelectionMap.get(player.getUniqueId());
@@ -437,7 +437,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 
 	private @NotNull ItemStack createCategoryItem(@NotNull Category category) {
 		if (debugMode) {
-			ErrorClass.throwDebug("BugReportCommand: Starting createCategoryItem", "debug");
+			ErrorClass.throwDebug("BugReportCommand: Starting createCategoryItem");
 		}
 		ItemStack itemStack = new ItemStack(category.getItem());
 		ItemMeta itemMeta = itemStack.getItemMeta();

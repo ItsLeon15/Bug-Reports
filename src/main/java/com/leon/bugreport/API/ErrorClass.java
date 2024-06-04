@@ -54,15 +54,18 @@ public class ErrorClass {
 		}
 	}
 
-	public static void throwDebug(String Debug, String severity) {
-		if (Objects.equals(severity, "debug")) {
-			plugin.getLogger().info(Debug);
-		} else if (Objects.equals(severity, "warning")) {
-			plugin.getLogger().warning(Debug);
-		} else if (Objects.equals(severity, "error")) {
-			plugin.getLogger().severe(Debug);
-		}
-
+	public static void throwDebug(String Debug) {
+		plugin.getLogger().info(Debug);
 		logErrorMessage(Debug);
+	}
+
+	public static void throwWarning(String Warning) {
+		plugin.getLogger().info(Warning);
+		logErrorMessage(Warning);
+	}
+
+	public static void throwError(String Error) {
+		plugin.getLogger().info(Error);
+		logErrorMessage(Error);
 	}
 }

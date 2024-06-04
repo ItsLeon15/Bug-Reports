@@ -19,7 +19,7 @@ public class BugListArchivedCommand implements CommandExecutor {
 	@Override
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
 		if (debugMode) {
-			ErrorClass.throwDebug("BugListArchivedCommand: Triggered /buglistarchived command", "debug");
+			ErrorClass.throwDebug("BugListArchivedCommand: Triggered /buglistarchived command");
 		}
 		if (!(sender instanceof Player player)) {
 			sender.sendMessage(returnStartingMessage(ChatColor.RED) + "This command can only be run by a player.");

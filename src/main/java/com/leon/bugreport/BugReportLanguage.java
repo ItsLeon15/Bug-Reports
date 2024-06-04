@@ -27,7 +27,7 @@ public class BugReportLanguage {
 
 	public BugReportLanguage(@NotNull Plugin plugin) {
 		if (debugMode) {
-			ErrorClass.throwDebug("BugReportLanguage: Starting BugReportLanguage", "debug");
+			ErrorClass.throwDebug("BugReportLanguage: Starting BugReportLanguage");
 		}
 		BugReportLanguage.plugin = plugin;
 		langFolder = new File(plugin.getDataFolder(), "languages");
@@ -38,7 +38,7 @@ public class BugReportLanguage {
 		}
 
 		if (!languageCodes.contains(languageCode)) {
-			ErrorClass.throwDebug("Invalid language code '" + languageCode + "'. Defaulting to 'en_US'.", "error");
+			ErrorClass.throwError("Error 051: Invalid language code '" + languageCode + "'. Defaulting to 'en_US'.");
 			languageCode = "en_US";
 		}
 
@@ -58,7 +58,7 @@ public class BugReportLanguage {
 
 	private static void ensureTempEnglishFileExists() {
 		if (debugMode) {
-			ErrorClass.throwDebug("BugReportLanguage: Starting ensureTemEnglishFileExists", "debug");
+			ErrorClass.throwDebug("BugReportLanguage: Starting ensureTemEnglishFileExists");
 		}
 		if (enLangTempFile == null) {
 			enLangTempFile = new File(langFolder, "temp/en_US_temp.yml");
@@ -79,7 +79,7 @@ public class BugReportLanguage {
 
 	public static @Nullable String getEnglishValueFromValue(String value) {
 		if (debugMode) {
-			ErrorClass.throwDebug("BugReportLanguage: Starting getEnglishValueFromValue", "debug");
+			ErrorClass.throwDebug("BugReportLanguage: Starting getEnglishValueFromValue");
 		}
 		checkIfEnglishFileModified();
 
@@ -101,7 +101,7 @@ public class BugReportLanguage {
 
 		File[] files = langFolder.listFiles();
 		if (files == null || files.length == 0) {
-			ErrorClass.throwDebug("No language files found in the 'languages' folder.", "error");
+			ErrorClass.throwError("Error 052: No language files found in the 'languages' folder.");
 			for (String languageCode : languageCodes) {
 				plugin.saveResource("languages/" + languageCode + ".yml", false);
 			}
@@ -111,8 +111,8 @@ public class BugReportLanguage {
 				for (File file : files) {
 					if (file.getName().equalsIgnoreCase(languageCode + ".yml")) {
 						if (isFileEmpty(file)) {
-							ErrorClass.throwDebug("Language file '" + languageCode + ".yml' is empty.", "warning");
-							ErrorClass.throwDebug("Creating new file.", "warning");
+							ErrorClass.throwWarning("Language file '" + languageCode + ".yml' is empty.");
+							ErrorClass.throwWarning("Creating new file.");
 							plugin.saveResource("languages/" + languageCode + ".yml", true);
 						}
 						found = true;
@@ -124,7 +124,7 @@ public class BugReportLanguage {
 					if (resourceAvailable) {
 						plugin.saveResource("languages/" + languageCode + ".yml", false);
 					} else {
-						ErrorClass.throwDebug("Language file '" + languageCode + ".yml' not found in resources.", "error");
+						ErrorClass.throwError("Error 053: Language file '" + languageCode + ".yml' not found in resources.");
 					}
 				}
 			}
@@ -140,11 +140,11 @@ public class BugReportLanguage {
 			ConfigurationSection langSection = yamlConfig.getConfigurationSection(languageCode);
 			langConfig = flattenYamlConfiguration(Objects.requireNonNullElse(langSection, yamlConfig));
 		} else {
-			ErrorClass.throwDebug("Language file '" + languageCode + ".yml' not found.", "error");
+			ErrorClass.throwError("Error 054: Language file '" + languageCode + ".yml' not found.");
 		}
 
 		if (debugMode) {
-			ErrorClass.throwDebug("Loaded " + langConfig.size() + " language keys.", "info");
+			ErrorClass.throwDebug("Loaded " + langConfig.size() + " language keys.");
 		}
 	}
 

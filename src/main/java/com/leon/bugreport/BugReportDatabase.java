@@ -58,8 +58,8 @@ public class BugReportDatabase {
 				}
 			}
 		} catch (Exception e) {
-			ErrorClass.throwDebug("Failed to add missing columns.", "error");
-			ErrorClass.throwDebug(e.getMessage(), "error");
+			ErrorClass.throwError("Error 027: Failed to add missing columns.");
+			ErrorClass.throwError(e.getMessage());
 		}
 	}
 
@@ -79,8 +79,8 @@ public class BugReportDatabase {
 				playerDataStatement.close();
 			}
 		} catch (Exception e) {
-			ErrorClass.throwDebug("Failed to set player last login timestamp.", "error");
-			ErrorClass.throwDebug(e.getMessage(), "error");
+			ErrorClass.throwError("Error 028: Failed to set player last login timestamp.");
+			ErrorClass.throwError(e.getMessage());
 		}
 	}
 
@@ -94,8 +94,8 @@ public class BugReportDatabase {
 			}
 			statement.close();
 		} catch (Exception e) {
-			ErrorClass.throwDebug("Failed to get player last login timestamp.", "error");
-			ErrorClass.throwDebug(e.getMessage(), "error");
+			ErrorClass.throwError("Error 029: Failed to get player last login timestamp.");
+			ErrorClass.throwError(e.getMessage());
 		}
 		return 0;
 	}
@@ -114,8 +114,8 @@ public class BugReportDatabase {
 			}
 			statement.close();
 		} catch (Exception e) {
-			ErrorClass.throwDebug("Failed to get bug report location.", "error");
-			ErrorClass.throwDebug(e.getMessage(), "error");
+			ErrorClass.throwDebug("Error 030: Failed to get bug report location.");
+			ErrorClass.throwDebug(e.getMessage());
 		}
 		return null;
 	}
@@ -129,8 +129,8 @@ public class BugReportDatabase {
 				}
 			}
 		} catch (Exception e) {
-			ErrorClass.throwDebug("Failed to add missing columns.", "error");
-			ErrorClass.throwDebug(e.getMessage(), "error");
+			ErrorClass.throwError("Error 031: Failed to add missing columns.");
+			ErrorClass.throwError(e.getMessage());
 		}
 	}
 
@@ -140,10 +140,10 @@ public class BugReportDatabase {
 		ConfigurationSection databaseSection = Objects.requireNonNull(config.getConfigurationSection("database"));
 
 		if (databaseType.equalsIgnoreCase("local")) {
-			ErrorClass.throwDebug("Connecting to local database", "debug");
+			ErrorClass.throwDebug("Connecting to local database");
 			connectLocal();
 		} else if (databaseType.equalsIgnoreCase("mysql")) {
-			ErrorClass.throwDebug("Connecting to remote database", "debug");
+			ErrorClass.throwDebug("Connecting to remote database");
 
 			String host = databaseSection.getString("host");
 			int port = databaseSection.getInt("port");
@@ -153,7 +153,7 @@ public class BugReportDatabase {
 
 			connectRemote(host, port, database, username, password);
 		} else {
-			ErrorClass.throwDebug("Invalid database type. Please use 'local' or 'mysql'.", "error");
+			ErrorClass.throwError("Error 032: Invalid database type. Please use 'local' or 'mysql'.");
 		}
 	}
 
@@ -166,7 +166,7 @@ public class BugReportDatabase {
 				return resultSet.getLong("total_deleted");
 			}
 		} catch (SQLException e) {
-			ErrorClass.throwDebug(e.getMessage(), "error");
+			ErrorClass.throwWarning("Error 033: " + e.getMessage());
 		}
 		return 0;
 	}
@@ -184,7 +184,7 @@ public class BugReportDatabase {
 			resultSet.close();
 			statement.close();
 		} catch (SQLException e) {
-			ErrorClass.throwDebug(e.getMessage(), "error");
+			ErrorClass.throwDebug(e.getMessage());
 		}
 
 		return count;
@@ -203,7 +203,7 @@ public class BugReportDatabase {
 			resultSet.close();
 			statement.close();
 		} catch (SQLException e) {
-			ErrorClass.throwDebug(e.getMessage(), "error");
+			ErrorClass.throwDebug("Error 034: " + e.getMessage());
 		}
 
 		return count;
@@ -222,7 +222,7 @@ public class BugReportDatabase {
 			resultSet.close();
 			statement.close();
 		} catch (SQLException e) {
-			ErrorClass.throwDebug(e.getMessage(), "error");
+			ErrorClass.throwDebug("Error 035: " + e.getMessage());
 		}
 
 		return count;
@@ -240,7 +240,7 @@ public class BugReportDatabase {
 			resultSet.close();
 			statement.close();
 		} catch (SQLException e) {
-			ErrorClass.throwDebug(e.getMessage(), "error");
+			ErrorClass.throwDebug("Error 036: " + e.getMessage());
 		}
 
 		return count;
@@ -258,7 +258,7 @@ public class BugReportDatabase {
 				}
 			}
 		} catch (SQLException e) {
-			ErrorClass.throwDebug(e.getMessage(), "error");
+			ErrorClass.throwDebug("Error 037: " + e.getMessage());
 		}
 		return reports;
 	}
@@ -277,7 +277,7 @@ public class BugReportDatabase {
 				reports.add(new BugReportPair<>(timestampToString, message));
 			}
 		} catch (SQLException e) {
-			ErrorClass.throwDebug(e.getMessage(), "error");
+			ErrorClass.throwDebug("Error 038: " + e.getMessage());
 		}
 		return reports;
 	}
@@ -294,7 +294,7 @@ public class BugReportDatabase {
 				statement.close();
 			}
 		} catch (SQLException e) {
-			ErrorClass.throwDebug(e.getMessage(), "error");
+			ErrorClass.throwDebug("Error 039: " + e.getMessage());
 		}
 
 		return count;
@@ -312,7 +312,7 @@ public class BugReportDatabase {
 				statement.close();
 			}
 		} catch (SQLException e) {
-			ErrorClass.throwDebug(e.getMessage(), "error");
+			ErrorClass.throwDebug("Error 040: " + e.getMessage());
 		}
 
 		return count;
@@ -321,7 +321,7 @@ public class BugReportDatabase {
 	public static @NotNull Map<UUID, List<String>> loadBugReports() {
 		Map<UUID, List<String>> bugReports = new HashMap<>();
 		if (debugMode) {
-			ErrorClass.throwDebug("Loading bug reports", "debug");
+			ErrorClass.throwDebug("Loading bug reports");
 		}
 
 		try (Connection connection = dataSource.getConnection()) {
@@ -353,19 +353,19 @@ public class BugReportDatabase {
 			}
 
 			if (debugMode) {
-				ErrorClass.throwDebug("Loaded " + bugReports.size() + " bug reports", "error");
+				ErrorClass.throwDebug("Loaded " + bugReports.size() + " bug reports");
 			}
 
 			resultSet.close();
 			statement.close();
 		} catch (SQLException e) {
-			ErrorClass.throwDebug("Failed to load bug reports.", "error");
+			ErrorClass.throwDebug("Error 041: Failed to load bug reports.");
 			if (e.getMessage().startsWith("[SQLITE_CORRUPT]")) {
-				ErrorClass.throwDebug("Your database is corrupted. Please delete the database file and restart the server.", "error");
-				ErrorClass.throwDebug("File path: plugins/BugReport/bugreports.db", "error");
-				ErrorClass.throwDebug("If you need help, please join the discord server: https://discord.gg/ZvdNYqmsbx", "error");
+				ErrorClass.throwError("Your database is corrupted. Please delete the database file and restart the server.");
+				ErrorClass.throwError("File path: plugins/BugReport/bugreports.db");
+				ErrorClass.throwError("If you need help, please join the discord server: https://discord.gg/ZvdNYqmsbx");
 			} else {
-				ErrorClass.throwDebug(e.getMessage(), "error");
+				ErrorClass.throwError("Error 042: " + e.getMessage());
 			}
 		}
 
@@ -383,10 +383,10 @@ public class BugReportDatabase {
 			hikariConfig.setUsername(username);
 			hikariConfig.setPassword(password);
 			dataSource = new HikariDataSource(hikariConfig);
-			ErrorClass.throwDebug("Connected to remote database", "debug");
+			ErrorClass.throwDebug("Connected to remote database");
 		} catch (Exception e) {
-			ErrorClass.throwDebug("Failed to connect to remote database.", "error");
-			ErrorClass.throwDebug(e.getMessage(), "error");
+			ErrorClass.throwError("Error 043: Failed to connect to remote database.");
+			ErrorClass.throwError(e.getMessage());
 		}
 
 		createTables();
@@ -398,10 +398,10 @@ public class BugReportDatabase {
 			HikariConfig hikariConfig = new HikariConfig();
 			hikariConfig.setJdbcUrl("jdbc:sqlite:" + databaseFile.getAbsolutePath());
 			dataSource = new HikariDataSource(hikariConfig);
-			ErrorClass.throwDebug("Connected to local database", "debug");
+			ErrorClass.throwDebug("Connected to local database");
 		} catch (Exception e) {
-			ErrorClass.throwDebug("Failed to connect to local database.", "error");
-			ErrorClass.throwDebug(e.getMessage(), "error");
+			ErrorClass.throwError("Error 044: Error Failed to connect to local database.");
+			ErrorClass.throwError(e.getMessage());
 		}
 
 		createTables();
@@ -413,14 +413,14 @@ public class BugReportDatabase {
 			connection.createStatement().execute("CREATE TABLE IF NOT EXISTS player_data(player_id TEXT, last_login_timestamp BIGINT DEFAULT 0)");
 			connection.createStatement().execute("CREATE TABLE IF NOT EXISTS bugreport_analytics(total_deleted INTEGER DEFAULT 0)");
 		} catch (Exception e) {
-			ErrorClass.throwDebug("Failed to create tables.", "error");
-			ErrorClass.throwDebug(e.getMessage(), "error");
+			ErrorClass.throwError("Error 045: Failed to create tables.");
+			ErrorClass.throwError(e.getMessage());
 		}
 	}
 
 	public static void updateReportStatus(int reportIDGUI, int statusID) {
 		if (debugMode) {
-			ErrorClass.throwDebug("Updating report status for report ID " + reportIDGUI, "debug");
+			ErrorClass.throwDebug("Updating report status for report ID " + reportIDGUI);
 		}
 		try (Connection connection = dataSource.getConnection()) {
 			try (PreparedStatement statement = connection.prepareStatement("UPDATE bug_reports SET status = ? WHERE report_id = ?")) {
@@ -446,17 +446,17 @@ public class BugReportDatabase {
 			reports.set(existingHeaderPosition, newHeader.toString().trim());
 			bugReports.put(getStaticUUID(), reports);
 			if (debugMode) {
-				ErrorClass.throwDebug("Updated report status for report ID " + reportIDGUI, "info");
+				ErrorClass.throwDebug("Updated report status for report ID " + reportIDGUI);
 			}
 		} catch (Exception e) {
-			ErrorClass.throwDebug("Failed to update bug report status.", "error");
-			ErrorClass.throwDebug(e.getMessage(), "error");
+			ErrorClass.throwError("Error 046: Failed to update bug report status.");
+			ErrorClass.throwError(e.getMessage());
 		}
 	}
 
 	public static void updateBugReportArchive(int reportIndex, int archived) {
 		if (debugMode) {
-			ErrorClass.throwDebug("Updating bug report archive status for report ID " + reportIndex, "debug");
+			ErrorClass.throwDebug("Updating bug report archive status for report ID " + reportIndex);
 		}
 		try (Connection connection = dataSource.getConnection()) {
 			PreparedStatement statement = connection.prepareStatement("UPDATE bug_reports SET archived = ? WHERE report_id = ?");
@@ -483,24 +483,24 @@ public class BugReportDatabase {
 			reports.set(existingHeaderPosition, newHeader.toString().trim());
 			bugReports.put(getStaticUUID(), reports);
 			if (debugMode) {
-				ErrorClass.throwDebug("Updated bug report archive status for report ID " + reportIndex, "debug");
+				ErrorClass.throwDebug("Updated bug report archive status for report ID " + reportIndex);
 			}
 		} catch (Exception e) {
-			ErrorClass.throwDebug("Failed to update bug report archive status.", "error");
-			ErrorClass.throwDebug(e.getMessage(), "error");
+			ErrorClass.throwError("Error 047: Failed to update bug report archive status.");
+			ErrorClass.throwError(e.getMessage());
 		}
 	}
 
 	public static void deleteBugReport(int reportIndex) {
 		if (debugMode) {
-			ErrorClass.throwDebug("Deleting bug report for report ID " + reportIndex, "debug");
+			ErrorClass.throwDebug("Deleting bug report for report ID " + reportIndex);
 		}
 		try (Connection connection = dataSource.getConnection()) {
 			try (PreparedStatement statement = connection.prepareStatement("DELETE FROM bug_reports WHERE report_id = ?")) {
 				statement.setInt(1, reportIndex);
 				int rowsAffected = statement.executeUpdate();
 				if (debugMode) {
-					ErrorClass.throwDebug("Deleted bug report rows affected: " + rowsAffected, "debug");
+					ErrorClass.throwDebug("Deleted bug report rows affected: " + rowsAffected);
 				}
 			}
 
@@ -517,8 +517,8 @@ public class BugReportDatabase {
 					analyticsStatement.setInt(1, totalDeleted + 1);
 					int updateRowsAffected = analyticsStatement.executeUpdate();
 					if (debugMode) {
-						ErrorClass.throwDebug("Updated total_deleted, rows affected: " + updateRowsAffected, "debug");
-						ErrorClass.throwDebug("Updated bug report total deleted to " + (totalDeleted + 1), "debug");
+						ErrorClass.throwDebug("Updated total_deleted, rows affected: " + updateRowsAffected);
+						ErrorClass.throwDebug("Updated bug report total deleted to " + (totalDeleted + 1));
 					}
 				}
 			} else {
@@ -526,13 +526,13 @@ public class BugReportDatabase {
 					insertStatement.setInt(1, 1);
 					int insertRowsAffected = insertStatement.executeUpdate();
 					if (debugMode) {
-						ErrorClass.throwDebug("Inserted initial bug report total_deleted value of 1, rows affected: " + insertRowsAffected, "debug");
+						ErrorClass.throwDebug("Inserted initial bug report total_deleted value of 1, rows affected: " + insertRowsAffected);
 					}
 				}
 			}
 		} catch (SQLException e) {
-			ErrorClass.throwDebug("Failed to delete bug report or update analytics.", "error");
-			ErrorClass.throwDebug(e.getMessage(), "error");
+			ErrorClass.throwError("Error 048: Failed to delete bug report or update analytics.");
+			ErrorClass.throwError(e.getMessage());
 		}
 
 		loadBugReports();
@@ -562,8 +562,8 @@ public class BugReportDatabase {
 				statement.close();
 			}
 		} catch (Exception e) {
-			ErrorClass.throwDebug("Failed to make all headers equal report_id.", "error");
-			ErrorClass.throwDebug(e.getMessage(), "error");
+			ErrorClass.throwError("Error 049: Failed to make all headers equal report_id.");
+			ErrorClass.throwError(e.getMessage());
 		}
 	}
 
@@ -582,8 +582,8 @@ public class BugReportDatabase {
 				}
 			}
 		} catch (Exception e) {
-			ErrorClass.throwDebug("Failed to fix report_id.", "error");
-			ErrorClass.throwDebug(e.getMessage(), "error");
+			ErrorClass.throwDebug("Error 050: Failed to fix report_id.");
+			ErrorClass.throwDebug(e.getMessage());
 		}
 
 	}
@@ -616,8 +616,8 @@ public class BugReportDatabase {
 			statement.executeUpdate();
 			statement.close();
 		} catch (Exception e) {
-			ErrorClass.throwDebug("Failed to add bug report.", "error");
-			ErrorClass.throwDebug(e.getMessage(), "error");
+			ErrorClass.throwDebug("Error 051: Failed to add bug report.");
+			ErrorClass.throwDebug(e.getMessage());
 		}
 	}
 }

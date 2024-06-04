@@ -48,7 +48,7 @@ public class BugReportSettings {
 
 	public static @NotNull Inventory getSettingsGUI() {
 		if (debugMode) {
-			ErrorClass.throwDebug("BugReportSettings: Starting getSettingsGUI", "debug");
+			ErrorClass.throwDebug("BugReportSettings: Starting getSettingsGUI");
 		}
 		Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Report - " + getValueFromLanguageFile("buttonNames.settings", "Settings"));
 
@@ -90,7 +90,7 @@ public class BugReportSettings {
 		playButtonClickSound(player);
 
 		if (debugMode) {
-			ErrorClass.throwDebug("Discord Webhook toggle clicked by " + player.getName(), "debug");
+			ErrorClass.throwDebug("Discord Webhook toggle clicked by " + player.getName());
 		}
 		boolean toggle = getDiscordWebhookToggle();
 		config.set("enableDiscordWebhook", !toggle);
@@ -109,7 +109,7 @@ public class BugReportSettings {
 		playButtonClickSound(player);
 
 		if (debugMode) {
-			ErrorClass.throwDebug("Bug Report Notifications toggle clicked by " + player.getName(), "debug");
+			ErrorClass.throwDebug("Bug Report Notifications toggle clicked by " + player.getName());
 		}
 		boolean toggle = getBugReportNotificationsToggle();
 		config.set("enableBugReportNotifications", !toggle);
@@ -128,7 +128,7 @@ public class BugReportSettings {
 		playButtonClickSound(player);
 
 		if (debugMode) {
-			ErrorClass.throwDebug("Category Selection toggle clicked by " + player.getName(), "debug");
+			ErrorClass.throwDebug("Category Selection toggle clicked by " + player.getName());
 		}
 		boolean toggle = getCategorySelectionToggle();
 		config.set("enablePluginReportCategoriesGUI", !toggle);
@@ -143,7 +143,7 @@ public class BugReportSettings {
 		playButtonClickSound(player);
 
 		if (debugMode) {
-			ErrorClass.throwDebug("Language toggle clicked by " + player.getName(), "debug");
+			ErrorClass.throwDebug("Language toggle clicked by " + player.getName());
 		}
 		player.openInventory(openLanguageGUI());
 	}
@@ -191,14 +191,14 @@ public class BugReportSettings {
 
 	public static @NotNull ItemStack createCustomPlayerHead(String texture, String name, int modelData) {
 		if (debugMode) {
-			ErrorClass.throwDebug("Creating custom player head with texture: " + texture + ", name: " + name + ", modelData: " + modelData, "debug");
+			ErrorClass.throwDebug("Creating custom player head with texture: " + texture + ", name: " + name + ", modelData: " + modelData);
 		}
 		return createCustomPlayerHead(texture, name, modelData, null);
 	}
 
 	public static @NotNull ItemStack createCustomPlayerHead(String texture, String name, int modelData, ChatColor nameColor) {
 		if (debugMode) {
-			ErrorClass.throwDebug("Creating custom player head with texture: " + texture + ", name: " + name + ", modelData: " + modelData + ", nameColor: " + nameColor, "debug");
+			ErrorClass.throwDebug("Creating custom player head with texture: " + texture + ", name: " + name + ", modelData: " + modelData + ", nameColor: " + nameColor);
 		}
 		ItemStack playerHead = new ItemStack(Material.PLAYER_HEAD);
 		SkullMeta skullMeta = (SkullMeta) playerHead.getItemMeta();
@@ -210,7 +210,7 @@ public class BugReportSettings {
 				String textureUrl = textureJson.getAsJsonObject("textures").getAsJsonObject("SKIN").get("url").getAsString();
 
 				if (debugMode) {
-					ErrorClass.throwDebug("Texture URL: " + textureUrl, "debug");
+					ErrorClass.throwDebug("Texture URL: " + textureUrl);
 				}
 
 				PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
@@ -224,10 +224,10 @@ public class BugReportSettings {
 				playerHead.setItemMeta(skullMeta);
 
 				if (debugMode) {
-					ErrorClass.throwDebug("Custom player head created successfully.", "debug");
+					ErrorClass.throwDebug("Custom player head created successfully.");
 				}
 			} catch (Exception e) {
-				ErrorClass.throwDebug("Failed to create custom player head: " + e.getMessage(), "error");
+				ErrorClass.throwError("Error 060: Failed to create custom player head: " + e.getMessage());
 				return new ItemStack(Material.PLAYER_HEAD);
 			}
 		}
@@ -296,7 +296,7 @@ public class BugReportSettings {
 			setPluginLanguage(languageCode);
 
 			if (debugMode) {
-				ErrorClass.throwDebug("Language set to " + languageCode, "debug");
+				ErrorClass.throwDebug("Language set to " + languageCode);
 			}
 			reloadConfig();
 
@@ -312,7 +312,7 @@ public class BugReportSettings {
 			}
 
 			if (debugMode) {
-				ErrorClass.throwDebug("Clicked inventory: " + displayName, "debug");
+				ErrorClass.throwDebug("Clicked inventory: " + displayName);
 			}
 
 			String customDisplayName = getEnglishValueFromValue(displayName);
@@ -802,7 +802,7 @@ public class BugReportSettings {
 			config.set("useTitleInsteadOfMessage", !toggle);
 			saveConfig();
 			if (debugMode) {
-				ErrorClass.throwDebug("Title message set to " + !toggle, "debug");
+				ErrorClass.throwDebug("Title message set to " + !toggle);
 			}
 			player.getOpenInventory().setItem(19, getTitleMessage() ? createButton(Material.LIME_DYE, ChatColor.GREEN + getValueFromLanguageFile("buttonNames.true", "On")) : createButton(Material.GRAY_DYE, ChatColor.RED + getValueFromLanguageFile("buttonNames.false", "Off")));
 		}
@@ -818,7 +818,7 @@ public class BugReportSettings {
 			config.set("enablePlayerHeads", !toggle);
 			saveConfig();
 			if (debugMode) {
-				ErrorClass.throwDebug("Player heads set to " + !toggle, "debug");
+				ErrorClass.throwDebug("Player heads set to " + !toggle);
 			}
 			player.getOpenInventory().setItem(20, getPlayerHead() ? createButton(Material.LIME_DYE, ChatColor.GREEN + getValueFromLanguageFile("buttonNames.true", "On")) : createButton(Material.GRAY_DYE, ChatColor.RED + getValueFromLanguageFile("buttonNames.false", "Off")));
 		}
@@ -834,7 +834,7 @@ public class BugReportSettings {
 			config.set("enablePluginReportBook", !toggle);
 			saveConfig();
 			if (debugMode) {
-				ErrorClass.throwDebug("Report book set to " + !toggle, "debug");
+				ErrorClass.throwDebug("Report book set to " + !toggle);
 			}
 			player.getOpenInventory().setItem(21, getReportBook() ? createButton(Material.LIME_DYE, ChatColor.GREEN + getValueFromLanguageFile("buttonNames.true", "On")) : createButton(Material.GRAY_DYE, ChatColor.RED + getValueFromLanguageFile("buttonNames.false", "Off")));
 		}

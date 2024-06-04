@@ -20,7 +20,7 @@ public class BugListSettingsCommand implements CommandExecutor {
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 		if (debugMode) {
-			ErrorClass.throwDebug("BugListSettingsCommand: ", "debug");
+			ErrorClass.throwDebug("BugListSettingsCommand: Triggered /buglistsettings command");
 		}
 		if (!(sender instanceof Player player)) {
 			sender.sendMessage(returnStartingMessage(ChatColor.RED) + "This command can only be run by a player.");

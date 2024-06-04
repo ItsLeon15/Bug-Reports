@@ -44,7 +44,7 @@ public class BugPlaceholders extends PlaceholderExpansion {
 	@Override
 	public String onRequest(OfflinePlayer player, @NotNull String params) {
 		if (debugMode) {
-			ErrorClass.throwDebug("LinkDiscordCommand: Requested Placeholders", "debug");
+			ErrorClass.throwDebug("LinkDiscordCommand: Requested Placeholders");
 		}
 		switch (params) {
 			case "totalBugReports" -> {

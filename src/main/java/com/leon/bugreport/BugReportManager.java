@@ -110,10 +110,10 @@ public class BugReportManager implements Listener {
 
 	public static boolean checkCategoryConfig() {
 		if (debugMode) {
-			ErrorClass.throwDebug("BugReportManager: Starting checkCategoryConfig", "debug");
+			ErrorClass.throwDebug("BugReportManager: Starting checkCategoryConfig");
 		}
 		if (!config.contains("reportCategories")) {
-			ErrorClass.throwDebug(getValueFromLanguageFile("missingReportCategoryMessage", "Missing reportCategories in config.yml"), "error");
+			ErrorClass.throwError("Error 054 " + getValueFromLanguageFile("missingReportCategoryMessage", "Missing reportCategories in config.yml"));
 			return false;
 		}
 
@@ -124,7 +124,7 @@ public class BugReportManager implements Listener {
 
 			for (int i = 0; i < keys.length; i++) {
 				if (values[i] == null) {
-					ErrorClass.throwDebug(getValueFromLanguageFile("missingValueMessage", "Missing '%key%' in reportCategories in config.yml").replace("%key%", keys[i].toString()), "warning");
+					ErrorClass.throwWarning(getValueFromLanguageFile("missingValueMessage", "Missing '%key%' in reportCategories in config.yml").replace("%key%", keys[i].toString()));
 					return false;
 				}
 			}
@@ -140,7 +140,7 @@ public class BugReportManager implements Listener {
 
 	public static void loadConfig() {
 		if (debugMode) {
-			ErrorClass.throwDebug("BugReportManager: Starting loadConfig", "debug");
+			ErrorClass.throwDebug("BugReportManager: Starting loadConfig");
 		}
 		configFile = new File(plugin.getDataFolder(), "config.yml");
 
@@ -155,7 +155,7 @@ public class BugReportManager implements Listener {
 
 	public static void checkConfig() {
 		if (debugMode) {
-			ErrorClass.throwDebug("BugReportManager: Starting checkConfig", "debug");
+			ErrorClass.throwDebug("BugReportManager: Starting checkConfig");
 		}
 		Map<String, ?> newValues = new HashMap<>() {
 			@Serial
@@ -206,13 +206,13 @@ public class BugReportManager implements Listener {
 
 	public static void saveConfig() {
 		if (debugMode) {
-			ErrorClass.throwDebug("Saving config.yml...", "debug");
+			ErrorClass.throwDebug("Saving config.yml...");
 		}
 
 		try {
 			config.save(configFile);
 		} catch (Exception e) {
-			ErrorClass.throwDebug("Error saving config.yml: " + e.getMessage(), "error");
+			ErrorClass.throwError("Error 055: Error saving config.yml: " + e.getMessage());
 		}
 	}
 
@@ -287,7 +287,7 @@ public class BugReportManager implements Listener {
 
 	public static String getReportByKey(@NotNull String currentReport, String keyName) {
 		if (debugMode) {
-			ErrorClass.throwDebug("BugReportManager: Starting getReportByKey", "debug");
+			ErrorClass.throwDebug("BugReportManager: Starting getReportByKey");
 		}
 		String[] reportLines = currentReport.split("\n");
 		Map<String, String> reportData = new HashMap<>();
@@ -319,7 +319,7 @@ public class BugReportManager implements Listener {
 	@NotNull
 	private static List<String> getFilteredReports(boolean showArchived, @NotNull List<String> reports) {
 		if (debugMode) {
-			ErrorClass.throwDebug("BugReportManager: Starting getFilteredReports", "debug");
+			ErrorClass.throwDebug("BugReportManager: Starting getFilteredReports");
 		}
 		List<String> filteredReports = new ArrayList<>();
 		for (String report : reports) {
@@ -374,14 +374,14 @@ public class BugReportManager implements Listener {
 	public static int getCurrentPage(@NotNull Player player) {
 		List<MetadataValue> metadata = player.getMetadata("currentPage");
 		if (debugMode) {
-			ErrorClass.throwDebug("Current page for " + player.getName() + " is " + (!metadata.isEmpty() ? metadata.get(0).asInt() : 0), "debug");
+			ErrorClass.throwDebug("Current page for " + player.getName() + " is " + (!metadata.isEmpty() ? metadata.get(0).asInt() : 0));
 		}
 		return !metadata.isEmpty() ? metadata.get(0).asInt() : 0;
 	}
 
 	public static void setCurrentPage(@NotNull Player player, int page) {
 		if (debugMode) {
-			ErrorClass.throwDebug("Setting current page to " + page + " for " + player.getName(), "debug");
+			ErrorClass.throwDebug("Setting current page to " + page + " for " + player.getName());
 		}
 		player.setMetadata("currentPage", new FixedMetadataValue(plugin, page));
 	}
@@ -444,7 +444,7 @@ public class BugReportManager implements Listener {
 
 	public static @NotNull ItemStack createInfoItem(Material material, String name, String value, @NotNull Boolean longMessage) {
 		if (debugMode) {
-			ErrorClass.throwDebug("BugReportManager: Starting creatingInfoItem", "debug");
+			ErrorClass.throwDebug("BugReportManager: Starting creatingInfoItem");
 		}
 		ItemStack item = new ItemStack(material);
 		ItemMeta meta = item.getItemMeta();
@@ -475,7 +475,7 @@ public class BugReportManager implements Listener {
 
 	private @Nullable List<Category> loadReportCategories() {
 		if (debugMode) {
-			ErrorClass.throwDebug("BugReportManager: Starting loadReportCategories", "debug");
+			ErrorClass.throwDebug("BugReportManager: Starting loadReportCategories");
 		}
 		if (checkCategoryConfig()) {
 			List<Category> categories = new ArrayList<>();
@@ -503,7 +503,7 @@ public class BugReportManager implements Listener {
 
 			return categories;
 		} else {
-			ErrorClass.throwDebug(getValueFromLanguageFile("wentWrongLoadingCategoriesMessage", "Something went wrong while loading the report categories"), "error");
+			ErrorClass.throwError("Error 056: " + getValueFromLanguageFile("wentWrongLoadingCategoriesMessage", "Something went wrong while loading the report categories"));
 			return null;
 		}
 	}
@@ -514,7 +514,7 @@ public class BugReportManager implements Listener {
 
 	public void setWebhookURL(String webhookURL) {
 		if (debugMode) {
-			ErrorClass.throwDebug("Setting Discord Webhook URL to " + webhookURL, "debug");
+			ErrorClass.throwDebug("Setting Discord Webhook URL to " + webhookURL);
 		}
 		config.set("webhookURL", webhookURL);
 		saveConfig();
@@ -523,7 +523,7 @@ public class BugReportManager implements Listener {
 
 	public void submitBugReport(@NotNull Player player, String message, Integer categoryId) {
 		if (debugMode) {
-			ErrorClass.throwDebug("Submitting bug report for " + player.getName() + "...", "debug");
+			ErrorClass.throwDebug("Submitting bug report for " + player.getName() + "...");
 		}
 		List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
 		UUID playerId = player.getUniqueId();
@@ -543,19 +543,19 @@ public class BugReportManager implements Listener {
 
 		if (Bukkit.getPluginManager().isPluginEnabled("Plan")) {
 			if (debugMode) {
-				ErrorClass.throwDebug("Updating Plan hook for " + playerName + "...", "debug");
+				ErrorClass.throwDebug("Updating Plan hook for " + playerName + "...");
 			}
 			PlanHook.getInstance().updateHook(playerId, playerName);
 		}
 
 		if (debugMode) {
-			ErrorClass.throwDebug("Adding bug report to database...", "debug");
+			ErrorClass.throwDebug("Adding bug report to database...");
 		}
 		database.addBugReport(playerName, playerId, worldName, header, message, location, gamemode, serverName);
 
 		if (config.getBoolean("enableBugReportNotifications", true)) {
 			if (debugMode) {
-				ErrorClass.throwDebug("Sending bug report notification to online players...", "debug");
+				ErrorClass.throwDebug("Sending bug report notification to online players...");
 			}
 			String defaultMessage = returnStartingMessage(ChatColor.GRAY) + getValueFromLanguageFile("bugReportNotificationMessage", "A new bug report has been submitted by %player%!").replace("%player%", ChatColor.AQUA + playerName + ChatColor.GRAY);
 
@@ -568,26 +568,26 @@ public class BugReportManager implements Listener {
 
 		if (config.getBoolean("enableDiscordWebhook", true)) {
 			if (debugMode) {
-				ErrorClass.throwDebug("Sending bug report to Discord...", "debuh");
+				ErrorClass.throwDebug("Sending bug report to Discord...");
 			}
 			String webhookURL = config.getString("webhookURL", "");
 			if (webhookURL.isEmpty()) {
-				ErrorClass.throwDebug(getValueFromLanguageFile("missingDiscordWebhookURLMessage", "Missing webhookURL in config.yml"), "warning");
+				ErrorClass.throwWarning(getValueFromLanguageFile("missingDiscordWebhookURLMessage", "Missing webhookURL in config.yml"));
 			}
 
 			try {
 				discord.sendBugReport(message, worldName, playerName, location, gamemode, categoryId, serverName);
 				if (debugMode) {
-					ErrorClass.throwDebug("Bug report sent to Discord.", "debug");
+					ErrorClass.throwDebug("Bug report sent to Discord.");
 				}
 			} catch (Exception e) {
-				ErrorClass.throwDebug("Error sending bug report to Discord: " + e.getMessage(), "error");
+				ErrorClass.throwError("Error 057: Error sending bug report to Discord: " + e.getMessage());
 			}
 		}
 
 		if (getServer().getMessenger().isIncomingChannelRegistered(BugReportPlugin.getPlugin(), "BungeeCord")) {
 			if (debugMode) {
-				ErrorClass.throwDebug("BugReportManager: Detected BungeeCord", "debug");
+				ErrorClass.throwDebug("BugReportManager: Detected BungeeCord");
 			}
 			PluginMessageListener.sendPluginMessage(player);
 		}
@@ -608,12 +608,12 @@ public class BugReportManager implements Listener {
 		@EventHandler(priority = EventPriority.NORMAL)
 		public void onInventoryClick(@NotNull InventoryClickEvent event) {
 			if (debugMode) {
-				ErrorClass.throwDebug("BugReportManager: Triggered InventoryClickEvent", "debug");
+				ErrorClass.throwDebug("BugReportManager: Triggered InventoryClickEvent");
 			}
 			String TitleText = ChatColor.stripColor(event.getView().getTitle());
 
 			if (debugMode) {
-				ErrorClass.throwDebug("Clicked inventory: " + TitleText, "debug");
+				ErrorClass.throwDebug("Clicked inventory: " + TitleText);
 			}
 
 			boolean isArchivedGUI = TitleText.startsWith("Archived Bugs");
@@ -645,7 +645,7 @@ public class BugReportManager implements Listener {
 			String customDisplayName = getEnglishValueFromValue(displayName);
 
 			if (debugMode) {
-				ErrorClass.throwDebug("Clicked item: " + customDisplayName, "debug");
+				ErrorClass.throwDebug("Clicked item: " + customDisplayName);
 			}
 
 			if (cleanedDisplayName.startsWith("Bug Report #")) {
@@ -654,7 +654,7 @@ public class BugReportManager implements Listener {
 				String report = reports.stream().filter(reportString -> reportString.contains("Report ID: " + reportID)).findFirst().orElse(null);
 
 				if (debugMode) {
-					ErrorClass.throwDebug("Opening bug report details GUI for report ID " + reportID, "debug");
+					ErrorClass.throwDebug("Opening bug report details GUI for report ID " + reportID);
 				}
 
 				playButtonClickSound(player);
@@ -701,7 +701,7 @@ public class BugReportManager implements Listener {
 		@EventHandler(priority = EventPriority.NORMAL)
 		public void onInventoryClose(@NotNull InventoryCloseEvent event) {
 			if (debugMode) {
-				ErrorClass.throwDebug("BugReportManager: Triggered InventoryCloseEvent", "debug");
+				ErrorClass.throwDebug("BugReportManager: Triggered InventoryCloseEvent");
 			}
 			if (event.getView().getTitle().startsWith(ChatColor.YELLOW + "Bug Report")) {
 				Player player = (Player) event.getPlayer();
@@ -751,7 +751,7 @@ public class BugReportManager implements Listener {
 			String customDisplayName = getEnglishValueFromValue(itemName);
 
 			if (debugMode) {
-				ErrorClass.throwDebug("Clicked item: " + customDisplayName, "debug");
+				ErrorClass.throwDebug("Clicked item: " + customDisplayName);
 			}
 
 			if (customDisplayName == null || customDisplayName.equals(" ")) {
@@ -766,7 +766,7 @@ public class BugReportManager implements Listener {
 			if (customDisplayName.contains("(Click to teleport)")) {
 				playButtonClickSound(player);
 				if (debugMode) {
-					ErrorClass.throwDebug("Teleporting to the location of bug report #" + reportIDGUI + "...", "debug");
+					ErrorClass.throwDebug("Teleporting to the location of bug report #" + reportIDGUI + "...");
 				}
 
 				if (checkForKey("useTitleInsteadOfMessage", true)) {
@@ -794,7 +794,7 @@ public class BugReportManager implements Listener {
 					BugReportDatabase.updateBugReportArchive(reportIDGUI, 0);
 
 					if (debugMode) {
-						ErrorClass.throwDebug("Unarchiving bug report #" + reportIDGUI + "...", "debug");
+						ErrorClass.throwDebug("Unarchiving bug report #" + reportIDGUI + "...");
 					}
 					player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI(localCurrentPage, player) : getBugReportGUI(localCurrentPage, player));
 					player.sendMessage(returnStartingMessage(ChatColor.YELLOW) + " Bug Report #" + reportIDGUI + " has been unarchived.");
@@ -806,7 +806,7 @@ public class BugReportManager implements Listener {
 						playButtonClickSound(player);
 
 						if (debugMode) {
-							ErrorClass.throwDebug("Archiving bug report #" + reportIDGUI + "...", "debug");
+							ErrorClass.throwDebug("Archiving bug report #" + reportIDGUI + "...");
 						}
 						Bukkit.getPluginManager().registerEvents(new BugReportConfirmationGUI.BugReportConfirmationListener(gui, reportIDGUI, isArchivedDetails), plugin);
 						BugReportConfirmationGUI.openConfirmationGUI(player, true, bugReportID);
@@ -820,7 +820,7 @@ public class BugReportManager implements Listener {
 						playButtonClickSound(player);
 
 						if (debugMode) {
-							ErrorClass.throwDebug("Opening confirmation GUI for deletion on Bug Report #" + reportIDGUI + "...", "debug");
+							ErrorClass.throwDebug("Opening confirmation GUI for deletion on Bug Report #" + reportIDGUI + "...");
 						}
 						Bukkit.getPluginManager().registerEvents(new BugReportConfirmationGUI.BugReportConfirmationListener(gui, reportIDGUI, isArchivedDetails), plugin);
 						BugReportConfirmationGUI.openConfirmationGUI(player, false, bugReportID);

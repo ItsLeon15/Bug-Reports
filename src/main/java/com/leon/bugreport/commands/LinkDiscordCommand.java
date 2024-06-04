@@ -23,7 +23,7 @@ public class LinkDiscordCommand implements CommandExecutor {
 	@Override
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
 		if (debugMode) {
-			ErrorClass.throwDebug("LinkDiscordCommand: Triggered /buglistdiscord", "debug");
+			ErrorClass.throwDebug("LinkDiscordCommand: Triggered /buglistdiscord");
 		}
 		if (!(sender instanceof Player player)) {
 			sender.sendMessage("Only players can use this command.");
@@ -32,7 +32,7 @@ public class LinkDiscordCommand implements CommandExecutor {
 
 		if (player.hasPermission("bugreport.admin")) {
 			if (debugMode) {
-				ErrorClass.throwDebug("LinkDiscordCommand: Passed permission check", "debug");
+				ErrorClass.throwDebug("LinkDiscordCommand: Passed permission check");
 			}
 			if (args.length < 1) {
 				player.sendMessage(returnStartingMessage(ChatColor.RED) + "Usage: /buglinkdiscord <webhook URL>");
@@ -59,7 +59,7 @@ public class LinkDiscordCommand implements CommandExecutor {
 	@Contract(pure = true)
 	private boolean isWebhookURLValid(@NotNull String webhookURL) {
 		if (debugMode) {
-			ErrorClass.throwDebug("LinkDiscordCommand: Starting isWebhookURLValid", "debug");
+			ErrorClass.throwDebug("LinkDiscordCommand: Starting isWebhookURLValid");
 		}
 		return webhookURL.matches("^https://(canary\\.)?discord\\.com/api/webhooks/[0-9]+/[a-zA-Z0-9-_]+$");
 	}

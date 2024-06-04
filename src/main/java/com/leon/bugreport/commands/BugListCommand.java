@@ -52,7 +52,7 @@ public class BugListCommand implements CommandExecutor {
 	@Override
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
 		if (debugMode) {
-			ErrorClass.throwDebug("BugListCommand: Triggered /buglist Command", "debug");
+			ErrorClass.throwDebug("BugListCommand: Triggered /buglist Command");
 		}
 		if (!(sender instanceof Player player)) {
 			sender.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
@@ -153,7 +153,7 @@ public class BugListCommand implements CommandExecutor {
 
 	private void returnDefaultCommand(Player player) {
 		if (debugMode) {
-			ErrorClass.throwDebug("BugListCommand: Triggered returnDefaultCommand", "debug");
+			ErrorClass.throwDebug("BugListCommand: Triggered returnDefaultCommand");
 		}
 		BugReportManager.setCurrentPage(player, 1);
 		Inventory bugReportGUI = BugReportManager.getBugReportGUI(1, player);
