@@ -1,6 +1,7 @@
 package com.leon.bugreport;
 
 import com.leon.bugreport.API.CacheCleanupListener;
+import com.leon.bugreport.API.ErrorClass;
 import com.leon.bugreport.commands.*;
 import com.leon.bugreport.expansions.BugPlaceholders;
 import com.leon.bugreport.extensions.PlanHook;
@@ -22,7 +23,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
 import static com.leon.bugreport.BugReportDatabase.dataSource;
 import static com.leon.bugreport.BugReportDatabase.getStaticUUID;
 import static com.leon.bugreport.BugReportManager.*;
@@ -35,6 +35,9 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 
 	@NotNull
 	private static List<String> getNewReports(@NotNull List<String> reports, long lastLoginTimestamp) {
+		if (debugMode) {
+			ErrorClass.throwDebug("BugReportPlugin: Starting getNewReports", "debug");
+		}
 		List<String> newReports = new ArrayList<>();
 		for (String report : reports) {
 			String[] lines = report.split("\n");
@@ -75,8 +78,7 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 
 		if (!getDataFolder().exists()) {
 			if (!getDataFolder().mkdirs()) {
-				plugin.getLogger().warning("Failed to create data folder.");
-				logErrorMessage("Failed to create data folder.");
+				ErrorClass.throwDebug("Failed to create data folder.", "error");
 			}
 		}
 
@@ -84,7 +86,7 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 			updateChecker.getVersion(spigotVersion -> {
 				String serverVersion = this.getDescription().getVersion();
 				if (compareVersions(serverVersion, spigotVersion) < 0) {
-					plugin.getLogger().info("A new version of Bug Report is available: " + spigotVersion);
+					ErrorClass.throwDebug("A new version of Bug Report is available: " + spigotVersion, "debug");
 				}
 			});
 		}
@@ -109,8 +111,7 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 		try {
 			dataSource.close();
 		} catch (Exception e) {
-			plugin.getLogger().warning("Failed to close database connection.");
-			logErrorMessage("Failed to close database connection.");
+			ErrorClass.throwDebug("Failed to close database connection.", "error");
 		}
 
 		this.getServer().getMessenger().unregisterOutgoingPluginChannel(this);
@@ -126,7 +127,7 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 
 	private int compareVersions(@NotNull String version1, @NotNull String version2) {
 		if (debugMode) {
-			plugin.getLogger().info("Comparing versions: " + version1 + " and " + version2);
+			ErrorClass.throwDebug("Comparing versions: " + version1 + " and " + version2, "debug");
 		}
 		String[] parts1 = version1.split("\\.");
 		String[] parts2 = version2.split("\\.");
@@ -203,7 +204,7 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 	}
 
 	private void registerCommands() {
-		if (BugReportManager.debugMode) plugin.getLogger().info("Registering commands");
+		if (BugReportManager.debugMode) ErrorClass.throwDebug("Registering commands", "debug");
 
 		this.saveDefaultConfig();
 		FileConfiguration config = this.getConfig();

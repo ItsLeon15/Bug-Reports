@@ -1,5 +1,6 @@
 package com.leon.bugreport.commands;
 
+import com.leon.bugreport.API.ErrorClass;
 import com.leon.bugreport.BugReportDatabase;
 import com.leon.bugreport.BugReportLanguage;
 import com.leon.bugreport.BugReportManager;
@@ -50,6 +51,9 @@ public class BugListCommand implements CommandExecutor {
 
 	@Override
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+		if (debugMode) {
+			ErrorClass.throwDebug("BugListCommand: Triggered /buglist Command", "debug");
+		}
 		if (!(sender instanceof Player player)) {
 			sender.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
 					+ "This command can only be run by a player.");
@@ -148,6 +152,9 @@ public class BugListCommand implements CommandExecutor {
 	}
 
 	private void returnDefaultCommand(Player player) {
+		if (debugMode) {
+			ErrorClass.throwDebug("BugListCommand: Triggered returnDefaultCommand", "debug");
+		}
 		BugReportManager.setCurrentPage(player, 1);
 		Inventory bugReportGUI = BugReportManager.getBugReportGUI(1, player);
 		player.openInventory(bugReportGUI);

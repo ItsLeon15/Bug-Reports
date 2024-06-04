@@ -1,10 +1,10 @@
 package com.leon.bugreport.discord;
 
+import com.leon.bugreport.API.ErrorClass;
 import com.leon.bugreport.BugReportPlugin;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -15,11 +15,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 import java.util.*;
-import java.util.logging.Logger;
 
-import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
-import static com.leon.bugreport.BugReportManager.config;
-import static com.leon.bugreport.BugReportManager.plugin;
+import static com.leon.bugreport.BugReportManager.*;
 import static com.leon.bugreport.commands.BugReportCommand.chatColorToColor;
 import static com.leon.bugreport.commands.BugReportCommand.stringColorToColorCode;
 
@@ -41,6 +38,9 @@ public class LinkDiscord {
 	}
 
 	private DiscordWebhook.EmbedObject generateDefaultEmbed() {
+		if (debugMode) {
+			ErrorClass.throwDebug("LinkDiscord: Starting generateDefaultEmbed", "debug");
+		}
 		String discordEmbedTitle = config.getString("discordEmbedTitle");
 		String discordEmbedFooter = config.getString("discordEmbedFooter");
 		String discordEmbedThumbnail = config.getString("discordEmbedThumbnail");
@@ -55,6 +55,9 @@ public class LinkDiscord {
 	}
 
 	private void sendEmptyEmbedOrDefault(String username, DiscordWebhook.EmbedObject @NotNull ... existingEmbedObject) {
+		if (debugMode) {
+			ErrorClass.throwDebug("LinkDiscord: Starting sendEmptyEmbedOrDefault", "debug");
+		}
 		DiscordWebhook.EmbedObject embedObject = existingEmbedObject.length > 0 ? existingEmbedObject[0] : generateDefaultEmbed();
 
 		String discordEnableUserAuthor = config.getString("discordEnableUserAuthor");
@@ -79,6 +82,9 @@ public class LinkDiscord {
 	}
 
 	public void sendBugReport(String message, String world, String username, String location, String gamemode, Integer category, String serverName) {
+		if (debugMode) {
+			ErrorClass.throwDebug("LinkDiscord: Starting sendBugReport", "debug");
+		}
 		if (webhookURL == null || webhookURL.isEmpty()) {
 			plugin.getLogger().info("Webhook URL is not configured. Bug report not sent to Discord.");
 			return;
@@ -86,13 +92,11 @@ public class LinkDiscord {
 
 		if (!config.contains("discordEmbedFields")) {
 			plugin.getLogger().warning("discordEmbedFields key is not present in the config. Sending an empty embed.");
-			logErrorMessage("discordEmbedFields key is not present in the config. Sending an empty embed.");
 		}
 
 		List<Map<?, ?>> discordEmbedFields = config.getMapList("discordEmbedFields");
 		if (discordEmbedFields.isEmpty()) {
 			plugin.getLogger().warning("discordEmbedFields is empty in the config. Bug report not sent to Discord.");
-			logErrorMessage("discordEmbedFields is empty in the config. Bug report not sent to Discord.");
 			sendEmptyEmbedOrDefault(username);
 			return;
 		}
@@ -101,6 +105,9 @@ public class LinkDiscord {
 	}
 
 	private void sendDiscordMessageEmbedFull(String message, String world, String username, String location, String gamemode, Integer category, String serverName, @NotNull List<Map<?, ?>> discordEmbedFields) {
+		if (debugMode) {
+			ErrorClass.throwDebug("LinkDiscordCommand: Starting sendDiscordMessageEmbedFull", "debug");
+		}
 		List<DiscordEmbedDetails> discordDetails = new ArrayList<>();
 
 		for (Map<?, ?> field : discordEmbedFields) {
@@ -129,6 +136,9 @@ public class LinkDiscord {
 	}
 
 	private @NotNull String getValueForField(@NotNull String fieldValue, String username, String world, String location, String gamemode, Integer category, String message, String serverName) {
+		if (debugMode) {
+			ErrorClass.throwDebug("LinkDiscordCommand: Starting getValueForField", "debug");
+		}
 		Player player = Bukkit.getPlayer(username);
 
 		if (player != null && PlaceholderAPI.containsPlaceholders(fieldValue)) {
@@ -150,10 +160,16 @@ public class LinkDiscord {
 			fieldValue = fieldValue.replace(entry.getKey(), entry.getValue());
 		}
 
+		if (debugMode) {
+			ErrorClass.throwDebug("LinkDiscordCommand: Finished getValueForField", "debug");
+		}
 		return fieldValue;
 	}
 
 	private void sendEmbed(DiscordWebhook.EmbedObject embedObject) {
+		if (debugMode) {
+			ErrorClass.throwDebug("LinkDiscordCommand: Starting sendEmbed", "debug");
+		}
 		DiscordWebhook webhook = new DiscordWebhook(webhookURL);
 		webhook.addEmbed(embedObject);
 
@@ -220,6 +236,9 @@ public class LinkDiscord {
 		} else {
 			try {
 				webhook.execute();
+				if (debugMode) {
+					ErrorClass.throwDebug("LinkDiscordCommand: Executed Webhook", "debug");
+				}
 			} catch (IOException e) {
 				throwException("Error sending bug report to Discord: " + e.getMessage());
 			}
@@ -227,11 +246,13 @@ public class LinkDiscord {
 	}
 
 	private void throwException(String message) {
-		plugin.getLogger().warning(message);
-		logErrorMessage(message);
+		ErrorClass.throwDebug(message, "error");
 	}
 
 	private String getCategoryName(Integer category) {
+		if (debugMode) {
+			ErrorClass.throwDebug("LinkDiscordCommand: Starting getCategoryName", "debug");
+		}
 		List<Map<?, ?>> categoryList = config.getMapList("reportCategories");
 		for (Map<?, ?> categoryMap : categoryList) {
 			if (categoryMap.get("id").equals(category)) {
@@ -242,6 +263,9 @@ public class LinkDiscord {
 	}
 
 	private @NotNull String getUserIDFromAPI(String username) {
+		if (debugMode) {
+			ErrorClass.throwDebug("LinkDiscordCommand: Starting getUserIDFromAPI", "debug");
+		}
 		String url = "https://playerdb.co/api/player/minecraft/" + username;
 		StringBuilder content = new StringBuilder();
 
@@ -266,8 +290,7 @@ public class LinkDiscord {
 			errorLogged = false;
 		} catch (Exception e) {
 			if (!errorLogged) {
-				BugReportPlugin.getPlugin().getLogger().warning("Error getting UUID from API: " + e.getMessage());
-				logErrorMessage("Error getting UUID from API: " + e.getMessage());
+				ErrorClass.throwDebug("Error getting UUID from API: " + e.getMessage(), "error");
 				errorLogged = true;
 			}
 			return "Unknown UUID";

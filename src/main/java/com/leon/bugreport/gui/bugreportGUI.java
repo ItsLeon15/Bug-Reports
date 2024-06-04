@@ -1,5 +1,6 @@
 package com.leon.bugreport.gui;
 
+import com.leon.bugreport.API.ErrorClass;
 import com.leon.bugreport.keys.guiTextures;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -18,7 +19,6 @@ import java.io.Serial;
 import java.util.*;
 
 import static com.leon.bugreport.API.DataSource.getPlayerHead;
-import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
 import static com.leon.bugreport.BugReportLanguage.getValueFromLanguageFile;
 import static com.leon.bugreport.BugReportManager.*;
 import static com.leon.bugreport.BugReportSettings.createCustomPlayerHead;
@@ -47,13 +47,22 @@ public class bugreportGUI {
 	};
 
 	public static void generateNewYML() {
+		if (debugMode) {
+			ErrorClass.throwDebug("bugreportGUI: Starting generateNewYML", "debug");
+		}
 		File configFile = new File(plugin.getDataFolder(), "custom_bug_report_details_GUI.yml");
 		if (!configFile.exists()) {
+			if (debugMode) {
+				ErrorClass.throwDebug("bugreportGUI: Created custom_bug_report_details_GUI.yml", "debug");
+			}
 			plugin.saveResource("custom_bug_report_details_GUI.yml", false);
 		}
 	}
 
 	public static void updateBugReportItems() {
+		if (debugMode) {
+			ErrorClass.throwDebug("bugreportGUI: Starting updateBugReportItems", "debug");
+		}
 		bugReportItems.put("BugReportUnArchive", getValueFromLanguageFile("buttonNames.unarchive", "Unarchive"));
 		bugReportItems.put("BugReportArchive", getValueFromLanguageFile("buttonNames.archive", "Archive"));
 		bugReportItems.put("BugReportBack", getValueFromLanguageFile("buttonNames.back", "Back"));
@@ -61,15 +70,21 @@ public class bugreportGUI {
 	}
 
 	private static @Nullable YamlConfiguration loadGUIConfig() {
+		if (debugMode) {
+			ErrorClass.throwDebug("bugreportGUI: Starting loadGUIConfig", "debug");
+		}
 		File configFile = new File(plugin.getDataFolder(), "custom_bug_report_details_GUI.yml");
 		if (!configFile.exists()) {
-			plugin.getLogger().info("custom_bug_report_details_GUI.yml not found. Falling back to default GUI settings.");
+			ErrorClass.throwDebug("custom_bug_report_details_GUI.yml not found. Falling back to default GUI settings.", "error");
 			return null;
 		}
 		return YamlConfiguration.loadConfiguration(configFile);
 	}
 
 	public static void openBugReportDetailsGUI(Player player, String report, Integer reportIDGUI, Boolean isArchivedGUI) {
+		if (debugMode) {
+			ErrorClass.throwDebug("bugreportGUI: Starting openBugReportDetailsGUI", "debug");
+		}
 		updateBugReportItems();
 		YamlConfiguration guiConfig = loadGUIConfig();
 		String bugReportTitle = isArchivedGUI ? "Archived Bug Details - #" : "Bug Report Details - #";
@@ -79,7 +94,7 @@ public class bugreportGUI {
 			guiSize = guiConfig.getInt("bug_report_details_GUI.guiSize");
 			if (guiSize < 9 || guiSize > 54 || guiSize % 9 != 0) {
 				guiSize = 45;
-				Bukkit.getLogger().warning("Invalid GUI size in customGUI.yml. Falling back to default size.");
+				ErrorClass.throwDebug("Invalid GUI size in customGUI.yml. Falling back to default size.", "warning");
 			}
 		} else {
 			guiSize = 45;
@@ -98,9 +113,11 @@ public class bugreportGUI {
 	}
 
 	private static void setupGUIFromConfig(Inventory gui, Player player, @NotNull YamlConfiguration guiConfig, String report, Integer reportIDGUI, Boolean isArchivedGUI) {
+		if (debugMode) {
+			ErrorClass.throwDebug("bugreportGUI: Starting setupGUIFromConfig", "debug");
+		}
 		if (!validateGUIConfig(guiConfig)) {
-			plugin.getLogger().severe("The layout of the customGUI.yml file is incorrect. Falling back to the default layout.");
-			logErrorMessage("The layout of the customGUI.yml file is incorrect. Falling back to the default layout");
+			ErrorClass.throwDebug("The layout of the customGUI.yml file is incorrect. Falling back to the default layout.", "error");
 			setupDefaultGUI(gui, player, report, reportIDGUI, isArchivedGUI);
 			return;
 		}
@@ -163,7 +180,7 @@ public class bugreportGUI {
 						gui.setItem(slot, itemStack);
 					}
 				} catch (IllegalArgumentException e) {
-					Bukkit.getLogger().warning("Error parsing material or slot number: " + e.getMessage());
+					ErrorClass.throwDebug("Error parsing material or slot number: " + e.getMessage(), "error");
 				}
 			}
 		}
@@ -176,15 +193,18 @@ public class bugreportGUI {
 	 * @return true if the configuration is valid; false otherwise.
 	 */
 	private static boolean validateGUIConfig(@NotNull YamlConfiguration guiConfig) {
+		if (debugMode) {
+			ErrorClass.throwDebug("bugreportGUI: Starting validateGUIConfig", "debug");
+		}
 		int guiSize = guiConfig.getInt("bug_report_details_GUI.guiSize", -1);
 		if (guiSize < 9 || guiSize > 54 || guiSize % 9 != 0) {
-			Bukkit.getLogger().warning("Invalid GUI size defined in customGUI.yml. Must be between 9 and 54 and a multiple of 9.");
+			ErrorClass.throwDebug("Invalid GUI size defined in customGUI.yml. Must be between 9 and 54 and a multiple of 9.", "error");
 			return false;
 		}
 
 		List<?> itemsList = guiConfig.getList("bug_report_details_GUI.items");
 		if (itemsList == null || itemsList.isEmpty()) {
-			Bukkit.getLogger().warning("No items defined in customGUI.yml or incorrect format.");
+			ErrorClass.throwDebug("No items defined in customGUI.yml or incorrect format.", "warning");
 			return false;
 		}
 
@@ -204,18 +224,18 @@ public class bugreportGUI {
 			}
 
 			if (Integer.parseInt(itemMap.get("slot").toString()) >= guiSize) {
-				Bukkit.getLogger().warning("Slot number in customGUI.yml is greater than the GUI size.");
+				ErrorClass.throwDebug("Slot number in customGUI.yml is greater than the GUI size.", "error");
 				return false;
 			}
 
 			if (!bugReportItems.containsKey(itemMap.get("bugReportItem").toString())) {
-				Bukkit.getLogger().warning("Invalid bugReportItem in customGUI.yml: " + itemMap.get("bugReportItem"));
+				ErrorClass.throwDebug("Invalid bugReportItem in customGUI.yml: " + itemMap.get("bugReportItem"), "warning");
 				return false;
 			}
 
 			if ("BugReporter".equals(itemMap.get("bugReportItem").toString())) {
 				if (!"%player_texture%".equals(itemMap.get("texture"))) {
-					Bukkit.getLogger().warning("Texture for BugReporter item in customGUI.yml must be %player_texture%.");
+					ErrorClass.throwDebug("Texture for BugReporter item in customGUI.yml must be %player_texture%.", "warning");
 					return false;
 				}
 			}
@@ -225,6 +245,9 @@ public class bugreportGUI {
 	}
 
 	private static @NotNull ItemStack createItemForReportDetail(String bugReportItemKey, Material defaultMaterial, @Nullable String textureBase64, @NotNull Map<String, String> reportDetails, Boolean isArchivedGUI) {
+		if (debugMode) {
+			ErrorClass.throwDebug("bugreportGUI: Starting createItemForReportDetail", "debug");
+		}
 		String reportDetailKey = deriveReportDetailKey(bugReportItemKey);
 		var ref = new Object() {
 			String detailValue = reportDetails.getOrDefault(reportDetailKey, "N/A");
@@ -311,6 +334,9 @@ public class bugreportGUI {
 	 */
 	@Contract(pure = true)
 	private static String deriveReportDetailKey(@NotNull String bugReportItemKey) {
+		if (debugMode) {
+			ErrorClass.throwDebug("bugreportGUI: Starting deriveReportDetailKey", "debug");
+		}
 		switch (bugReportItemKey) {
 			case "BugReporter":
 				return getValueFromLanguageFile("buttonNames.bugReportDetailsUsername", "Username");
@@ -352,10 +378,16 @@ public class bugreportGUI {
 	 * @return true if the item supports custom textures; false otherwise.
 	 */
 	private static boolean isItemSupportsTexture(String bugReportItemKey) {
+		if (debugMode) {
+			ErrorClass.throwDebug("bugreportGUI: Starting isItemSupportsTexture", "debug");
+		}
 		return List.of("BugReportUUID", "BugReportWorld", "BugReportMessage", "BugReportCategory", "BugReportTimestamp", "BugReportLocation", "BugReportGamemode", "BugReportServerName", "BugReportUnArchive", "BugReportArchive", "BugReportDelete").contains(bugReportItemKey);
 	}
 
 	private static @NotNull Map<String, String> parseReportDetails(@NotNull String report) {
+		if (debugMode) {
+			ErrorClass.throwDebug("bugreportGUI: Starting parseReportDetails", "debug");
+		}
 		Map<String, String> details = new HashMap<>();
 		String[] lines = report.split("\n");
 		for (String line : lines) {
@@ -370,8 +402,12 @@ public class bugreportGUI {
 	}
 
 	public static void setupDefaultGUI(Inventory gui, Player player, String report, Integer reportIDGUI, Boolean isArchivedGUI) {
+		if (debugMode) {
+			ErrorClass.throwDebug("bugreportGUI: Starting setupDefaultGUI", "debug");
+		}
 		if (report == null) {
 			player.sendMessage(returnStartingMessage(ChatColor.RED) + " Error 101: Report is null. Please report this to the plugin developer.");
+			ErrorClass.throwDebug("Error 101: Report is null.", "error");
 			return;
 		}
 

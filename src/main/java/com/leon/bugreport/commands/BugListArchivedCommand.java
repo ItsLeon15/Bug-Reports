@@ -1,5 +1,6 @@
 package com.leon.bugreport.commands;
 
+import com.leon.bugreport.API.ErrorClass;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -17,6 +18,9 @@ public class BugListArchivedCommand implements CommandExecutor {
 
 	@Override
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+		if (debugMode) {
+			ErrorClass.throwDebug("BugListArchivedCommand: Triggered /buglistarchived command", "debug");
+		}
 		if (!(sender instanceof Player player)) {
 			sender.sendMessage(returnStartingMessage(ChatColor.RED) + "This command can only be run by a player.");
 			return true;
