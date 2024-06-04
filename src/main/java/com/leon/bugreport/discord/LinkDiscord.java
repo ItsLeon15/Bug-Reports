@@ -1,6 +1,5 @@
 package com.leon.bugreport.discord;
 
-import com.leon.bugreport.API.ErrorClass;
 import com.leon.bugreport.BugReportPlugin;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
@@ -16,7 +15,9 @@ import java.net.URL;
 import java.util.List;
 import java.util.*;
 
-import static com.leon.bugreport.BugReportManager.*;
+import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
+import static com.leon.bugreport.BugReportManager.config;
+import static com.leon.bugreport.BugReportManager.plugin;
 import static com.leon.bugreport.commands.BugReportCommand.chatColorToColor;
 import static com.leon.bugreport.commands.BugReportCommand.stringColorToColorCode;
 
@@ -25,9 +26,8 @@ public class LinkDiscord {
 	private static final String EMBED_FOOTER_TEXT = "Bug Report V0.12.3";
 	private static final String EMBED_THUMBNAIL = "https://www.spigotmc.org/data/resource_icons/110/110732.jpg";
 	private static final Color EMBED_COLOR = Color.YELLOW;
-	private String webhookURL;
-
 	private static boolean errorLogged = false;
+	private String webhookURL;
 
 	public LinkDiscord(String webhookURL) {
 		this.webhookURL = webhookURL;
@@ -38,9 +38,6 @@ public class LinkDiscord {
 	}
 
 	private DiscordWebhook.EmbedObject generateDefaultEmbed() {
-		if (debugMode) {
-			ErrorClass.throwDebug("LinkDiscord: Starting generateDefaultEmbed", "debug");
-		}
 		String discordEmbedTitle = config.getString("discordEmbedTitle");
 		String discordEmbedFooter = config.getString("discordEmbedFooter");
 		String discordEmbedThumbnail = config.getString("discordEmbedThumbnail");
@@ -55,9 +52,6 @@ public class LinkDiscord {
 	}
 
 	private void sendEmptyEmbedOrDefault(String username, DiscordWebhook.EmbedObject @NotNull ... existingEmbedObject) {
-		if (debugMode) {
-			ErrorClass.throwDebug("LinkDiscord: Starting sendEmptyEmbedOrDefault", "debug");
-		}
 		DiscordWebhook.EmbedObject embedObject = existingEmbedObject.length > 0 ? existingEmbedObject[0] : generateDefaultEmbed();
 
 		String discordEnableUserAuthor = config.getString("discordEnableUserAuthor");
@@ -82,9 +76,6 @@ public class LinkDiscord {
 	}
 
 	public void sendBugReport(String message, String world, String username, String location, String gamemode, Integer category, String serverName) {
-		if (debugMode) {
-			ErrorClass.throwDebug("LinkDiscord: Starting sendBugReport", "debug");
-		}
 		if (webhookURL == null || webhookURL.isEmpty()) {
 			plugin.getLogger().info("Webhook URL is not configured. Bug report not sent to Discord.");
 			return;
@@ -92,11 +83,13 @@ public class LinkDiscord {
 
 		if (!config.contains("discordEmbedFields")) {
 			plugin.getLogger().warning("discordEmbedFields key is not present in the config. Sending an empty embed.");
+			logErrorMessage("discordEmbedFields key is not present in the config. Sending an empty embed.");
 		}
 
 		List<Map<?, ?>> discordEmbedFields = config.getMapList("discordEmbedFields");
 		if (discordEmbedFields.isEmpty()) {
 			plugin.getLogger().warning("discordEmbedFields is empty in the config. Bug report not sent to Discord.");
+			logErrorMessage("discordEmbedFields is empty in the config. Bug report not sent to Discord.");
 			sendEmptyEmbedOrDefault(username);
 			return;
 		}
@@ -104,10 +97,16 @@ public class LinkDiscord {
 		sendDiscordMessageEmbedFull(message, world, username, location, gamemode, category, serverName, discordEmbedFields);
 	}
 
-	private void sendDiscordMessageEmbedFull(String message, String world, String username, String location, String gamemode, Integer category, String serverName, @NotNull List<Map<?, ?>> discordEmbedFields) {
-		if (debugMode) {
-			ErrorClass.throwDebug("LinkDiscordCommand: Starting sendDiscordMessageEmbedFull", "debug");
-		}
+	private void sendDiscordMessageEmbedFull(
+			String message,
+			String world,
+			String username,
+			String location,
+			String gamemode,
+			Integer category,
+			String serverName,
+			@NotNull List<Map<?, ?>> discordEmbedFields
+	) {
 		List<DiscordEmbedDetails> discordDetails = new ArrayList<>();
 
 		for (Map<?, ?> field : discordEmbedFields) {
@@ -135,10 +134,16 @@ public class LinkDiscord {
 		sendEmptyEmbedOrDefault(username, embedObject);
 	}
 
-	private @NotNull String getValueForField(@NotNull String fieldValue, String username, String world, String location, String gamemode, Integer category, String message, String serverName) {
-		if (debugMode) {
-			ErrorClass.throwDebug("LinkDiscordCommand: Starting getValueForField", "debug");
-		}
+	private @NotNull String getValueForField(
+			@NotNull String fieldValue,
+			String username,
+			String world,
+			String location,
+			String gamemode,
+			Integer category,
+			String message,
+			String serverName
+	) {
 		Player player = Bukkit.getPlayer(username);
 
 		if (player != null && PlaceholderAPI.containsPlaceholders(fieldValue)) {
@@ -160,16 +165,10 @@ public class LinkDiscord {
 			fieldValue = fieldValue.replace(entry.getKey(), entry.getValue());
 		}
 
-		if (debugMode) {
-			ErrorClass.throwDebug("LinkDiscordCommand: Finished getValueForField", "debug");
-		}
 		return fieldValue;
 	}
 
 	private void sendEmbed(DiscordWebhook.EmbedObject embedObject) {
-		if (debugMode) {
-			ErrorClass.throwDebug("LinkDiscordCommand: Starting sendEmbed", "debug");
-		}
 		DiscordWebhook webhook = new DiscordWebhook(webhookURL);
 		webhook.addEmbed(embedObject);
 
@@ -181,7 +180,7 @@ public class LinkDiscord {
 				StringBuilder membersToPing = new StringBuilder();
 				StringBuilder rolesToPing = new StringBuilder();
 
-				if (discordPingMembers != null && !discordPingMembers.isEmpty()) {
+				if (!discordPingMembers.isEmpty()) {
 					for (String member : discordPingMembers) {
 						String trimmedMember = member.trim();
 						if (!trimmedMember.isEmpty() && !trimmedMember.equals("<@>") && !trimmedMember.equals("@")) {
@@ -195,7 +194,7 @@ public class LinkDiscord {
 					}
 				}
 
-				if (discordPingRoles != null && !discordPingRoles.isEmpty()) {
+				if (!discordPingRoles.isEmpty()) {
 					for (String role : discordPingRoles) {
 						String trimmedRole = role.trim();
 						if (!trimmedRole.isEmpty() && !trimmedRole.equals("<@&>") && !trimmedRole.equals("&")) {
@@ -210,14 +209,14 @@ public class LinkDiscord {
 				}
 
 				StringBuilder content = new StringBuilder();
-				if (rolesToPing.length() > 0 && rolesToPing.toString().contains("<@&") && rolesToPing.toString().contains(">")) {
+				if (!rolesToPing.isEmpty() && rolesToPing.toString().contains("<@&") && rolesToPing.toString().contains(">")) {
 					content.append(rolesToPing.toString().trim()).append(" ");
 				}
-				if (membersToPing.length() > 0 && membersToPing.toString().contains("<@") && membersToPing.toString().contains(">")) {
+				if (!membersToPing.isEmpty() && membersToPing.toString().contains("<@") && membersToPing.toString().contains(">")) {
 					content.append(membersToPing.toString().trim()).append(" ");
 				}
 
-				if (content.length() > 0) {
+				if (!content.isEmpty()) {
 					if (config.getString("discordPingMessage") != null && !config.getString("discordPingMessage").isEmpty()) {
 						content.insert(0, config.getString("discordPingMessage") + " ");
 					}
@@ -236,9 +235,6 @@ public class LinkDiscord {
 		} else {
 			try {
 				webhook.execute();
-				if (debugMode) {
-					ErrorClass.throwDebug("LinkDiscordCommand: Executed Webhook", "debug");
-				}
 			} catch (IOException e) {
 				throwException("Error sending bug report to Discord: " + e.getMessage());
 			}
@@ -246,13 +242,11 @@ public class LinkDiscord {
 	}
 
 	private void throwException(String message) {
-		ErrorClass.throwDebug(message, "error");
+		plugin.getLogger().warning(message);
+		logErrorMessage(message);
 	}
 
 	private String getCategoryName(Integer category) {
-		if (debugMode) {
-			ErrorClass.throwDebug("LinkDiscordCommand: Starting getCategoryName", "debug");
-		}
 		List<Map<?, ?>> categoryList = config.getMapList("reportCategories");
 		for (Map<?, ?> categoryMap : categoryList) {
 			if (categoryMap.get("id").equals(category)) {
@@ -263,9 +257,6 @@ public class LinkDiscord {
 	}
 
 	private @NotNull String getUserIDFromAPI(String username) {
-		if (debugMode) {
-			ErrorClass.throwDebug("LinkDiscordCommand: Starting getUserIDFromAPI", "debug");
-		}
 		String url = "https://playerdb.co/api/player/minecraft/" + username;
 		StringBuilder content = new StringBuilder();
 
@@ -290,7 +281,8 @@ public class LinkDiscord {
 			errorLogged = false;
 		} catch (Exception e) {
 			if (!errorLogged) {
-				ErrorClass.throwDebug("Error getting UUID from API: " + e.getMessage(), "error");
+				BugReportPlugin.getPlugin().getLogger().warning("Error getting UUID from API: " + e.getMessage());
+				logErrorMessage("Error getting UUID from API: " + e.getMessage());
 				errorLogged = true;
 			}
 			return "Unknown UUID";
