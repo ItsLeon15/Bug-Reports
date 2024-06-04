@@ -56,7 +56,6 @@ public class ErrorClass {
 
 	public static void throwDebug(String Debug) {
 		plugin.getLogger().info(Debug);
-		logErrorMessage(Debug);
 	}
 
 	public static void throwWarning(String Warning) {
