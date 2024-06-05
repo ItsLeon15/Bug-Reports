@@ -2,6 +2,7 @@ package com.leon.bugreport;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.leon.bugreport.API.ErrorClass;
 import com.leon.bugreport.keys.guiTextures;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -26,7 +27,6 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
-import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
 import static com.leon.bugreport.BugReportDatabase.getStaticUUID;
 import static com.leon.bugreport.BugReportLanguage.*;
 import static com.leon.bugreport.BugReportManager.*;
@@ -47,6 +47,9 @@ public class BugReportSettings {
 	}
 
 	public static @NotNull Inventory getSettingsGUI() {
+		if (debugMode) {
+			ErrorClass.throwDebug("BugReportSettings: Starting getSettingsGUI");
+		}
 		Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Report - " + getValueFromLanguageFile("buttonNames.settings", "Settings"));
 
 		ItemStack setDiscordWebhook = createCustomPlayerHead(guiTextures.setDiscordWebhookTexture, getValueFromLanguageFile("buttonNames.enableDiscordWebhook", "Enable Discord Webhook"), 1);
@@ -87,7 +90,7 @@ public class BugReportSettings {
 		playButtonClickSound(player);
 
 		if (debugMode) {
-			plugin.getLogger().info("Discord Webhook toggle clicked by " + player.getName());
+			ErrorClass.throwDebug("Discord Webhook toggle clicked by " + player.getName());
 		}
 		boolean toggle = getDiscordWebhookToggle();
 		config.set("enableDiscordWebhook", !toggle);
@@ -106,7 +109,7 @@ public class BugReportSettings {
 		playButtonClickSound(player);
 
 		if (debugMode) {
-			plugin.getLogger().info("Bug Report Notifications toggle clicked by " + player.getName());
+			ErrorClass.throwDebug("Bug Report Notifications toggle clicked by " + player.getName());
 		}
 		boolean toggle = getBugReportNotificationsToggle();
 		config.set("enableBugReportNotifications", !toggle);
@@ -125,7 +128,7 @@ public class BugReportSettings {
 		playButtonClickSound(player);
 
 		if (debugMode) {
-			plugin.getLogger().info("Category Selection toggle clicked by " + player.getName());
+			ErrorClass.throwDebug("Category Selection toggle clicked by " + player.getName());
 		}
 		boolean toggle = getCategorySelectionToggle();
 		config.set("enablePluginReportCategoriesGUI", !toggle);
@@ -140,7 +143,7 @@ public class BugReportSettings {
 		playButtonClickSound(player);
 
 		if (debugMode) {
-			plugin.getLogger().info("Language toggle clicked by " + player.getName());
+			ErrorClass.throwDebug("Language toggle clicked by " + player.getName());
 		}
 		player.openInventory(openLanguageGUI());
 	}
@@ -188,14 +191,14 @@ public class BugReportSettings {
 
 	public static @NotNull ItemStack createCustomPlayerHead(String texture, String name, int modelData) {
 		if (debugMode) {
-			plugin.getLogger().info("Creating custom player head with texture: " + texture + ", name: " + name + ", modelData: " + modelData);
+			ErrorClass.throwDebug("Creating custom player head with texture: " + texture + ", name: " + name + ", modelData: " + modelData);
 		}
 		return createCustomPlayerHead(texture, name, modelData, null);
 	}
 
 	public static @NotNull ItemStack createCustomPlayerHead(String texture, String name, int modelData, ChatColor nameColor) {
 		if (debugMode) {
-			plugin.getLogger().info("Creating custom player head with texture: " + texture + ", name: " + name + ", modelData: " + modelData + ", nameColor: " + nameColor);
+			ErrorClass.throwDebug("Creating custom player head with texture: " + texture + ", name: " + name + ", modelData: " + modelData + ", nameColor: " + nameColor);
 		}
 		ItemStack playerHead = new ItemStack(Material.PLAYER_HEAD);
 		SkullMeta skullMeta = (SkullMeta) playerHead.getItemMeta();
@@ -207,7 +210,7 @@ public class BugReportSettings {
 				String textureUrl = textureJson.getAsJsonObject("textures").getAsJsonObject("SKIN").get("url").getAsString();
 
 				if (debugMode) {
-					plugin.getLogger().info("Texture URL: " + textureUrl);
+					ErrorClass.throwDebug("Texture URL: " + textureUrl);
 				}
 
 				PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
@@ -221,11 +224,10 @@ public class BugReportSettings {
 				playerHead.setItemMeta(skullMeta);
 
 				if (debugMode) {
-					plugin.getLogger().info("Custom player head created successfully.");
+					ErrorClass.throwDebug("Custom player head created successfully.");
 				}
 			} catch (Exception e) {
-				plugin.getLogger().warning("Failed to create custom player head: " + e.getMessage());
-				logErrorMessage("Failed to create custom player head: " + e.getMessage());
+				ErrorClass.throwError("Error 060: Failed to create custom player head: " + e.getMessage());
 				return new ItemStack(Material.PLAYER_HEAD);
 			}
 		}
@@ -294,7 +296,7 @@ public class BugReportSettings {
 			setPluginLanguage(languageCode);
 
 			if (debugMode) {
-				plugin.getLogger().info("Language set to " + languageCode);
+				ErrorClass.throwDebug("Language set to " + languageCode);
 			}
 			reloadConfig();
 
@@ -310,7 +312,7 @@ public class BugReportSettings {
 			}
 
 			if (debugMode) {
-				plugin.getLogger().info("Clicked inventory: " + displayName);
+				ErrorClass.throwDebug("Clicked inventory: " + displayName);
 			}
 
 			String customDisplayName = getEnglishValueFromValue(displayName);
@@ -800,7 +802,7 @@ public class BugReportSettings {
 			config.set("useTitleInsteadOfMessage", !toggle);
 			saveConfig();
 			if (debugMode) {
-				plugin.getLogger().info("Title message set to " + !toggle);
+				ErrorClass.throwDebug("Title message set to " + !toggle);
 			}
 			player.getOpenInventory().setItem(19, getTitleMessage() ? createButton(Material.LIME_DYE, ChatColor.GREEN + getValueFromLanguageFile("buttonNames.true", "On")) : createButton(Material.GRAY_DYE, ChatColor.RED + getValueFromLanguageFile("buttonNames.false", "Off")));
 		}
@@ -816,7 +818,7 @@ public class BugReportSettings {
 			config.set("enablePlayerHeads", !toggle);
 			saveConfig();
 			if (debugMode) {
-				plugin.getLogger().info("Player heads set to " + !toggle);
+				ErrorClass.throwDebug("Player heads set to " + !toggle);
 			}
 			player.getOpenInventory().setItem(20, getPlayerHead() ? createButton(Material.LIME_DYE, ChatColor.GREEN + getValueFromLanguageFile("buttonNames.true", "On")) : createButton(Material.GRAY_DYE, ChatColor.RED + getValueFromLanguageFile("buttonNames.false", "Off")));
 		}
@@ -832,7 +834,7 @@ public class BugReportSettings {
 			config.set("enablePluginReportBook", !toggle);
 			saveConfig();
 			if (debugMode) {
-				plugin.getLogger().info("Report book set to " + !toggle);
+				ErrorClass.throwDebug("Report book set to " + !toggle);
 			}
 			player.getOpenInventory().setItem(21, getReportBook() ? createButton(Material.LIME_DYE, ChatColor.GREEN + getValueFromLanguageFile("buttonNames.true", "On")) : createButton(Material.GRAY_DYE, ChatColor.RED + getValueFromLanguageFile("buttonNames.false", "Off")));
 		}

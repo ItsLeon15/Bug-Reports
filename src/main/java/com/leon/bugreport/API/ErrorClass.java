@@ -2,6 +2,7 @@ package com.leon.bugreport.API;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.util.Objects;
 
 import static com.leon.bugreport.BugReportManager.plugin;
 
@@ -51,5 +52,19 @@ public class ErrorClass {
 			plugin.getLogger().warning("Failed to write to error log file");
 			logErrorMessage("Failed to write to error log file");
 		}
+	}
+
+	public static void throwDebug(String Debug) {
+		plugin.getLogger().info(Debug);
+	}
+
+	public static void throwWarning(String Warning) {
+		plugin.getLogger().info(Warning);
+		logErrorMessage(Warning);
+	}
+
+	public static void throwError(String Error) {
+		plugin.getLogger().info(Error);
+		logErrorMessage(Error);
 	}
 }

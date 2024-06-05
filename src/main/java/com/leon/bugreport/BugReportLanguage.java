@@ -1,5 +1,6 @@
 package com.leon.bugreport;
 
+import com.leon.bugreport.API.ErrorClass;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -25,6 +26,9 @@ public class BugReportLanguage {
 	private static Plugin plugin;
 
 	public BugReportLanguage(@NotNull Plugin plugin) {
+		if (debugMode) {
+			ErrorClass.throwDebug("BugReportLanguage: Starting BugReportLanguage");
+		}
 		BugReportLanguage.plugin = plugin;
 		langFolder = new File(plugin.getDataFolder(), "languages");
 		languageCode = plugin.getConfig().getString("language", "en_US");
@@ -34,7 +38,7 @@ public class BugReportLanguage {
 		}
 
 		if (!languageCodes.contains(languageCode)) {
-			plugin.getLogger().warning("Invalid language code '" + languageCode + "'. Defaulting to 'en_US'.");
+			ErrorClass.throwError("Error 051: Invalid language code '" + languageCode + "'. Defaulting to 'en_US'.");
 			languageCode = "en_US";
 		}
 
@@ -53,6 +57,9 @@ public class BugReportLanguage {
 	}
 
 	private static void ensureTempEnglishFileExists() {
+		if (debugMode) {
+			ErrorClass.throwDebug("BugReportLanguage: Starting ensureTemEnglishFileExists");
+		}
 		if (enLangTempFile == null) {
 			enLangTempFile = new File(langFolder, "temp/en_US_temp.yml");
 		}
@@ -71,6 +78,9 @@ public class BugReportLanguage {
 	}
 
 	public static @Nullable String getEnglishValueFromValue(String value) {
+		if (debugMode) {
+			ErrorClass.throwDebug("BugReportLanguage: Starting getEnglishValueFromValue");
+		}
 		checkIfEnglishFileModified();
 
 		String strippedValue = ChatColor.stripColor(value);
@@ -91,7 +101,7 @@ public class BugReportLanguage {
 
 		File[] files = langFolder.listFiles();
 		if (files == null || files.length == 0) {
-			plugin.getLogger().warning("No language files found in the 'languages' folder.");
+			ErrorClass.throwError("Error 052: No language files found in the 'languages' folder.");
 			for (String languageCode : languageCodes) {
 				plugin.saveResource("languages/" + languageCode + ".yml", false);
 			}
@@ -101,8 +111,8 @@ public class BugReportLanguage {
 				for (File file : files) {
 					if (file.getName().equalsIgnoreCase(languageCode + ".yml")) {
 						if (isFileEmpty(file)) {
-							plugin.getLogger().warning("Language file '" + languageCode + ".yml' is empty.");
-							plugin.getLogger().warning("Creating new file.");
+							ErrorClass.throwWarning("Language file '" + languageCode + ".yml' is empty.");
+							ErrorClass.throwWarning("Creating new file.");
 							plugin.saveResource("languages/" + languageCode + ".yml", true);
 						}
 						found = true;
@@ -114,7 +124,7 @@ public class BugReportLanguage {
 					if (resourceAvailable) {
 						plugin.saveResource("languages/" + languageCode + ".yml", false);
 					} else {
-						plugin.getLogger().warning("Language file '" + languageCode + ".yml' not found in resources.");
+						ErrorClass.throwError("Error 053: Language file '" + languageCode + ".yml' not found in resources.");
 					}
 				}
 			}
@@ -130,11 +140,11 @@ public class BugReportLanguage {
 			ConfigurationSection langSection = yamlConfig.getConfigurationSection(languageCode);
 			langConfig = flattenYamlConfiguration(Objects.requireNonNullElse(langSection, yamlConfig));
 		} else {
-			plugin.getLogger().warning("Language file '" + languageCode + ".yml' not found.");
+			ErrorClass.throwError("Error 054: Language file '" + languageCode + ".yml' not found.");
 		}
 
 		if (debugMode) {
-			plugin.getLogger().info("Loaded " + langConfig.size() + " language keys.");
+			ErrorClass.throwDebug("Loaded " + langConfig.size() + " language keys.");
 		}
 	}
 

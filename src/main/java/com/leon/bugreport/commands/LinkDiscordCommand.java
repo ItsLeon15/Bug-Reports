@@ -1,5 +1,6 @@
 package com.leon.bugreport.commands;
 
+import com.leon.bugreport.API.ErrorClass;
 import com.leon.bugreport.BugReportManager;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -9,6 +10,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import static com.leon.bugreport.BugReportManager.debugMode;
 import static com.leon.bugreport.BugReportManager.returnStartingMessage;
 
 public class LinkDiscordCommand implements CommandExecutor {
@@ -20,12 +22,18 @@ public class LinkDiscordCommand implements CommandExecutor {
 
 	@Override
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+		if (debugMode) {
+			ErrorClass.throwDebug("LinkDiscordCommand: Triggered /buglistdiscord");
+		}
 		if (!(sender instanceof Player player)) {
 			sender.sendMessage("Only players can use this command.");
 			return true;
 		}
 
 		if (player.hasPermission("bugreport.admin")) {
+			if (debugMode) {
+				ErrorClass.throwDebug("LinkDiscordCommand: Passed permission check");
+			}
 			if (args.length < 1) {
 				player.sendMessage(returnStartingMessage(ChatColor.RED) + "Usage: /buglinkdiscord <webhook URL>");
 				return true;
@@ -50,6 +58,9 @@ public class LinkDiscordCommand implements CommandExecutor {
 
 	@Contract(pure = true)
 	private boolean isWebhookURLValid(@NotNull String webhookURL) {
+		if (debugMode) {
+			ErrorClass.throwDebug("LinkDiscordCommand: Starting isWebhookURLValid");
+		}
 		return webhookURL.matches("^https://(canary\\.)?discord\\.com/api/webhooks/[0-9]+/[a-zA-Z0-9-_]+$");
 	}
 }

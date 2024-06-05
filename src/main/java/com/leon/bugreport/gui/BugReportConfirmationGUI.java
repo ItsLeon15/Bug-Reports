@@ -1,5 +1,6 @@
 package com.leon.bugreport.gui;
 
+import com.leon.bugreport.API.ErrorClass;
 import com.leon.bugreport.BugReportDatabase;
 import com.leon.bugreport.BugReportLanguage;
 import com.leon.bugreport.keys.guiTextures;
@@ -19,7 +20,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
 import static com.leon.bugreport.BugReportDatabase.getStaticUUID;
 import static com.leon.bugreport.BugReportManager.*;
 import static com.leon.bugreport.BugReportSettings.createCustomPlayerHead;
@@ -27,10 +27,17 @@ import static com.leon.bugreport.gui.bugreportGUI.openBugReportDetailsGUI;
 
 public class BugReportConfirmationGUI {
 	public static void openConfirmationGUI(@NotNull Player player, @NotNull Boolean isArchived, String bugReportID) {
+		if (debugMode) {
+			ErrorClass.throwDebug("BugReportConfirmationGUI: Starting openConfirmationGUI");
+		}
 		player.openInventory(getConfirmationGUI(isArchived, bugReportID));
 	}
 
 	public static @NotNull Inventory getConfirmationGUI(boolean isArchived, String bugReportID) {
+		if (debugMode) {
+			ErrorClass.throwDebug("BugReportConfirmationGUI: Starting getConfirmationGUI");
+		}
+		
 		// TODO: Add the bug report ID to the title without any destructive actions.
 		String guiTitle;
 
@@ -56,6 +63,9 @@ public class BugReportConfirmationGUI {
 	}
 
 	public void archiveReport(@NotNull Player player, @NotNull Integer reportIDGUI, @NotNull Boolean isArchivedDetails) {
+		if (debugMode) {
+			ErrorClass.throwDebug("BugReportConfirmationGUI: Starting archiveReport");
+		}
 		BugReportDatabase.updateBugReportArchive(reportIDGUI, 1);
 		player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI(localCurrentPage, player) : getBugReportGUI(localCurrentPage, player));
 		player.sendMessage(returnStartingMessage(ChatColor.RED)
@@ -63,6 +73,9 @@ public class BugReportConfirmationGUI {
 	}
 
 	public void deleteReport(@NotNull Player player, @NotNull Integer reportIDGUI, @NotNull Boolean isArchivedDetails) {
+		if (debugMode) {
+			ErrorClass.throwDebug("BugReportConfirmationGUI: Starting deleteReport");
+		}
 		UUID playerId = player.getUniqueId();
 		BugReportDatabase.deleteBugReport(reportIDGUI);
 
@@ -79,10 +92,13 @@ public class BugReportConfirmationGUI {
 												Boolean fromArchivedGUI) implements Listener {
 		@EventHandler(priority = EventPriority.NORMAL)
 		public void onInventoryClick(@NotNull InventoryClickEvent event) {
+			if (debugMode) {
+				ErrorClass.throwDebug("BugReportConfirmationGUI: Triggered InventoryClickEvent");
+			}
 			String displayName = ChatColor.stripColor(event.getView().getTitle());
 
 			if (debugMode) {
-				plugin.getLogger().info("Clicked inventory: " + displayName);
+				ErrorClass.throwDebug("BugReportConfirmationGUI: Clicked inventory: " + displayName);
 			}
 
 			String customDisplayName = BugReportLanguage.getEnglishValueFromValue(displayName);
@@ -90,9 +106,8 @@ public class BugReportConfirmationGUI {
 			boolean isDeletedDetails = customDisplayName.startsWith("Delete Bug Report");
 
 			if (!isArchivedDetails && !isDeletedDetails) {
-				plugin.getLogger().warning("Something went wrong with the languages folder. Please remove the file and restart the server.");
-				plugin.getLogger().warning("If the issue persists, please contact the developer.");
-				logErrorMessage("Something went wrong with the languages folder.");
+				ErrorClass.throwError("Error 020: BugReportConfirmationGUI - Something went wrong with the languages folder. Please remove the file and restart the server.");
+				ErrorClass.throwError("BugReportConfirmationGUI: If the issue persists, please contact the developer.");
 				return;
 			}
 
@@ -118,19 +133,19 @@ public class BugReportConfirmationGUI {
 			String customItemDisplayName = BugReportLanguage.getEnglishValueFromValue(ChatColor.stripColor(itemDisplayName));
 
 			if (debugMode) {
-				plugin.getLogger().info("Clicked item: " + customItemDisplayName);
+				ErrorClass.throwDebug("BugReportConfirmationGUI: Clicked item: " + customItemDisplayName);
 			}
 
 			if (isArchivedDetails) {
 				if (debugMode) {
-					plugin.getLogger().info("Opening archived confirmation GUI.");
+					ErrorClass.throwDebug("BugReportConfirmationGUI: Opening archived confirmation GUI.");
 				}
 				switch (customItemDisplayName) {
 					case "Archive" -> {
 						playButtonClickSound(player);
 
 						if (debugMode) {
-							plugin.getLogger().info("Archiving report: " + reportIDGUI);
+							ErrorClass.throwDebug("BugReportConfirmationGUI: Archiving report: " + reportIDGUI);
 						}
 						new BugReportConfirmationGUI().archiveReport(player, reportIDGUI, true);
 
@@ -142,7 +157,7 @@ public class BugReportConfirmationGUI {
 						playButtonClickSound(player);
 
 						if (debugMode) {
-							plugin.getLogger().info("Going back to bug reports.");
+							ErrorClass.throwDebug("BugReportConfirmationGUI: Going back to bug reports.");
 						}
 						returnFromConfirmationGUI(player, false);
 					}
@@ -151,14 +166,14 @@ public class BugReportConfirmationGUI {
 
 			if (isDeletedDetails) {
 				if (debugMode) {
-					plugin.getLogger().info("Opening delete confirmation GUI.");
+					ErrorClass.throwDebug("BugReportConfirmationGUI: Opening delete confirmation GUI.");
 				}
 				switch (customItemDisplayName) {
 					case "Delete" -> {
 						playButtonClickSound(player);
 
 						if (debugMode) {
-							plugin.getLogger().info("Deleting report: " + reportIDGUI);
+							ErrorClass.throwDebug("BugReportConfirmationGUI: Deleting report: " + reportIDGUI);
 						}
 						new BugReportConfirmationGUI().deleteReport(player, reportIDGUI, isArchivedDetails);
 
@@ -170,7 +185,7 @@ public class BugReportConfirmationGUI {
 						playButtonClickSound(player);
 
 						if (debugMode) {
-							plugin.getLogger().info("Going back to archived reports.");
+							ErrorClass.throwDebug("BugReportConfirmationGUI: Going back to archived reports.");
 						}
 						returnFromConfirmationGUI(player, false);
 					}
@@ -179,6 +194,9 @@ public class BugReportConfirmationGUI {
 		}
 
 		private void returnFromConfirmationGUI(@NotNull Player player, Boolean fromArchivedGUI) {
+			if (debugMode) {
+				ErrorClass.throwDebug("BugReportConfirmationGUI: Going back to archived reports.");
+			}
 			player.openInventory(fromArchivedGUI ? getArchivedBugReportsGUI(localCurrentPage, player) : getBugReportGUI(localCurrentPage, player));
 
 			List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));

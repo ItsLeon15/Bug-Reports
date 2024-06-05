@@ -22,9 +22,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
 
-import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
-import static com.leon.bugreport.BugReportManager.config;
-import static com.leon.bugreport.BugReportManager.plugin;
+import static com.leon.bugreport.BugReportManager.*;
 
 public class DataSource {
 	private static final File CACHE_DIR = new File("plugins/BugReport/cache");
@@ -33,6 +31,9 @@ public class DataSource {
 	private static long CACHE_EXPIRY_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
 	public static long convertTimeToMillis(@NotNull String timeString) {
+		if (debugMode) {
+            ErrorClass.throwDebug("DataSource: Starting convertTimeToMillis");
+        }
 		Map<String, Integer> timeUnits = Map.of("m", 60, "h", 3600, "d", 86400, "w", 604800, "mo", 2592000, "y", 31536000);
 		String[] parts = timeString.split("(?<=\\D)(?=\\d)|(?<=\\d)(?=\\D)");
 		int number = Integer.parseInt(parts[0]);
@@ -40,10 +41,16 @@ public class DataSource {
 
 		int seconds = timeUnits.getOrDefault(unit, 86400);
 		CACHE_EXPIRY_DURATION = (long) number * seconds * 1000;
+		if (debugMode) {
+			ErrorClass.throwDebug("DataSource: Finished convertTimeToMillis");
+		}
 		return CACHE_EXPIRY_DURATION;
 	}
 
 	private static Map<String, CacheEntry> loadCache() {
+		if (debugMode) {
+			ErrorClass.throwDebug("DataSource: Starting loadCache");
+		}
 		ensureCacheDirectoryExists();
 		if (!CACHE_FILE.exists()) {
 			return new HashMap<>();
@@ -57,37 +64,49 @@ public class DataSource {
 				return new HashMap<>();
 			}
 		} catch (IOException e) {
-			plugin.getLogger().warning("Failed to load cache");
-			logErrorMessage("Failed to load cache");
+			ErrorClass.throwError("Error 001: DataSource - failed to load cache");
 			return new HashMap<>();
 		}
 	}
 
 	private static void saveCache(Map<String, CacheEntry> cache) {
+		if (debugMode) {
+			ErrorClass.throwDebug("DataSource: Starting saveCache");
+		}
 		ensureCacheDirectoryExists();
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(CACHE_FILE))) {
 			String jsonString = new Gson().toJson(cache);
 			writer.write(jsonString);
 		} catch (IOException e) {
-			plugin.getLogger().warning("Failed to save cache");
-			logErrorMessage("Failed to save cache");
+			ErrorClass.throwError("Error 002: DataSource - failed to save cache");
 		}
 	}
 
 	private static boolean isCacheValid(long timestamp) {
+		if (debugMode) {
+			ErrorClass.throwDebug("DataSource: Starting isCacheValid");
+		}
 		boolean configKeyExists = config.contains("refreshPlayerHeadCache");
 		long configDate = configKeyExists ? convertTimeToMillis(Objects.requireNonNull(config.getString("refreshPlayerHeadCache"))) : CACHE_EXPIRY_DURATION;
+		if (debugMode) {
+			ErrorClass.throwDebug("DataSource: Finished isCacheValid");
+		}
 		return System.currentTimeMillis() - timestamp < configDate;
 	}
 
 	private static void ensureCacheDirectoryExists() {
+		if (debugMode) {
+			ErrorClass.throwDebug("DataSource: Starting ensureCacheDirectoryExists");
+		}
 		if (!CACHE_DIR.exists() && !CACHE_DIR.mkdirs()) {
-			plugin.getLogger().warning("Failed to create cache directory");
-			logErrorMessage("Failed to create cache directory");
+			ErrorClass.throwError("Error 003: DataSource - Failed to create cache directory");
 		}
 	}
 
 	public static void cleanOutdatedCache(Boolean listAllNewReports) {
+		if (debugMode) {
+			ErrorClass.throwDebug("DataSource: Starting cleanOutdatedCache");
+		}
 		Map<String, CacheEntry> cache = loadCache();
 
 		if (cache == null || cache.isEmpty()) {
@@ -106,6 +125,9 @@ public class DataSource {
 	}
 
 	private static @Nullable String fetchFromURL(String urlString) throws IOException {
+		if (debugMode) {
+			ErrorClass.throwDebug("DataSource: Starting fetchFromURL");
+		}
 		URL url = new URL(urlString);
 		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 		try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
@@ -116,11 +138,17 @@ public class DataSource {
 			}
 			return result.toString();
 		} catch (IOException e) {
+			if (debugMode) {
+				ErrorClass.throwError("Error 004: DataSource - Error fetching from URL");
+			}
 			return null;
 		}
 	}
 
 	private static @NotNull UUID getUUIDFromUsername(String username, @NotNull Map<String, CacheEntry> cache) throws Exception {
+		if (debugMode) {
+			ErrorClass.throwDebug("DataSource: Starting getUUIDFromUsername");
+		}
 		if (cache.containsKey(username) && isCacheValid(cache.get(username).timestamp)) {
 			return UUID.fromString(cache.get(username).data);
 		}
@@ -149,17 +177,29 @@ public class DataSource {
 
 			cache.put(username, existingEntry);
 			saveCache(cache);
+			if (debugMode) {
+				ErrorClass.throwDebug("DataSource: Finished getUUIDFromUsername");
+			}
 			return UUID.fromString("00000000-0000-0000-0000-000000000000");
 		}
 	}
 
 	private static @NotNull UUID extractUUIDFromResponse(String response) {
+		if (debugMode) {
+			ErrorClass.throwDebug("DataSource: Starting extractUUIDFromResponse");
+		}
 		JsonObject jsonResponse = JsonParser.parseString(response).getAsJsonObject();
 		String uuidString = jsonResponse.get("id").getAsString();
+		if (debugMode) {
+			ErrorClass.throwDebug("DataSource: Finished extractUUIDFromResponse");
+		}
 		return UUID.fromString(uuidString.substring(0, 8) + "-" + uuidString.substring(8, 12) + "-" + uuidString.substring(12, 16) + "-" + uuidString.substring(16, 20) + "-" + uuidString.substring(20, 32));
 	}
 
 	private static @Nullable String returnFalseIfCacheIsInvalid(@NotNull Map<String, CacheEntry> cache) {
+		if (debugMode) {
+			ErrorClass.throwDebug("DataSource: Starting returnFalseIfCacheIsInvalid");
+		}
 		for (Map.Entry<String, CacheEntry> entry : cache.entrySet()) {
 			CacheEntry cacheEntry = entry.getValue();
 
@@ -187,6 +227,9 @@ public class DataSource {
 	}
 
 	public static @NotNull ItemStack getPlayerHead(String playerName) {
+		if (debugMode) {
+			ErrorClass.throwDebug("DataSource: Starting getPlayerhead");
+		}
 		Map<String, CacheEntry> cache = loadCache();
 		cleanOutdatedCache(true); // TODO
 		if (playerName == null || playerName.trim().isEmpty()) {
@@ -198,7 +241,9 @@ public class DataSource {
 
 			String cacheInvalidReason = returnFalseIfCacheIsInvalid(cache);
 			if (cacheInvalidReason != null) {
-				logErrorMessage("Cache is invalid: " + cacheInvalidReason);
+				if (debugMode) {
+					ErrorClass.throwError("Error 005: DataSource - Cache is invalid " + cacheInvalidReason);
+				}
 				saveCache(new HashMap<>());
 				cache = loadCache(); // Reset cache if invalid
 			}
@@ -213,13 +258,15 @@ public class DataSource {
 
 			return base64 != null && !base64.isEmpty() ? createSkullItem(base64, playerName) : getDefaultPlayerHead();
 		} catch (Exception e) {
-			plugin.getLogger().warning("Failed to get player head for " + playerName + ": " + e.getMessage());
-			logErrorMessage("Failed to get player head for " + playerName + ": " + e.getMessage());
+			ErrorClass.throwError("Error 006: DataSource - Failed to get player head for " + playerName + ": " + e.getMessage());
 			return getDefaultPlayerHead();
 		}
 	}
 
 	private static @NotNull ItemStack getDefaultPlayerHead() {
+		if (debugMode) {
+			ErrorClass.throwDebug("DataSource: Starting getDefaultPlayerHead");
+		}
 		ItemStack defaultHead = new ItemStack(Material.PLAYER_HEAD);
 		SkullMeta meta = (SkullMeta) defaultHead.getItemMeta();
 		if (meta != null) {
@@ -230,6 +277,9 @@ public class DataSource {
 	}
 
 	private static void updatePlayerHeadCache(String playerName, String uuid, String base64, @NotNull Map<String, CacheEntry> cache) {
+		if (debugMode) {
+			ErrorClass.throwDebug("DataSource: Starting updatePlayerHeadCache");
+		}
 		long currentTime = System.currentTimeMillis();
 		CacheEntry playerCacheEntry = new CacheEntry(uuid, currentTime);
 		playerCacheEntry.nestedData = new CacheEntry(base64, currentTime);
@@ -239,6 +289,9 @@ public class DataSource {
 	}
 
 	private static @NotNull ItemStack createSkullItem(String textureValue, String displayName) {
+		if (debugMode) {
+			ErrorClass.throwDebug("DataSource: Starting createSkullItem");
+		}
 		ItemStack playerHead = new ItemStack(Material.PLAYER_HEAD);
 		SkullMeta skullMeta = (SkullMeta) playerHead.getItemMeta();
 
@@ -261,8 +314,7 @@ public class DataSource {
 				skullMeta.setDisplayName(displayName);
 				playerHead.setItemMeta(skullMeta);
 			} catch (Exception e) {
-				plugin.getLogger().warning("Failed to set custom player head texture: " + e.getMessage());
-				logErrorMessage("Failed to set custom player head texture: " + e.getMessage());
+				ErrorClass.throwError("Error 007: Failed to set custom player head texture: " + e.getMessage());
 				return new ItemStack(Material.PLAYER_HEAD); // Fallback to default head on failure
 			}
 		}
@@ -271,6 +323,9 @@ public class DataSource {
 	}
 
 	private static boolean checkIfPlayerHeadIsCached(String playerName, @NotNull Map<String, CacheEntry> cache) {
+		if (debugMode) {
+			ErrorClass.throwDebug("DataSource: Started checkIfPlayerHeadIsCached");
+		}
 		return cache.containsKey(playerName) && isCacheValid(cache.get(playerName).timestamp);
 	}
 
@@ -290,17 +345,19 @@ public class DataSource {
 			if (base64 != null) {
 				setSkullWithBase64(skullMeta, base64);
 			} else {
-				throw new IllegalArgumentException("Base64 data for player " + playerName + " not found in cache.");
+				throw new IllegalArgumentException("Error 008: Base64 data for player " + playerName + " not found in cache.");
 			}
 		} catch (Exception e) {
-			plugin.getLogger().warning("Failed to get cached player head for " + playerName);
-			logErrorMessage("Failed to get cached player head for " + playerName);
+			ErrorClass.throwError("Error 009: Failed to get cached player head for " + playerName);
 		}
 		head.setItemMeta(skullMeta);
 		return head;
 	}
 
 	private static @NotNull String getBase64FromUUID(@NotNull UUID uuid, @NotNull Map<String, CacheEntry> cache) throws Exception {
+		if (debugMode) {
+			ErrorClass.throwDebug("DataSource: getBase64FromUUID");
+		}
 		if (uuid.toString().equals("00000000-0000-0000-0000-000000000000")) {
 			return "00000000-0000-0000-0000-000000000000";
 		}
@@ -323,13 +380,15 @@ public class DataSource {
 				return base64;
 			}
 		}
-		throw new IllegalArgumentException("Couldn't find textures property for UUID " + uuid);
+		throw new IllegalArgumentException("Error 010: Couldn't find textures property for UUID " + uuid);
 	}
 
 	private static void setSkullWithBase64(@NotNull SkullMeta skullMeta, String base64) {
+		if (debugMode) {
+			ErrorClass.throwDebug("DataSource: Starting setSkullWithBase");
+		}
 		if (base64 == null || base64.isEmpty()) {
-			plugin.getLogger().warning("Base64 string is empty. Cannot set custom player head texture.");
-			logErrorMessage("Base64 string is empty. Cannot set custom player head texture.");
+			ErrorClass.throwError("Error 011: Base64 string is empty. Cannot set custom player head texture.");
 			return;
 		}
 
@@ -338,12 +397,14 @@ public class DataSource {
 			profileField.setAccessible(true);
 			profileField.set(skullMeta, createGameProfile(base64));
 		} catch (NoSuchFieldException | IllegalAccessException e) {
-			plugin.getLogger().warning("Failed to set custom player head texture: " + e.getMessage());
-			logErrorMessage("Failed to set custom player head texture: " + e.getMessage());
+			ErrorClass.throwError("Error 012: Failed to set custom player head texture: " + e.getMessage());
 		}
 	}
 
 	private static @NotNull GameProfile createGameProfile(String textureValue) {
+		if (debugMode) {
+			ErrorClass.throwDebug("DataSource: Starting createGameProfile");
+		}
 		GameProfile profile = new GameProfile(UUID.randomUUID(), "GameProfile");
 		profile.getProperties().put("textures", new Property("textures", textureValue));
 		return profile;

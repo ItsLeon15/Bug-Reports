@@ -1,5 +1,6 @@
 package com.leon.bugreport;
 
+import com.leon.bugreport.API.ErrorClass;
 import com.leon.bugreport.extensions.BugReportPair;
 import com.leon.bugreport.extensions.PlanHook;
 import com.zaxxer.hikari.HikariConfig;
@@ -17,7 +18,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
 import static com.leon.bugreport.BugReportManager.*;
 
 public class BugReportDatabase {
@@ -58,9 +58,8 @@ public class BugReportDatabase {
 				}
 			}
 		} catch (Exception e) {
-			plugin.getLogger().severe("Failed to add missing columns.");
-			plugin.getLogger().severe(e.getMessage());
-			logErrorMessage("Failed to add missing columns." + e.getMessage());
+			ErrorClass.throwError("Error 027: Failed to add missing columns.");
+			ErrorClass.throwError(e.getMessage());
 		}
 	}
 
@@ -80,9 +79,8 @@ public class BugReportDatabase {
 				playerDataStatement.close();
 			}
 		} catch (Exception e) {
-			plugin.getLogger().severe("Failed to set player last login timestamp.");
-			plugin.getLogger().severe(e.getMessage());
-			logErrorMessage("Failed to set player last login timestamp." + e.getMessage());
+			ErrorClass.throwError("Error 028: Failed to set player last login timestamp.");
+			ErrorClass.throwError(e.getMessage());
 		}
 	}
 
@@ -96,9 +94,8 @@ public class BugReportDatabase {
 			}
 			statement.close();
 		} catch (Exception e) {
-			plugin.getLogger().severe("Failed to get player last login timestamp.");
-			plugin.getLogger().severe(e.getMessage());
-			logErrorMessage("Failed to get player last login timestamp." + e.getMessage());
+			ErrorClass.throwError("Error 029: Failed to get player last login timestamp.");
+			ErrorClass.throwError(e.getMessage());
 		}
 		return 0;
 	}
@@ -117,9 +114,8 @@ public class BugReportDatabase {
 			}
 			statement.close();
 		} catch (Exception e) {
-			plugin.getLogger().severe("Failed to get bug report location.");
-			plugin.getLogger().severe(e.getMessage());
-			logErrorMessage("Failed to get bug report location." + e.getMessage());
+			ErrorClass.throwDebug("Error 030: Failed to get bug report location.");
+			ErrorClass.throwDebug(e.getMessage());
 		}
 		return null;
 	}
@@ -133,9 +129,8 @@ public class BugReportDatabase {
 				}
 			}
 		} catch (Exception e) {
-			plugin.getLogger().severe("Failed to add missing columns.");
-			plugin.getLogger().severe(e.getMessage());
-			logErrorMessage("Failed to add missing columns." + e.getMessage());
+			ErrorClass.throwError("Error 031: Failed to add missing columns.");
+			ErrorClass.throwError(e.getMessage());
 		}
 	}
 
@@ -145,10 +140,10 @@ public class BugReportDatabase {
 		ConfigurationSection databaseSection = Objects.requireNonNull(config.getConfigurationSection("database"));
 
 		if (databaseType.equalsIgnoreCase("local")) {
-			plugin.getLogger().info("Connecting to local database");
+			ErrorClass.throwDebug("Connecting to local database");
 			connectLocal();
 		} else if (databaseType.equalsIgnoreCase("mysql")) {
-			plugin.getLogger().info("Connecting to remote database");
+			ErrorClass.throwDebug("Connecting to remote database");
 
 			String host = databaseSection.getString("host");
 			int port = databaseSection.getInt("port");
@@ -158,8 +153,7 @@ public class BugReportDatabase {
 
 			connectRemote(host, port, database, username, password);
 		} else {
-			plugin.getLogger().warning("Invalid database type. Please use 'local' or 'mysql'.");
-			logErrorMessage("Invalid database type. Please use 'local' or 'mysql'.");
+			ErrorClass.throwError("Error 032: Invalid database type. Please use 'local' or 'mysql'.");
 		}
 	}
 
@@ -172,8 +166,7 @@ public class BugReportDatabase {
 				return resultSet.getLong("total_deleted");
 			}
 		} catch (SQLException e) {
-			plugin.getLogger().severe(e.getMessage());
-			logErrorMessage(e.getMessage());
+			ErrorClass.throwWarning("Error 033: " + e.getMessage());
 		}
 		return 0;
 	}
@@ -191,8 +184,7 @@ public class BugReportDatabase {
 			resultSet.close();
 			statement.close();
 		} catch (SQLException e) {
-			plugin.getLogger().severe(e.getMessage());
-			logErrorMessage(e.getMessage());
+			ErrorClass.throwDebug(e.getMessage());
 		}
 
 		return count;
@@ -211,8 +203,7 @@ public class BugReportDatabase {
 			resultSet.close();
 			statement.close();
 		} catch (SQLException e) {
-			plugin.getLogger().severe(e.getMessage());
-			logErrorMessage(e.getMessage());
+			ErrorClass.throwDebug("Error 034: " + e.getMessage());
 		}
 
 		return count;
@@ -231,8 +222,7 @@ public class BugReportDatabase {
 			resultSet.close();
 			statement.close();
 		} catch (SQLException e) {
-			plugin.getLogger().severe(e.getMessage());
-			logErrorMessage(e.getMessage());
+			ErrorClass.throwDebug("Error 035: " + e.getMessage());
 		}
 
 		return count;
@@ -250,8 +240,7 @@ public class BugReportDatabase {
 			resultSet.close();
 			statement.close();
 		} catch (SQLException e) {
-			plugin.getLogger().severe(e.getMessage());
-			logErrorMessage(e.getMessage());
+			ErrorClass.throwDebug("Error 036: " + e.getMessage());
 		}
 
 		return count;
@@ -269,8 +258,7 @@ public class BugReportDatabase {
 				}
 			}
 		} catch (SQLException e) {
-			plugin.getLogger().severe(e.getMessage());
-			logErrorMessage(e.getMessage());
+			ErrorClass.throwDebug("Error 037: " + e.getMessage());
 		}
 		return reports;
 	}
@@ -289,8 +277,7 @@ public class BugReportDatabase {
 				reports.add(new BugReportPair<>(timestampToString, message));
 			}
 		} catch (SQLException e) {
-			plugin.getLogger().severe(e.getMessage());
-			logErrorMessage(e.getMessage());
+			ErrorClass.throwDebug("Error 038: " + e.getMessage());
 		}
 		return reports;
 	}
@@ -307,8 +294,7 @@ public class BugReportDatabase {
 				statement.close();
 			}
 		} catch (SQLException e) {
-			plugin.getLogger().severe(e.getMessage());
-			logErrorMessage(e.getMessage());
+			ErrorClass.throwDebug("Error 039: " + e.getMessage());
 		}
 
 		return count;
@@ -326,8 +312,7 @@ public class BugReportDatabase {
 				statement.close();
 			}
 		} catch (SQLException e) {
-			plugin.getLogger().severe(e.getMessage());
-			logErrorMessage(e.getMessage());
+			ErrorClass.throwDebug("Error 040: " + e.getMessage());
 		}
 
 		return count;
@@ -336,7 +321,7 @@ public class BugReportDatabase {
 	public static @NotNull Map<UUID, List<String>> loadBugReports() {
 		Map<UUID, List<String>> bugReports = new HashMap<>();
 		if (debugMode) {
-			plugin.getLogger().info("Loading bug reports");
+			ErrorClass.throwDebug("Loading bug reports");
 		}
 
 		try (Connection connection = dataSource.getConnection()) {
@@ -368,20 +353,19 @@ public class BugReportDatabase {
 			}
 
 			if (debugMode) {
-				plugin.getLogger().info("Loaded " + bugReports.size() + " bug reports");
+				ErrorClass.throwDebug("Loaded " + bugReports.size() + " bug reports");
 			}
 
 			resultSet.close();
 			statement.close();
 		} catch (SQLException e) {
-			plugin.getLogger().severe("Failed to load bug reports.");
-			logErrorMessage("Failed to load bug reports.");
+			ErrorClass.throwDebug("Error 041: Failed to load bug reports.");
 			if (e.getMessage().startsWith("[SQLITE_CORRUPT]")) {
-				plugin.getLogger().severe("Your database is corrupted. Please delete the database file and restart the server.");
-				plugin.getLogger().severe("File path: plugins/BugReport/bugreports.db");
-				plugin.getLogger().severe("If you need help, please join the discord server: https://discord.gg/ZvdNYqmsbx");
+				ErrorClass.throwError("Your database is corrupted. Please delete the database file and restart the server.");
+				ErrorClass.throwError("File path: plugins/BugReport/bugreports.db");
+				ErrorClass.throwError("If you need help, please join the discord server: https://discord.gg/ZvdNYqmsbx");
 			} else {
-				plugin.getLogger().severe(e.getMessage());
+				ErrorClass.throwError("Error 042: " + e.getMessage());
 			}
 		}
 
@@ -399,10 +383,10 @@ public class BugReportDatabase {
 			hikariConfig.setUsername(username);
 			hikariConfig.setPassword(password);
 			dataSource = new HikariDataSource(hikariConfig);
-			plugin.getLogger().info("Connected to remote database");
+			ErrorClass.throwDebug("Connected to remote database");
 		} catch (Exception e) {
-			plugin.getLogger().severe("Failed to connect to remote database.");
-			plugin.getLogger().severe(e.getMessage());
+			ErrorClass.throwError("Error 043: Failed to connect to remote database.");
+			ErrorClass.throwError(e.getMessage());
 		}
 
 		createTables();
@@ -414,10 +398,10 @@ public class BugReportDatabase {
 			HikariConfig hikariConfig = new HikariConfig();
 			hikariConfig.setJdbcUrl("jdbc:sqlite:" + databaseFile.getAbsolutePath());
 			dataSource = new HikariDataSource(hikariConfig);
-			plugin.getLogger().info("Connected to local database");
+			ErrorClass.throwDebug("Connected to local database");
 		} catch (Exception e) {
-			plugin.getLogger().severe("Failed to connect to local database.");
-			plugin.getLogger().severe(e.getMessage());
+			ErrorClass.throwError("Error 044: Error Failed to connect to local database.");
+			ErrorClass.throwError(e.getMessage());
 		}
 
 		createTables();
@@ -429,14 +413,14 @@ public class BugReportDatabase {
 			connection.createStatement().execute("CREATE TABLE IF NOT EXISTS player_data(player_id TEXT, last_login_timestamp BIGINT DEFAULT 0)");
 			connection.createStatement().execute("CREATE TABLE IF NOT EXISTS bugreport_analytics(total_deleted INTEGER DEFAULT 0)");
 		} catch (Exception e) {
-			plugin.getLogger().severe("Failed to create tables.");
-			plugin.getLogger().severe(e.getMessage());
+			ErrorClass.throwError("Error 045: Failed to create tables.");
+			ErrorClass.throwError(e.getMessage());
 		}
 	}
 
 	public static void updateReportStatus(int reportIDGUI, int statusID) {
 		if (debugMode) {
-			plugin.getLogger().info("Updating report status for report ID " + reportIDGUI);
+			ErrorClass.throwDebug("Updating report status for report ID " + reportIDGUI);
 		}
 		try (Connection connection = dataSource.getConnection()) {
 			try (PreparedStatement statement = connection.prepareStatement("UPDATE bug_reports SET status = ? WHERE report_id = ?")) {
@@ -462,17 +446,17 @@ public class BugReportDatabase {
 			reports.set(existingHeaderPosition, newHeader.toString().trim());
 			bugReports.put(getStaticUUID(), reports);
 			if (debugMode) {
-				plugin.getLogger().info("Updated report status for report ID " + reportIDGUI);
+				ErrorClass.throwDebug("Updated report status for report ID " + reportIDGUI);
 			}
 		} catch (Exception e) {
-			plugin.getLogger().severe("Failed to update bug report status.");
-			plugin.getLogger().severe(e.getMessage());
+			ErrorClass.throwError("Error 046: Failed to update bug report status.");
+			ErrorClass.throwError(e.getMessage());
 		}
 	}
 
 	public static void updateBugReportArchive(int reportIndex, int archived) {
 		if (debugMode) {
-			plugin.getLogger().info("Updating bug report archive status for report ID " + reportIndex);
+			ErrorClass.throwDebug("Updating bug report archive status for report ID " + reportIndex);
 		}
 		try (Connection connection = dataSource.getConnection()) {
 			PreparedStatement statement = connection.prepareStatement("UPDATE bug_reports SET archived = ? WHERE report_id = ?");
@@ -499,24 +483,24 @@ public class BugReportDatabase {
 			reports.set(existingHeaderPosition, newHeader.toString().trim());
 			bugReports.put(getStaticUUID(), reports);
 			if (debugMode) {
-				plugin.getLogger().info("Updated bug report archive status for report ID " + reportIndex);
+				ErrorClass.throwDebug("Updated bug report archive status for report ID " + reportIndex);
 			}
 		} catch (Exception e) {
-			plugin.getLogger().severe("Failed to update bug report archive status.");
-			plugin.getLogger().severe(e.getMessage());
+			ErrorClass.throwError("Error 047: Failed to update bug report archive status.");
+			ErrorClass.throwError(e.getMessage());
 		}
 	}
 
 	public static void deleteBugReport(int reportIndex) {
 		if (debugMode) {
-			plugin.getLogger().info("Deleting bug report for report ID " + reportIndex);
+			ErrorClass.throwDebug("Deleting bug report for report ID " + reportIndex);
 		}
 		try (Connection connection = dataSource.getConnection()) {
 			try (PreparedStatement statement = connection.prepareStatement("DELETE FROM bug_reports WHERE report_id = ?")) {
 				statement.setInt(1, reportIndex);
 				int rowsAffected = statement.executeUpdate();
 				if (debugMode) {
-					plugin.getLogger().info("Deleted bug report rows affected: " + rowsAffected);
+					ErrorClass.throwDebug("Deleted bug report rows affected: " + rowsAffected);
 				}
 			}
 
@@ -533,8 +517,8 @@ public class BugReportDatabase {
 					analyticsStatement.setInt(1, totalDeleted + 1);
 					int updateRowsAffected = analyticsStatement.executeUpdate();
 					if (debugMode) {
-						plugin.getLogger().info("Updated total_deleted, rows affected: " + updateRowsAffected);
-						plugin.getLogger().info("Updated bug report total deleted to " + (totalDeleted + 1));
+						ErrorClass.throwDebug("Updated total_deleted, rows affected: " + updateRowsAffected);
+						ErrorClass.throwDebug("Updated bug report total deleted to " + (totalDeleted + 1));
 					}
 				}
 			} else {
@@ -542,13 +526,13 @@ public class BugReportDatabase {
 					insertStatement.setInt(1, 1);
 					int insertRowsAffected = insertStatement.executeUpdate();
 					if (debugMode) {
-						plugin.getLogger().info("Inserted initial bug report total_deleted value of 1, rows affected: " + insertRowsAffected);
+						ErrorClass.throwDebug("Inserted initial bug report total_deleted value of 1, rows affected: " + insertRowsAffected);
 					}
 				}
 			}
 		} catch (SQLException e) {
-			plugin.getLogger().severe("Failed to delete bug report or update analytics.");
-			plugin.getLogger().severe(e.getMessage());
+			ErrorClass.throwError("Error 048: Failed to delete bug report or update analytics.");
+			ErrorClass.throwError(e.getMessage());
 		}
 
 		loadBugReports();
@@ -578,8 +562,8 @@ public class BugReportDatabase {
 				statement.close();
 			}
 		} catch (Exception e) {
-			plugin.getLogger().severe("Failed to make all headers equal report_id.");
-			plugin.getLogger().severe(e.getMessage());
+			ErrorClass.throwError("Error 049: Failed to make all headers equal report_id.");
+			ErrorClass.throwError(e.getMessage());
 		}
 	}
 
@@ -598,8 +582,8 @@ public class BugReportDatabase {
 				}
 			}
 		} catch (Exception e) {
-			plugin.getLogger().severe("Failed to fix report_id.");
-			plugin.getLogger().severe(e.getMessage());
+			ErrorClass.throwDebug("Error 050: Failed to fix report_id.");
+			ErrorClass.throwDebug(e.getMessage());
 		}
 
 	}
@@ -632,8 +616,8 @@ public class BugReportDatabase {
 			statement.executeUpdate();
 			statement.close();
 		} catch (Exception e) {
-			plugin.getLogger().severe("Failed to add bug report.");
-			plugin.getLogger().severe(e.getMessage());
+			ErrorClass.throwDebug("Error 051: Failed to add bug report.");
+			ErrorClass.throwDebug(e.getMessage());
 		}
 	}
 }

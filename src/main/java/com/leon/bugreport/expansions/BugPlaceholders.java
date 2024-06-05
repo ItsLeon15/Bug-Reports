@@ -1,11 +1,13 @@
 package com.leon.bugreport.expansions;
 
+import com.leon.bugreport.API.ErrorClass;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
 import static com.leon.bugreport.BugReportDatabase.*;
+import static com.leon.bugreport.BugReportManager.debugMode;
 
 public class BugPlaceholders extends PlaceholderExpansion {
 	private final Plugin plugin;
@@ -41,6 +43,9 @@ public class BugPlaceholders extends PlaceholderExpansion {
 
 	@Override
 	public String onRequest(OfflinePlayer player, @NotNull String params) {
+		if (debugMode) {
+			ErrorClass.throwDebug("LinkDiscordCommand: Requested Placeholders");
+		}
 		switch (params) {
 			case "totalBugReports" -> {
 				return String.valueOf(loadBugReportCount());
