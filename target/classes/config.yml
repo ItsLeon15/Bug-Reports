@@ -1,0 +1,160 @@
+webhookURL: https://discord.com/api/webhooks/
+
+enableDiscordWebhook: false
+enablePluginReportBook: false
+enableBugReportNotifications: true
+
+# Either one of them has to be true, they both can not be true at the same time
+enablePluginReportCategoriesGUI: false # Set to true if you want a category selection GUI after doing /bugreport
+enablePluginReportCategoriesTabComplete: false # Set to true if you want a category tab completion after doing /bugreport. No GUI will open
+
+language: en_US
+
+update-checker: true
+update-checker-join: true
+
+# # Available placeholders:
+#
+# Aqua, Black, Blue, Dark_Aqua, Dark_Blue
+# Dark_Gray, Dark_Green, Dark_Purple, Dark_Red
+# Gold, Gray, Green, Light_Purple, Red, White, Yellow
+discordEmbedColor: Green
+discordEmbedTitle: New Bug Report
+discordEmbedFooter: Bug Report v0.12.3
+discordEmbedThumbnail: https://www.spigotmc.org/data/resource_icons/110/110732.jpg
+discordEnableThumbnail: true
+discordEnableUserAuthor: true
+discordIncludeDate: true
+
+# If you want to ping a role or a member, you can add them here. You can add multiple roles and members.
+# The role or member will be pinged in the message you set in discordPingMessage.
+# You don't need to add the "<@" or "<@&" characters to the role or member. They will be added automatically.
+discordPingMessage: A new Bug Report has been submitted
+discordEnablePing: true
+
+discordPingMembers:
+  - ''
+discordPingRoles:
+  - ''
+
+enableBungeeCordSendMessage: true
+enableBungeeCordReceiveMessage: true
+
+useTitleInsteadOfMessage: false
+enablePlayerHeads: true
+refreshPlayerHeadCache: 1d # Default, 1m, 1h, 1d, 1w, 1mo, 1y
+
+metrics: true # Enables or disables metrics
+serverName: "My Server"
+
+max-reports-per-player: 25 # 0 = unlimited
+report-confirmation-message: Thanks for submitting a report!
+bug-report-cooldown: 0 # 0 = disabled
+
+# # Available placeholders:
+#
+# Aqua, Black, Blue, Dark_Aqua, Dark_Blue
+# Dark_Gray, Dark_Green, Dark_Purple, Dark_Red
+# Gold, Gray, Green, Light_Purple, Red, White, Yellow
+pluginColor: Yellow
+
+# You are able to use & for color codes such as "&8[&6Bug Report&8]&9".
+# For a list of color codes, visit https://htmlcolorcodes.com/minecraft-color-codes (Format Codes will NOT work!)
+# This will override the pluginColor option.
+pluginTitle: '[Bug Report]'
+
+# This can either be "mysql" or "local".
+# If you choose "mysql", you must fill out the database section below.
+# If you choose "local", no configuration is required.
+databaseType: local
+database:
+  host: localhost
+  port: 3306
+  database: database
+  username: root
+  password: password
+
+# Placeholders via PlaceholderAPI are allowed to be used in the discordEmbedFields.
+# E.g: You can create a field with the biome of the player, where the bugreport was created.
+# Choose for the value: "%player_biome%" (without ""). This works with any other Placeholder supported by PlaceholderAPI.
+discordEmbedFields:
+  - name: "Username"
+    id: 1
+    value: "%report_username%"
+    inline: true
+  - name: "UUID"
+    id: 2
+    value: "%report_uuid%"
+    inline: true
+  - name: "World"
+    id: 3
+    value: "%report_world%"
+    inline: true
+  - name: "Location (X, Y, Z)"
+    id: 4
+    value: "%report_location%"
+    inline: true
+  - name: "Gamemode"
+    id: 5
+    value: "%report_gamemode%"
+    inline: true
+  - name: "Status"
+    id: 6
+    value: "%report_status%"
+    inline: true
+  - name: "Category"
+    id: 7
+    value: "%report_category%"
+    inline: true
+  - name: "Sever Name"
+    id: 8
+    value: "%report_server_name%"
+    inline: true
+  - name: "Full Message"
+    id: 9
+    value: "%report_full_message%"
+    inline: false
+
+reportCategories:
+  - name: Plugin Bug
+    id: 1
+    description: Report a bug with a plugin
+    item: minecraft:book
+    color: red
+  - name: Server Bug
+    id: 2
+    description: Report a bug with the server
+    item: minecraft:emerald
+    color: green
+  - name: Resource Bug
+    id: 3
+    description: Report a bug with the resource pack
+    item: minecraft:map
+    color: blue
+  - name: Other
+    id: 4
+    description: Report something else
+    item: minecraft:paper
+    color: yellow
+
+statuses:
+  - name: Open
+    description: Report is open
+    icon: minecraft:green_dye
+    color: GREEN
+    id: 1
+  - name: Archived
+    description: Report is archived
+    icon: minecraft:red_dye
+    color: RED
+    id: 2
+  - name: Pending
+    description: Report is pending
+    icon: minecraft:yellow_dye
+    color: YELLOW
+    id: 3
+  - name: Ignored
+    description: Report is ignored
+    icon: minecraft:white_dye
+    color: WHITE
+    id: 4

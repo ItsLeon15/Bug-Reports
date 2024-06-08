@@ -1,0 +1,75 @@
+# Slots always start from 0 and go up to the max guiSize value.
+
+# The list of valid bugReportItem instances are
+# BugReporter, BugReportUUID, BugReportWorld, BugReportMessage, BugReportCategory, BugReportStatus, BugReportTimestamp
+# BugReportLocation, BugReportGamemode, BugReportArchive, BugReportBack, BugReportDelete, BugReportServerName
+
+# Any of these items can have a texture, the list of textures can be obtained from here: https://minecraft-heads.com/custom-heads
+# Then select the "Value" under the "For Developers:" section and paste it in the texture field.
+
+# The only material that accepts an array of materials is BugReportStatus. Any other bugReportItem won't accept this type!
+
+# The list of all items that can have a texture are:
+# BugReportUUID, BugReportWorld, BugReportMessage
+# BugReportCategory, BugReportTimestamp, BugReportLocation
+# BugReportGamemode, BugReportArchive, BugReportDelete, BugReportServerName
+
+# BugReportStatus will be terminated if a custom status is provided.
+
+bug_report_details_GUI:
+  guiSize: 45 # The GUI size can be between 9 and 54 but has to be a multiple of 9.
+  items:
+    - slot: 0
+      bugReportItem: BugReportServerName
+      material: DIAMOND
+      texture: ""
+    - slot: 2
+      bugReportItem: BugReporter
+      material: PLAYER_HEAD # For player texture, use %player_texture%. Only works for BugReporter.
+      texture: "%player_texture%"
+    - slot: 4
+      bugReportItem: BugReportUUID
+      material: NAME_TAG
+      texture: ""
+    - slot: 6
+      bugReportItem: BugReportWorld
+      material: GRASS_BLOCK
+      texture: ""
+    - slot: 8
+      bugReportItem: BugReportMessage
+      material: PAPER
+      texture: ""
+    - slot: 18
+      bugReportItem: BugReportCategory
+      material: CHEST
+      texture: ""
+    - slot: 20
+      bugReportItem: BugReportStatus
+      material: [ LIME_DYE, RED_DYE ] # First item is Active, Second is Archived
+    - slot: 22
+      bugReportItem: BugReportTimestamp
+      material: CLOCK
+      texture: ""
+    - slot: 24
+      bugReportItem: BugReportLocation
+      material: COMPASS
+      texture: ""
+    - slot: 26
+      bugReportItem: BugReportGamemode
+      material: DIAMOND_SWORD
+      texture: ""
+    - slot: 38 # For BugReportArchive and BugReportUnArchive, only one will ever show depending on the GUI. The other will be hidden.
+      bugReportItem: BugReportUnArchive
+      material: PLAYER_HEAD
+      texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDVjNTg4YjllYzBhMDhhMzdlMDFhODA5ZWQwOTAzY2MzNGMzZTNmMTc2ZGM5MjIzMDQxN2RhOTNiOTQ4ZjE0OCJ9fX0="
+    - slot: 38
+      bugReportItem: BugReportArchive
+      material: PLAYER_HEAD
+      texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvY2Y5YjY3YmI5Y2MxYzg4NDg2NzYwYjE3MjY1MDU0MzEyZDY1OWRmMmNjNjc1NTc1MDA0NWJkNzFjZmZiNGU2MCJ9fX0="
+    - slot: 40
+      bugReportItem: BugReportBack
+      material: BARRIER
+    - slot: 42
+      bugReportItem: BugReportDelete
+      material: PLAYER_HEAD
+      texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmUwZmQxMDE5OWU4ZTRmY2RhYmNhZTRmODVjODU5MTgxMjdhN2M1NTUzYWQyMzVmMDFjNTZkMThiYjk0NzBkMyJ9fX0="
