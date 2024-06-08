@@ -272,7 +272,7 @@ class LinkDiscord(private var webhookURL: String) {
 
 			connection.requestMethod = "GET"
 			connection.setRequestProperty("Content-Type", "application/json")
-			connection.setRequestProperty("User-Agent", "BugReport/0.12.3")
+			connection.setRequestProperty("User-Agent", "BugReport/1.0.0")
 			connection.connectTimeout = 5000
 			connection.readTimeout = 5000
 			connection.doOutput = true
@@ -306,7 +306,7 @@ class LinkDiscord(private var webhookURL: String) {
 
 	companion object {
 		private const val EMBED_TITLE = "New Bug Report"
-		private const val EMBED_FOOTER_TEXT = "Bug Report V0.12.3"
+		private const val EMBED_FOOTER_TEXT = "Bug Report V1.0.0"
 		private const val EMBED_THUMBNAIL = "https://www.spigotmc.org/data/resource_icons/110/110732.jpg"
 		private var errorLogged = false
 	}

@@ -625,7 +625,7 @@ class BugReportManager(private val plugin: Plugin) : Listener {
 					put("update-checker-join", true)
 					put("discordEmbedColor", "Yellow")
 					put("discordEmbedTitle", "New Bug Report")
-					put("discordEmbedFooter", "Bug Report V0.12.3")
+					put("discordEmbedFooter", "Bug Report V1.0.0")
 					put("discordEmbedThumbnail", "https://www.spigotmc.org/data/resource_icons/110/110732.jpg")
 					put("discordEnableThumbnail", true)
 					put("discordEnableUserAuthor", true)
