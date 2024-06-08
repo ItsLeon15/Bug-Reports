@@ -1,9 +1,11 @@
 name: BugReport
-version: 0.12.3
-main: com.leon.bugreport.BugReportPlugin
-api-version: 1.13
+version: 1.0.0
+main: com.bugreportmc.bugreport.BugReportPlugin
+api-version: 1.18
+prefix: BugReport
 author: ItsLeon15
 softdepend: [ PlaceholderAPI, Plan ]
+load: STARTUP
 
 permissions:
   bugreport.admin:
@@ -37,28 +39,28 @@ commands:
       - br
     description: Submit a bug report
     usage: /bugreport <message>
-    executor: com.leon.bugreport.BugReportCommand
+    executor: com.bugreportmc.bugreport.commands.BugReportCommand
   buglist:
     aliases:
       - bl
     description: View bug reports
     usage: /buglist
-    executor: com.leon.bugreport.commands.BugListCommand
+    executor: com.bugreportmc.bugreport.commands.BugListCommand
   buglinkdiscord:
     aliases:
       - bld
     description: Link a Discord webhook to the server
     usage: /buglinkdiscord <Webhook URL>
-    executor: com.leon.bugreport.LinkDiscordCommand
+    executor: com.bugreportmc.bugreport.LinkDiscordCommand
   buglistarchived:
     aliases:
       - bla
     description: Lists all archived bug reports
     usage: /buglistarchived
-    executor: com.leon.bugreport.BugListArchivedCommand
+    executor: com.bugreportmc.bugreport.BugListArchivedCommand
   buglistsettings:
     aliases:
       - bls
     description: View the plugin settings
     usage: /buglistsettings
-    executor: com.leon.bugreport.BugListSettingsCommand
+    executor: com.bugreportmc.bugreport.BugListSettingsCommand
