@@ -2,7 +2,9 @@ package com.bugreportmc.bugreport.extensions
 
 import com.bugreportmc.bugreport.BugReportDatabase
 import com.bugreportmc.bugreport.BugReportDatabase.Companion.loadArchivedBugReportCountForPlayer
+import com.bugreportmc.bugreport.BugReportDatabase.Companion.loadBugReportAllPlayer
 import com.bugreportmc.bugreport.BugReportDatabase.Companion.loadBugReportCountForPlayer
+import com.bugreportmc.bugreport.BugReportDatabase.Companion.loadBugReportCountsPerPlayer
 import com.bugreportmc.bugreport.BugReportDatabase.Companion.loadNonArchivedBugReportCountForPlayer
 import com.djrapitops.plan.extension.CallEvents
 import com.djrapitops.plan.extension.DataExtension
@@ -69,7 +71,7 @@ class BugReportExtension : DataExtension {
 			Table.builder().columnOne("Date Submitted", Icon(Family.SOLID, "gavel", Color.AMBER))
 				.columnTwo("Reported Bug", Icon(Family.SOLID, "bug", Color.AMBER))
 
-		val allBugReports: List<BugReportPair<String, String>> = BugReportDatabase.loadBugReportAllPlayer(playerName)
+		val allBugReports: List<BugReportPair<String, String>> = loadBugReportAllPlayer(playerName)
 		for (report in allBugReports) {
 			val timestampString = report.first
 			val bugMessage = report.second
@@ -85,7 +87,7 @@ class BugReportExtension : DataExtension {
 			Table.builder().columnOne("Bug Reporter", Icon(Family.SOLID, "gavel", Color.AMBER))
 				.columnTwo("Reported Bug", Icon(Family.SOLID, "bug", Color.AMBER))
 
-		val allBugReports: List<BugReportPair<String, String>> = BugReportDatabase.loadBugReportCountsPerPlayer()
+		val allBugReports: List<BugReportPair<String, String>> = loadBugReportCountsPerPlayer()
 		for (report in allBugReports) {
 			val reporter = report.first
 			val bugMessage = report.second

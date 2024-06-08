@@ -248,7 +248,7 @@ class BugReportDatabase {
 		private fun addColumnIfNotExists(tableName: String, columnName: String, columnDefinition: String) {
 			try {
 				dataSource.getConnection().use { connection ->
-					connection.getMetaData().getColumns(null, null, tableName, columnName).use { resultSet ->
+					connection.metaData.getColumns(null, null, tableName, columnName).use { resultSet ->
 						if (!resultSet.next()) {
 							val query = String.format(
 								"ALTER TABLE %s ADD COLUMN %s %s", tableName, columnName, columnDefinition

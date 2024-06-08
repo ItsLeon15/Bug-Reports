@@ -1,6 +1,5 @@
 package com.bugreportmc.bugreport.api
 
-import com.bugreportmc.bugreport.BugReportManager
 import com.bugreportmc.bugreport.BugReportPlugin.Companion.plugin
 import com.bugreportmc.bugreport.api.DataSource.cleanOutdatedCache
 import org.bukkit.scheduler.BukkitRunnable

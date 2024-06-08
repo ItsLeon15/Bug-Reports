@@ -1,6 +1,13 @@
 package com.bugreportmc.bugreport
 
+import com.bugreportmc.bugreport.BugReportDatabase.Companion.getBugReportLocation
+import com.bugreportmc.bugreport.BugReportDatabase.Companion.getStaticUUID
+import com.bugreportmc.bugreport.BugReportDatabase.Companion.updateBugReportArchive
+import com.bugreportmc.bugreport.BugReportLanguage.Companion.getEnglishValueFromValue
+import com.bugreportmc.bugreport.BugReportLanguage.Companion.getValueFromLanguageFile
 import com.bugreportmc.bugreport.BugReportPlugin.Companion.plugin
+import com.bugreportmc.bugreport.BugReportSettings.getSettingsGUI
+import com.bugreportmc.bugreport.BugReportSettings.getStatusSelectionGUI
 import com.bugreportmc.bugreport.api.ErrorClass.logErrorMessage
 import com.bugreportmc.bugreport.commands.BugReportCommand.Companion.getChatColorByCode
 import com.bugreportmc.bugreport.commands.BugReportCommand.Companion.stringColorToColorCode
@@ -104,12 +111,12 @@ class BugReportManager(private val plugin: Plugin) : Listener {
 			return categories
 		} else {
 			plugin.logger.warning(
-				BugReportLanguage.getValueFromLanguageFile(
+				getValueFromLanguageFile(
 					"wentWrongLoadingCategoriesMessage", "Something went wrong while loading the report categories"
 				)
 			)
 			logErrorMessage(
-				BugReportLanguage.getValueFromLanguageFile(
+				getValueFromLanguageFile(
 					"wentWrongLoadingCategoriesMessage", "Something went wrong while loading the report categories"
 				)
 			)
@@ -131,7 +138,7 @@ class BugReportManager(private val plugin: Plugin) : Listener {
 			plugin.logger.info("Submitting bug report for " + player.name + "...")
 		}
 		val reports: MutableList<String> =
-			bugReports.getOrDefault(BugReportDatabase.getStaticUUID(), ArrayList<String>(listOf("DUMMY")))
+			bugReports.getOrDefault(getStaticUUID(), ArrayList<String>(listOf("DUMMY")))
 				.toMutableList()
 		val playerId: UUID = player.uniqueId
 
@@ -186,7 +193,7 @@ class BugReportManager(private val plugin: Plugin) : Listener {
 			if (debugMode) {
 				plugin.logger.info("Sending bug report notification to online players...")
 			}
-			val defaultMessage = returnStartingMessage(ChatColor.GRAY) + BugReportLanguage.getValueFromLanguageFile(
+			val defaultMessage = returnStartingMessage(ChatColor.GRAY) + getValueFromLanguageFile(
 				"bugReportNotificationMessage", "A new bug report has been submitted by %player%!"
 			).replace("%player%", ChatColor.AQUA.toString() + playerName + ChatColor.GRAY)
 
@@ -204,12 +211,12 @@ class BugReportManager(private val plugin: Plugin) : Listener {
 			val webhookURL: String = config.getString("webhookURL", "").toString()
 			if (webhookURL.isEmpty()) {
 				plugin.logger.warning(
-					BugReportLanguage.getValueFromLanguageFile(
+					getValueFromLanguageFile(
 						"missingDiscordWebhookURLMessage", "Missing webhookURL in config.yml"
 					)
 				)
 				logErrorMessage(
-					BugReportLanguage.getValueFromLanguageFile(
+					getValueFromLanguageFile(
 						"missingDiscordWebhookURLMessage", "Missing webhookURL in config.yml"
 					)
 				)
@@ -269,7 +276,7 @@ class BugReportManager(private val plugin: Plugin) : Listener {
 
 			val displayName: String = itemMeta.displayName
 			val cleanedDisplayName = ChatColor.stripColor(displayName)
-			val customDisplayName: String = BugReportLanguage.getEnglishValueFromValue(displayName).toString()
+			val customDisplayName: String = getEnglishValueFromValue(displayName).toString()
 
 			if (debugMode) {
 				plugin.logger.info("Clicked item: $customDisplayName")
@@ -278,7 +285,7 @@ class BugReportManager(private val plugin: Plugin) : Listener {
 			if (cleanedDisplayName!!.startsWith("Bug Report #")) {
 				val reportID = displayName.substring(14).toInt()
 				val reports: List<String?> = bugReports.getOrDefault(
-					BugReportDatabase.getStaticUUID(), ArrayList<String?>(
+					getStaticUUID(), ArrayList<String?>(
 						listOf("DUMMY")
 					)
 				)
@@ -336,7 +343,7 @@ class BugReportManager(private val plugin: Plugin) : Listener {
 				}
 
 				"Settings" -> {
-					player.openInventory(BugReportSettings.getSettingsGUI())
+					player.openInventory(getSettingsGUI())
 					playButtonClickSound(player)
 				}
 
@@ -396,7 +403,7 @@ class BugReportManager(private val plugin: Plugin) : Listener {
 			}
 
 			val itemName: String = itemMeta.displayName
-			val customDisplayName: String = BugReportLanguage.getEnglishValueFromValue(itemName).toString()
+			val customDisplayName: String = getEnglishValueFromValue(itemName).toString()
 
 			if (debugMode) {
 				plugin.logger.info("Clicked item: $customDisplayName")
@@ -408,7 +415,7 @@ class BugReportManager(private val plugin: Plugin) : Listener {
 
 			if (customDisplayName.contains("(Click to change)")) {
 				playButtonClickSound(player)
-				player.openInventory(BugReportSettings.getStatusSelectionGUI(reportIDGUI))
+				player.openInventory(getStatusSelectionGUI(reportIDGUI))
 			}
 
 			if (customDisplayName.contains("(Click to teleport)")) {
@@ -429,7 +436,7 @@ class BugReportManager(private val plugin: Plugin) : Listener {
 					player.sendMessage(returnStartingMessage(ChatColor.GREEN) + " Teleporting to the location of Bug Report #" + reportIDGUI + ".")
 				}
 
-				val teleportLocation: Location? = BugReportDatabase.getBugReportLocation(reportIDGUI)
+				val teleportLocation: Location? = getBugReportLocation(reportIDGUI)
 				if (teleportLocation != null) {
 					player.teleport(teleportLocation, PlayerTeleportEvent.TeleportCause.PLUGIN)
 				}
@@ -447,7 +454,7 @@ class BugReportManager(private val plugin: Plugin) : Listener {
 
 				"Unarchive" -> {
 					playButtonClickSound(player)
-					BugReportDatabase.updateBugReportArchive(reportIDGUI, 0)
+					updateBugReportArchive(reportIDGUI, 0)
 
 					if (debugMode) {
 						plugin.logger.info("Unarchiving bug report #$reportIDGUI...")
@@ -546,12 +553,12 @@ class BugReportManager(private val plugin: Plugin) : Listener {
 		fun checkCategoryConfig(): Boolean {
 			if (!config.contains("reportCategories")) {
 				plugin.logger.warning(
-					BugReportLanguage.getValueFromLanguageFile(
+					getValueFromLanguageFile(
 						"missingReportCategoryMessage", "Missing reportCategories in config.yml"
 					)
 				)
 				logErrorMessage(
-					BugReportLanguage.getValueFromLanguageFile(
+					getValueFromLanguageFile(
 						"missingReportCategoryMessage", "Missing reportCategories in config.yml"
 					)
 				)
@@ -566,12 +573,12 @@ class BugReportManager(private val plugin: Plugin) : Listener {
 				for (i in keys.indices) {
 					if (values[i] == null) {
 						plugin.logger.warning(
-							BugReportLanguage.getValueFromLanguageFile(
+							getValueFromLanguageFile(
 								"missingValueMessage", "Missing '%key%' in reportCategories in config.yml"
 							).replace("%key%", keys[i].toString())
 						)
 						logErrorMessage(
-							BugReportLanguage.getValueFromLanguageFile(
+							getValueFromLanguageFile(
 								"missingValueMessage", "Missing '%key%' in reportCategories in config.yml"
 							).replace("%key%", keys[i].toString())
 						)
@@ -667,7 +674,7 @@ class BugReportManager(private val plugin: Plugin) : Listener {
 			val navigationRow = 36
 
 			val reports: List<String> = bugReports.getOrDefault(
-				BugReportDatabase.getStaticUUID(), ArrayList<String>(
+				getStaticUUID(), ArrayList<String>(
 					listOf("DUMMY")
 				)
 			)
@@ -690,7 +697,7 @@ class BugReportManager(private val plugin: Plugin) : Listener {
 				null,
 				45,
 				ChatColor.YELLOW.toString() + (if (showArchived) "Archived Bugs" else "Bug " + "Report") + " - " + Objects.requireNonNull<String>(
-					BugReportLanguage.getValueFromLanguageFile(
+					getValueFromLanguageFile(
 						"buttonNames.pageInfo", "Page %currentPage% of %totalPages%"
 					)
 				).replace("%currentPage%", currentPage.toString()).replace("%totalPages%", totalPages.toString())
@@ -729,17 +736,16 @@ class BugReportManager(private val plugin: Plugin) : Listener {
 			}
 
 			val settingsButton: ItemStack = createButton(
-				Material.CHEST, ChatColor.YELLOW.toString() + BugReportLanguage.getValueFromLanguageFile(
+				Material.CHEST, ChatColor.YELLOW.toString() + getValueFromLanguageFile(
 					"buttonNames.settings", "Settings"
 				)
 			)
 			val closeButton: ItemStack = createButton(
-				Material.BARRIER,
-				ChatColor.RED.toString() + BugReportLanguage.getValueFromLanguageFile("buttonNames.close", "Close")
+				Material.BARRIER, ChatColor.RED.toString() + getValueFromLanguageFile("buttonNames.close", "Close")
 			)
 			val pageIndicator: ItemStack = createButton(
 				Material.PAPER, ChatColor.YELLOW.toString() + Objects.requireNonNull<String>(
-					BugReportLanguage.getValueFromLanguageFile(
+					getValueFromLanguageFile(
 						"buttonNames.pageInfo", "Page %currentPage% of %totalPages%"
 					)
 				).replace("%currentPage%", currentPage.toString()).replace("%totalPages%", totalPages.toString())
@@ -785,10 +791,10 @@ class BugReportManager(private val plugin: Plugin) : Listener {
 		}
 
 		private fun createNavigationButtons(forward: String, bugReportGUI: Inventory, index: Int) {
-			val forwardButton: ItemStack = ItemStack(Material.ARROW)
+			val forwardButton = ItemStack(Material.ARROW)
 			val forwardMeta: ItemMeta? = forwardButton.itemMeta
 			Objects.requireNonNull<ItemMeta>(forwardMeta).setDisplayName(
-				ChatColor.GREEN.toString() + BugReportLanguage.getValueFromLanguageFile(
+				ChatColor.GREEN.toString() + getValueFromLanguageFile(
 					"buttonNames.$forward",
 					forward.substring(0, 1).uppercase(Locale.getDefault()) + forward.substring(1)
 				)
@@ -870,7 +876,7 @@ class BugReportManager(private val plugin: Plugin) : Listener {
 		val totalPages: Int
 			get() {
 				val reports: List<String?> = bugReports.getOrDefault(
-					BugReportDatabase.getStaticUUID(), ArrayList<String?>(
+					getStaticUUID(), ArrayList<String?>(
 						listOf<String>("DUMMY")
 					)
 				)

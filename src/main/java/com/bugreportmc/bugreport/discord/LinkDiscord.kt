@@ -1,15 +1,13 @@
 package com.bugreportmc.bugreport.discord
 
-import com.bugreportmc.bugreport.api.ErrorClass
-import com.bugreportmc.bugreport.BugReportManager
 import com.bugreportmc.bugreport.BugReportManager.Companion.config
 import com.bugreportmc.bugreport.BugReportPlugin.Companion.plugin
 import com.bugreportmc.bugreport.api.ErrorClass.logErrorMessage
-import com.bugreportmc.bugreport.commands.BugReportCommand
+import com.bugreportmc.bugreport.commands.BugReportCommand.Companion.chatColorToColor
+import com.bugreportmc.bugreport.commands.BugReportCommand.Companion.stringColorToColorCode
 import me.clip.placeholderapi.PlaceholderAPI
 import org.bukkit.Bukkit
 import org.bukkit.Bukkit.getLogger
-import java.awt.Color
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -25,14 +23,14 @@ class LinkDiscord(private var webhookURL: String) {
 		var discordEmbedTitle = config.getString("discordEmbedTitle")
 		var discordEmbedFooter = config.getString("discordEmbedFooter")
 		var discordEmbedThumbnail = config.getString("discordEmbedThumbnail")
-		var discordEmbedColor = BugReportCommand.chatColorToColor(
-			BugReportCommand.stringColorToColorCode(
+		var discordEmbedColor = chatColorToColor(
+			stringColorToColorCode(
 				config.getString("discordEmbedColor")
 			)
 		)
 
 		discordEmbedFooter = if (discordEmbedFooter.isNullOrEmpty()) EMBED_FOOTER_TEXT else discordEmbedFooter
-		discordEmbedColor = discordEmbedColor ?: EMBED_COLOR
+		(discordEmbedColor).apply { discordEmbedColor = this }
 		discordEmbedTitle = if (discordEmbedTitle.isNullOrEmpty()) EMBED_TITLE else discordEmbedTitle
 		discordEmbedThumbnail = if (discordEmbedThumbnail.isNullOrEmpty()) EMBED_THUMBNAIL else discordEmbedThumbnail
 
@@ -144,11 +142,11 @@ class LinkDiscord(private var webhookURL: String) {
 		message: String,
 		serverName: String,
 	): String {
-		var fieldValue = fieldValue
+		var field = fieldValue
 		val player = Bukkit.getPlayer(username)
 
-		if (player != null && PlaceholderAPI.containsPlaceholders(fieldValue)) {
-			fieldValue = PlaceholderAPI.setPlaceholders(player, fieldValue)
+		if (player != null && PlaceholderAPI.containsPlaceholders(field)) {
+			field = PlaceholderAPI.setPlaceholders(player, field)
 		}
 
 		val replacements: MutableMap<String, String?> = HashMap()
@@ -163,10 +161,10 @@ class LinkDiscord(private var webhookURL: String) {
 		replacements["%report_full_message%"] = message
 
 		for ((key, value) in replacements) {
-			fieldValue = fieldValue.replace(key, value!!)
+			field = field.replace(key, value!!)
 		}
 
-		return fieldValue
+		return field
 	}
 
 	private fun sendEmbed(embedObject: DiscordWebhook.EmbedObject) {
@@ -310,7 +308,6 @@ class LinkDiscord(private var webhookURL: String) {
 		private const val EMBED_TITLE = "New Bug Report"
 		private const val EMBED_FOOTER_TEXT = "Bug Report V0.12.3"
 		private const val EMBED_THUMBNAIL = "https://www.spigotmc.org/data/resource_icons/110/110732.jpg"
-		private val EMBED_COLOR: Color = Color.YELLOW
 		private var errorLogged = false
 	}
 }

@@ -1,6 +1,9 @@
 package com.bugreportmc.bugreport.expansions
 
-import com.bugreportmc.bugreport.BugReportDatabase
+import com.bugreportmc.bugreport.BugReportDatabase.Companion.loadArchivedBugReportCount
+import com.bugreportmc.bugreport.BugReportDatabase.Companion.loadBugReportCount
+import com.bugreportmc.bugreport.BugReportDatabase.Companion.loadDeletedBugReportCount
+import com.bugreportmc.bugreport.BugReportDatabase.Companion.loadNonArchivedBugReportCount
 import me.clip.placeholderapi.expansion.PlaceholderExpansion
 import org.bukkit.OfflinePlayer
 import org.bukkit.plugin.Plugin
@@ -21,19 +24,19 @@ class BugPlaceholders(plugin: Plugin) : PlaceholderExpansion() {
 	override fun onRequest(player: OfflinePlayer?, params: String): String? {
 		return when (params) {
 			"totalBugReports" -> {
-				BugReportDatabase.loadBugReportCount().toString()
+				loadBugReportCount().toString()
 			}
 
 			"totalArchivedBugReports" -> {
-				BugReportDatabase.loadArchivedBugReportCount().toString()
+				loadArchivedBugReportCount().toString()
 			}
 
 			"totalNonArchivedBugReports" -> {
-				BugReportDatabase.loadNonArchivedBugReportCount().toString()
+				loadNonArchivedBugReportCount().toString()
 			}
 
 			"totalDeletedBugReports" -> {
-				BugReportDatabase.loadDeletedBugReportCount().toString()
+				loadDeletedBugReportCount().toString()
 			}
 
 			else -> {

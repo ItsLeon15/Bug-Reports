@@ -1,6 +1,10 @@
 package com.bugreportmc.bugreport
 
+import com.bugreportmc.bugreport.BugReportDatabase.Companion.getStaticUUID
+import com.bugreportmc.bugreport.BugReportDatabase.Companion.updateReportStatus
+import com.bugreportmc.bugreport.BugReportLanguage.Companion.getEnglishValueFromValue
 import com.bugreportmc.bugreport.BugReportLanguage.Companion.getValueFromLanguageFile
+import com.bugreportmc.bugreport.BugReportLanguage.Companion.setPluginLanguage
 import com.bugreportmc.bugreport.BugReportManager.Companion.bugReports
 import com.bugreportmc.bugreport.BugReportManager.Companion.checkForKey
 import com.bugreportmc.bugreport.BugReportManager.Companion.config
@@ -391,13 +395,12 @@ object BugReportSettings {
 				plugin.logger.info("Clicked inventory: $displayName")
 			}
 
-			val customDisplayName: String = BugReportLanguage.getEnglishValueFromValue(displayName).toString()
+			val customDisplayName: String = getEnglishValueFromValue(displayName).toString()
 
 			if (customDisplayName.contains("Status Selection")) {
 				event.isCancelled = true
 
 				val player = event.whoClicked as Player
-				val clickedInventory = event.clickedInventory ?: return
 
 				val clickedItem = event.currentItem
 				if (clickedItem == null || clickedItem.type == Material.AIR) {
@@ -412,13 +415,13 @@ object BugReportSettings {
 				val itemDisplayName = itemMeta.displayName
 				val customItemDisplayName = ChatColor.stripColor(itemDisplayName)
 				val englishItemDisplayName: String =
-					BugReportLanguage.getEnglishValueFromValue(customItemDisplayName).toString()
+					getEnglishValueFromValue(customItemDisplayName).toString()
 
 				if (englishItemDisplayName == "Back") {
 					playButtonClickSound(player)
 
 					val reports: List<String> = bugReports.getOrDefault(
-						BugReportDatabase.getStaticUUID(), ArrayList<String>(
+						getStaticUUID(), ArrayList<String>(
 							listOf("DUMMY")
 						)
 					)
@@ -441,7 +444,7 @@ object BugReportSettings {
 						val statusID = statusMap["id"] as Int?
 						newReportIDGUI?.let {
 							if (statusID != null) {
-								BugReportDatabase.updateReportStatus(it, statusID)
+								updateReportStatus(it, statusID)
 							}
 						}
 
@@ -455,7 +458,6 @@ object BugReportSettings {
 				event.isCancelled = true
 
 				val player = event.whoClicked as Player
-				val clickedInventory = event.clickedInventory ?: return
 
 				val clickedItem = event.currentItem
 				if (clickedItem == null || clickedItem.type == Material.AIR) {
@@ -469,7 +471,7 @@ object BugReportSettings {
 
 				val itemDisplayName = itemMeta.displayName
 				val customItemDisplayName: String =
-					BugReportLanguage.getEnglishValueFromValue(itemDisplayName).toString()
+					getEnglishValueFromValue(itemDisplayName).toString()
 
 				if (customItemDisplayName == "Close") {
 					player.closeInventory()
@@ -548,7 +550,7 @@ object BugReportSettings {
 
 				val itemDisplayName = itemMeta.displayName
 				val customItemDisplayName: String =
-					BugReportLanguage.getEnglishValueFromValue(itemDisplayName).toString()
+					getEnglishValueFromValue(itemDisplayName).toString()
 				if (customItemDisplayName == "Back") {
 					playButtonClickSound(player)
 
@@ -591,7 +593,7 @@ object BugReportSettings {
 
 				val itemDisplayName = itemMeta.displayName
 				val customItemDisplayName: String =
-					BugReportLanguage.getEnglishValueFromValue(itemDisplayName).toString()
+					getEnglishValueFromValue(itemDisplayName).toString()
 
 				if (customItemDisplayName == "Back") {
 					playButtonClickSound(player)
@@ -626,7 +628,7 @@ object BugReportSettings {
 
 				val itemDisplayName = itemMeta.displayName
 				val customItemDisplayName: String =
-					BugReportLanguage.getEnglishValueFromValue(itemDisplayName).toString()
+					getEnglishValueFromValue(itemDisplayName).toString()
 
 				if (customItemDisplayName == "Back") {
 					playButtonClickSound(player)
@@ -673,7 +675,7 @@ object BugReportSettings {
 
 				val itemDisplayName = itemMeta.displayName
 				val customItemDisplayName: String =
-					BugReportLanguage.getEnglishValueFromValue(itemDisplayName).toString()
+					getEnglishValueFromValue(itemDisplayName).toString()
 
 				when (customItemDisplayName) {
 					"Back" -> {
@@ -1091,11 +1093,11 @@ object BugReportSettings {
 						"buttonNames.setMaxReportsPerPlayer", "Set Max Reports Per Player"
 					)
 				) { value: String ->
-					var value = value
+					var maxReportsValues = value
 					val maxReports: Int
-					if (value.matches("[0-9]+".toRegex())) {
+					if (maxReportsValues.matches("[0-9]+".toRegex())) {
 						try {
-							maxReports = value.toInt()
+							maxReports = maxReportsValues.toInt()
 						} catch (e: NumberFormatException) {
 							if (checkForKey("useTitleInsteadOfMessage", true)) {
 								player.sendTitle(
@@ -1131,9 +1133,9 @@ object BugReportSettings {
 							)
 						}
 					} else {
-						value = value.substring(0, 1).uppercase(Locale.getDefault()) + value.substring(1)
+						maxReportsValues = maxReportsValues.substring(0, 1).uppercase(Locale.getDefault()) + maxReportsValues.substring(1)
 							.lowercase(Locale.getDefault())
-						val customDisplayName: String = BugReportLanguage.getEnglishValueFromValue(value).toString()
+						val customDisplayName: String = getEnglishValueFromValue(maxReportsValues).toString()
 						if (customDisplayName.contains("Cancel")) {
 							player.sendMessage(
 								returnStartingMessage(ChatColor.GREEN) + getValueFromLanguageFile(
@@ -1333,7 +1335,7 @@ object BugReportSettings {
 			updateLogic: Consumer<String>,
 		) {
 			val clickDisplayName = settingClickMap[player.uniqueId]
-			val displayNameDefault: String = BugReportLanguage.getEnglishValueFromValue(displayName).toString()
+			val displayNameDefault: String = getEnglishValueFromValue(displayName).toString()
 
 			if (clickDisplayName != null && clickDisplayName == displayNameDefault) {
 				event.isCancelled = true
@@ -1370,7 +1372,7 @@ object BugReportSettings {
 
 				bugreportGUI.updateBugReportItems()
 				config.set("language", languageCode)
-				BugReportLanguage.setPluginLanguage(languageCode)
+				setPluginLanguage(languageCode)
 
 				if (debugMode) {
 					plugin.logger.info("Language set to $languageCode")

@@ -1,6 +1,5 @@
 package com.bugreportmc.bugreport.api
 
-import com.bugreportmc.bugreport.BugReportManager
 import com.bugreportmc.bugreport.BugReportPlugin.Companion.plugin
 import java.io.File
 import java.io.FileWriter

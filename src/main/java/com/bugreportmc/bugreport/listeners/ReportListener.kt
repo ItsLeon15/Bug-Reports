@@ -1,6 +1,6 @@
 package com.bugreportmc.bugreport.listeners
 
-import com.bugreportmc.bugreport.BugReportManager
+import com.bugreportmc.bugreport.BugReportManager.Companion.generateBugReportGUI
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.event.EventHandler
@@ -12,7 +12,7 @@ class ReportListener : Listener {
 	fun onReportCreated(event: ReportCreatedEvent?) {
 		for (player in Bukkit.getOnlinePlayers()) {
 			if (player.openInventory.title.startsWith(ChatColor.YELLOW.toString() + "Bug Report")) {
-				val newGui: Inventory = BugReportManager.generateBugReportGUI(1, player, false)
+				val newGui: Inventory = generateBugReportGUI(1, player, false)
 				player.openInventory(newGui)
 			}
 		}

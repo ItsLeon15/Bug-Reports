@@ -1,5 +1,6 @@
 package com.bugreportmc.bugreport
 
+import com.bugreportmc.bugreport.BugReportManager.Companion.debugMode
 import com.bugreportmc.bugreport.BugReportPlugin.Companion.plugin
 import org.bukkit.ChatColor
 import org.bukkit.configuration.ConfigurationSection
@@ -130,7 +131,7 @@ class BugReportLanguage(plugin: Plugin) {
 				plugin.logger.warning("Language file '$languageCode.yml' not found.")
 			}
 
-			if (BugReportManager.debugMode) {
+			if (debugMode) {
 				plugin.logger.info("Loaded " + langConfig!!.size + " language keys.")
 			}
 		}

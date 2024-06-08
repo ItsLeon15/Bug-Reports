@@ -3,8 +3,11 @@ package com.bugreportmc.bugreport.commands
 import com.bugreportmc.bugreport.BugReportDatabase.Companion.getStaticUUID
 import com.bugreportmc.bugreport.BugReportLanguage.Companion.getValueFromLanguageFile
 import com.bugreportmc.bugreport.BugReportManager
+import com.bugreportmc.bugreport.BugReportManager.Companion.bugReports
 import com.bugreportmc.bugreport.BugReportManager.Companion.checkCategoryConfig
 import com.bugreportmc.bugreport.BugReportManager.Companion.checkForKey
+import com.bugreportmc.bugreport.BugReportManager.Companion.config
+import com.bugreportmc.bugreport.BugReportManager.Companion.endingPluginTitleColor
 import com.bugreportmc.bugreport.BugReportManager.Companion.pluginColor
 import com.bugreportmc.bugreport.BugReportManager.Companion.pluginTitle
 import com.bugreportmc.bugreport.BugReportManager.Companion.returnStartingMessage
@@ -29,6 +32,7 @@ import org.bukkit.inventory.meta.BookMeta
 import org.bukkit.scheduler.BukkitRunnable
 import org.jetbrains.annotations.Contract
 import java.awt.Color
+import java.lang.String.join
 import java.util.*
 
 class BugReportCommand(private val reportManager: BugReportManager) : CommandExecutor, Listener {
@@ -46,7 +50,7 @@ class BugReportCommand(private val reportManager: BugReportManager) : CommandExe
 				return
 			}
 			val pages = bookMeta.pages
-			val content = java.lang.String.join(" ", pages)
+			val content = join(" ", pages)
 			reportManager.submitBugReport(player, content, 0)
 			player.sendMessage(
 				returnStartingMessage(ChatColor.GREEN) + getValueFromLanguageFile(
@@ -112,7 +116,7 @@ class BugReportCommand(private val reportManager: BugReportManager) : CommandExe
 			return true
 		}
 
-		val cooldown = BugReportManager.config.getInt("bug-report-cooldown", 0)
+		val cooldown = config.getInt("bug-report-cooldown", 0)
 		if (cooldown > 0) {
 			val currentTime = System.currentTimeMillis()
 			val lastUsage = lastCommandUsage.getOrDefault(sender.uniqueId, 0L)
@@ -126,7 +130,7 @@ class BugReportCommand(private val reportManager: BugReportManager) : CommandExe
 		}
 
 		if (sender.hasPermission("bugreport.use") || sender.hasPermission("bugreport.admin")) {
-			if (BugReportManager.config.getBoolean("enablePluginReportBook", true)) {
+			if (config.getBoolean("enablePluginReportBook", true)) {
 				val bugReportBook = ItemStack(Material.WRITABLE_BOOK)
 				val meta = bugReportBook.itemMeta as BookMeta?
 
@@ -152,7 +156,7 @@ class BugReportCommand(private val reportManager: BugReportManager) : CommandExe
 				lastCommandUsage[sender.uniqueId] = System.currentTimeMillis()
 				return true
 			}
-			if (BugReportManager.config.getBoolean("enablePluginReportCategoriesGUI", true)) {
+			if (config.getBoolean("enablePluginReportCategoriesGUI", true)) {
 				if (!checkCategoryConfig()) {
 					sender.sendMessage(
 						returnStartingMessage(ChatColor.RED) + getValueFromLanguageFile(
@@ -171,7 +175,7 @@ class BugReportCommand(private val reportManager: BugReportManager) : CommandExe
 				return true
 			}
 
-			val maxReports = BugReportManager.config.getInt("max-reports-per-player")
+			val maxReports = config.getInt("max-reports-per-player")
 			if (maxReports != 0) {
 				val reportsLeft = maxReports - getReportCount(sender.uniqueId)
 				if (reportsLeft <= 0) {
@@ -195,7 +199,7 @@ class BugReportCommand(private val reportManager: BugReportManager) : CommandExe
 			}
 
 			try {
-				reportManager.submitBugReport(sender, java.lang.String.join(" ", *args), 0)
+				reportManager.submitBugReport(sender, join(" ", *args), 0)
 			} catch (e: Exception) {
 				plugin.logger.warning("Failed to submit bug report")
 				logErrorMessage("Failed to submit bug report")
@@ -219,7 +223,7 @@ class BugReportCommand(private val reportManager: BugReportManager) : CommandExe
 		} else {
 			sender.sendMessage(
 				"$pluginColor$pluginTitle " + Objects.requireNonNullElse(
-					BugReportManager.endingPluginTitleColor, ChatColor.RED
+					endingPluginTitleColor, ChatColor.RED
 				) + "You don't have permission to use this command!"
 			)
 		}
@@ -227,7 +231,7 @@ class BugReportCommand(private val reportManager: BugReportManager) : CommandExe
 		if (args.isEmpty() || args[0].equals("help", ignoreCase = true)) {
 			sender.sendMessage(
 				"$pluginColor$pluginTitle " + Objects.requireNonNullElse(
-					BugReportManager.endingPluginTitleColor, ChatColor.GREEN
+					endingPluginTitleColor, ChatColor.GREEN
 				) + "Commands:"
 			)
 			sender.sendMessage(ChatColor.GOLD.toString() + "/bugreport <Message>" + ChatColor.WHITE + " - " + ChatColor.GRAY + "Submits a bug report.")
@@ -240,7 +244,8 @@ class BugReportCommand(private val reportManager: BugReportManager) : CommandExe
 
 	private fun getReportCount(playerId: UUID): Int {
 		var count = 0
-		val reports: List<String?> = BugReportManager.bugReports.getOrDefault(getStaticUUID(), ArrayList(listOf("DUMMY")))
+		val reports: List<String?> =
+			bugReports.getOrDefault(getStaticUUID(), ArrayList(listOf("DUMMY")))
 		for (report in reports) {
 			if (report!!.contains(playerId.toString())) {
 				count++

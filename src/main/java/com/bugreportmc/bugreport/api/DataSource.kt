@@ -382,20 +382,7 @@ object DataSource {
 		return profile
 	}
 
-	private class CacheEntry {
-		var data: String
-		var timestamp: Long
+	private class CacheEntry(var data: String, var timestamp: Long) {
 		var nestedData: CacheEntry? = null
-
-		constructor(data: String, timestamp: Long) {
-			this.data = data
-			this.timestamp = timestamp
-		}
-
-		constructor(data: String, timestamp: Long, nestedData: CacheEntry?) {
-			this.data = data
-			this.timestamp = timestamp
-			this.nestedData = nestedData
-		}
 	}
 }

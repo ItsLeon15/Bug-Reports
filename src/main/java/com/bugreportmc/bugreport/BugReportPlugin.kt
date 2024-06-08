@@ -1,5 +1,8 @@
 package com.bugreportmc.bugreport
 
+import com.bugreportmc.bugreport.BugReportDatabase.Companion.getPlayerLastLoginTimestamp
+import com.bugreportmc.bugreport.BugReportDatabase.Companion.getStaticUUID
+import com.bugreportmc.bugreport.BugReportLanguage.Companion.getValueFromLanguageFile
 import com.bugreportmc.bugreport.BugReportManager.Companion.bugReports
 import com.bugreportmc.bugreport.BugReportManager.Companion.debugMode
 import com.bugreportmc.bugreport.BugReportManager.Companion.endingPluginTitleColor
@@ -11,9 +14,13 @@ import com.bugreportmc.bugreport.commands.*
 import com.bugreportmc.bugreport.expansions.BugPlaceholders
 import com.bugreportmc.bugreport.extensions.PlanHook
 import com.bugreportmc.bugreport.gui.bugreportGUI
-import com.bugreportmc.bugreport.listeners.*
+import com.bugreportmc.bugreport.listeners.ItemDropEvent
+import com.bugreportmc.bugreport.listeners.PluginMessageListener
+import com.bugreportmc.bugreport.listeners.ReportListener
+import com.bugreportmc.bugreport.listeners.UpdateChecker
 import me.clip.placeholderapi.metrics.bukkit.Metrics
 import org.bukkit.Bukkit
+import org.bukkit.Bukkit.getPluginManager
 import org.bukkit.ChatColor
 import org.bukkit.command.PluginCommand
 import org.bukkit.entity.Player
@@ -41,7 +48,7 @@ class BugReportPlugin : JavaPlugin(), Listener {
 			// Ignore catch
 		}
 
-		if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+		if (getPluginManager().getPlugin("PlaceholderAPI") != null) {
 			BugPlaceholders(this).register()
 		}
 
@@ -137,9 +144,9 @@ class BugReportPlugin : JavaPlugin(), Listener {
 					return
 				}
 
-				val lastLoginTimestamp: Long = BugReportDatabase.getPlayerLastLoginTimestamp(playerId)
+				val lastLoginTimestamp: Long = getPlayerLastLoginTimestamp(playerId)
 				val reports: ArrayList<String> = bugReports.getOrDefault(
-					BugReportDatabase.getStaticUUID(), ArrayList<String>(
+					getStaticUUID(), ArrayList<String>(
 						listOf("DUMMY")
 					)
 				)
@@ -152,7 +159,7 @@ class BugReportPlugin : JavaPlugin(), Listener {
 							endingPluginTitleColor, ChatColor.GRAY
 						)
 					).append(
-						BugReportLanguage.getValueFromLanguageFile(
+						getValueFromLanguageFile(
 							"newReportsMessage", "You have %numReports% new reports"
 						).replace("%numReports%", newReports.size.toString())
 					).append("\n")
@@ -162,7 +169,7 @@ class BugReportPlugin : JavaPlugin(), Listener {
 							endingPluginTitleColor, ChatColor.GRAY
 						)
 					).append(
-						BugReportLanguage.getValueFromLanguageFile(
+						getValueFromLanguageFile(
 							"noNewReportsMessage", "You have no new reports"
 						)
 					).append("\n")

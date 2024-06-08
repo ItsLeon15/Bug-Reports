@@ -94,7 +94,7 @@ class BugListCommand : CommandExecutor {
 
 		try {
 			val debugMode = args[1].toInt()
-			if (debugMode >= 0 && debugMode <= 1) {
+			if (debugMode in 0..1) {
 				BugReportManager.setDebugMode(debugMode)
 				player.sendMessage(
 					BugReportManager.pluginColor.toString() + BugReportManager.pluginTitle + " " + Objects.requireNonNullElse(
@@ -129,7 +129,7 @@ class BugListCommand : CommandExecutor {
 
 			versionMessage.append(ChatColor.GOLD).append("Version: ")
 				.append(if (pluginVersion.equals(version, ignoreCase = true)) ChatColor.GREEN else ChatColor.RED)
-				.append(pluginVersion.toString())
+				.append(pluginVersion)
 				.append(if (pluginVersion.equals(version, ignoreCase = true)) " (Up to date)" else " (Out of date)")
 				.append("\n")
 			versionMessage.append(ChatColor.GOLD).append("URL: ").append(ChatColor.WHITE).append(pluginURL).append("\n")

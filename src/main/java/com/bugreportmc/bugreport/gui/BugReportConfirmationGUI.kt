@@ -3,7 +3,8 @@ package com.bugreportmc.bugreport.gui
 import com.bugreportmc.bugreport.BugReportDatabase.Companion.deleteBugReport
 import com.bugreportmc.bugreport.BugReportDatabase.Companion.getStaticUUID
 import com.bugreportmc.bugreport.BugReportDatabase.Companion.updateBugReportArchive
-import com.bugreportmc.bugreport.BugReportLanguage
+import com.bugreportmc.bugreport.BugReportLanguage.Companion.getEnglishValueFromValue
+import com.bugreportmc.bugreport.BugReportLanguage.Companion.getValueFromLanguageFile
 import com.bugreportmc.bugreport.BugReportManager.Companion.bugReports
 import com.bugreportmc.bugreport.BugReportManager.Companion.createButton
 import com.bugreportmc.bugreport.BugReportManager.Companion.debugMode
@@ -13,7 +14,7 @@ import com.bugreportmc.bugreport.BugReportManager.Companion.localCurrentPage
 import com.bugreportmc.bugreport.BugReportManager.Companion.playButtonClickSound
 import com.bugreportmc.bugreport.BugReportManager.Companion.returnStartingMessage
 import com.bugreportmc.bugreport.BugReportPlugin.Companion.plugin
-import com.bugreportmc.bugreport.BugReportSettings
+import com.bugreportmc.bugreport.BugReportSettings.createCustomPlayerHead
 import com.bugreportmc.bugreport.api.ErrorClass.logErrorMessage
 import com.bugreportmc.bugreport.keys.guiTextures
 import org.bukkit.Bukkit
@@ -78,7 +79,7 @@ class BugReportConfirmationGUI {
 				plugin.logger.info("Clicked inventory: $displayName")
 			}
 
-			val customDisplayName = BugReportLanguage.getEnglishValueFromValue(displayName)
+			val customDisplayName = getEnglishValueFromValue(displayName)
 			val isArchivedDetails = customDisplayName!!.startsWith("Archive Bug Report")
 			val isDeletedDetails = customDisplayName.startsWith("Delete Bug Report")
 
@@ -104,8 +105,7 @@ class BugReportConfirmationGUI {
 			}
 
 			val itemDisplayName = itemMeta.displayName
-			val customItemDisplayName =
-				BugReportLanguage.getEnglishValueFromValue(ChatColor.stripColor(itemDisplayName))
+			val customItemDisplayName = getEnglishValueFromValue(ChatColor.stripColor(itemDisplayName))
 
 			if (debugMode) {
 				plugin.logger.info("Clicked item: $customItemDisplayName")
@@ -210,39 +210,34 @@ class BugReportConfirmationGUI {
 		}
 
 		private fun getConfirmationGUI(isArchived: Boolean, bugReportID: String?): Inventory {
-			val guiTitle: String
-
-			if (isArchived) {
-				guiTitle = ChatColor.YELLOW.toString() + Objects.requireNonNull(
-					BugReportLanguage.getValueFromLanguageFile(
+			val guiTitle: String = if (isArchived) {
+				ChatColor.YELLOW.toString() + Objects.requireNonNull(
+					getValueFromLanguageFile(
 						"buttonNames.confirmationArchive", "Archive Bug Report?"
 					)
 				)
 			} else {
-				guiTitle = ChatColor.YELLOW.toString() + BugReportLanguage.getValueFromLanguageFile(
+				ChatColor.YELLOW.toString() + getValueFromLanguageFile(
 					"buttonNames.confirmationDelete", "Delete Bug Report?"
 				)
 			}
 
 			val gui = Bukkit.createInventory(null, 27, guiTitle)
 			val backButton: ItemStack = createButton(
-				Material.BARRIER,
-				ChatColor.YELLOW.toString() + BugReportLanguage.getValueFromLanguageFile("buttonNames.back", "Back")
+				Material.BARRIER, ChatColor.YELLOW.toString() + getValueFromLanguageFile("buttonNames.back", "Back")
 			)
 			gui.setItem(15, backButton)
 
 			if (isArchived) {
-				val archiveButton = BugReportSettings.createCustomPlayerHead(
-					guiTextures.archiveTexture,
-					ChatColor.YELLOW.toString() + BugReportLanguage.getValueFromLanguageFile(
+				val archiveButton = createCustomPlayerHead(
+					guiTextures.archiveTexture, ChatColor.YELLOW.toString() + getValueFromLanguageFile(
 						"buttonNames.archive", "Archive"
-					),
-					16
+					), 16
 				)
 				gui.setItem(11, archiveButton)
 			} else {
-				val deleteButton = BugReportSettings.createCustomPlayerHead(
-					guiTextures.deleteTexture, ChatColor.YELLOW.toString() + BugReportLanguage.getValueFromLanguageFile(
+				val deleteButton = createCustomPlayerHead(
+					guiTextures.deleteTexture, ChatColor.YELLOW.toString() + getValueFromLanguageFile(
 						"buttonNames.delete", "Delete"
 					), 18
 				)

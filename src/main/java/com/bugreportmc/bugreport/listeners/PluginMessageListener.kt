@@ -4,7 +4,6 @@ import com.bugreportmc.bugreport.BugReportManager.Companion.config
 import com.bugreportmc.bugreport.BugReportManager.Companion.endingPluginTitleColor
 import com.bugreportmc.bugreport.BugReportManager.Companion.pluginColor
 import com.bugreportmc.bugreport.BugReportManager.Companion.pluginTitle
-import com.bugreportmc.bugreport.BugReportPlugin
 import com.bugreportmc.bugreport.BugReportPlugin.Companion.plugin
 import com.google.common.io.ByteStreams
 import org.bukkit.Bukkit

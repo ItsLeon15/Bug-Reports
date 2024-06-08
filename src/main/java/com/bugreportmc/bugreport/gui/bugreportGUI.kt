@@ -2,6 +2,7 @@ package com.bugreportmc.bugreport.gui
 
 import com.bugreportmc.bugreport.BugReportLanguage.Companion.getValueFromLanguageFile
 import com.bugreportmc.bugreport.BugReportManager
+import com.bugreportmc.bugreport.BugReportManager.Companion.config
 import com.bugreportmc.bugreport.BugReportManager.Companion.createButton
 import com.bugreportmc.bugreport.BugReportManager.Companion.createEmptyItem
 import com.bugreportmc.bugreport.BugReportManager.Companion.createInfoItem
@@ -10,7 +11,7 @@ import com.bugreportmc.bugreport.BugReportManager.Companion.returnStartingMessag
 import com.bugreportmc.bugreport.BugReportManager.Companion.translateTimestampToDate
 import com.bugreportmc.bugreport.BugReportPlugin.Companion.plugin
 import com.bugreportmc.bugreport.BugReportSettings
-import com.bugreportmc.bugreport.api.DataSource
+import com.bugreportmc.bugreport.api.DataSource.getPlayerHead
 import com.bugreportmc.bugreport.api.ErrorClass.logErrorMessage
 import com.bugreportmc.bugreport.keys.guiTextures
 import org.bukkit.Bukkit
@@ -45,7 +46,7 @@ object bugreportGUI {
 			put(
 				"BugReportLocation", (getValueFromLanguageFile(
 					"buttonNames.bugReportDetailsLocation", "Location"
-				) + ChatColor.BOLD).toString() + " (Click to teleport)"
+				) + ChatColor.BOLD) + " (Click to teleport)"
 			)
 			put("BugReportGamemode", getValueFromLanguageFile("buttonNames.bugReportDetailsGamemode", "Gamemode"))
 			put(
@@ -283,7 +284,7 @@ object bugreportGUI {
 			"BugReportCategory" -> {
 				val categoryID = reportDetails.getOrDefault("Category ID", "N/A")
 				if ("N/A" != categoryID) {
-					val categoryList: List<Map<*, *>> = BugReportManager.config.getMapList("reportCategories")
+					val categoryList: List<Map<*, *>> = config.getMapList("reportCategories")
 					detailValue = categoryList.stream()
 						.filter { categoryMap: Map<*, *> -> categoryID == categoryMap["id"].toString() }
 						.map<String> { categoryMap: Map<*, *> -> categoryMap["name"] as String? }.findFirst()
@@ -294,10 +295,10 @@ object bugreportGUI {
 			"BugReporter" -> {
 				val username = reportDetails["Username"]
 
-				if (BugReportManager.config.getBoolean("enablePlayerHeads")) {
-					item = DataSource.getPlayerHead(username)
+				item = if (config.getBoolean("enablePlayerHeads")) {
+					getPlayerHead(username)
 				} else {
-					item = createInfoItem(
+					createInfoItem(
 						Material.PLAYER_HEAD,
 						ChatColor.GOLD.toString() + "Username",
 						ChatColor.WHITE.toString() + username,
@@ -334,7 +335,7 @@ object bugreportGUI {
 			val status = reportDetails["Status"]
 
 			if (status != null) {
-				val statuses: List<Map<*, *>> = BugReportManager.config.getMapList("statuses")
+				val statuses: List<Map<*, *>> = config.getMapList("statuses")
 				for (statusMap in statuses) {
 					if (statusMap["id"].toString() == status) {
 						val statusName = statusMap["name"].toString()
@@ -404,7 +405,7 @@ object bugreportGUI {
 			"BugReportTimestamp" -> getValueFromLanguageFile("buttonNames.bugReportDetailsTimestamp", "Timestamp")
 			"BugReportLocation" -> (getValueFromLanguageFile(
 				"buttonNames.bugReportDetailsLocation", "Location"
-			) + ChatColor.BOLD).toString() + " (Click to teleport)"
+			) + ChatColor.BOLD) + " (Click to teleport)"
 
 			"BugReportGamemode" -> getValueFromLanguageFile("buttonNames.bugReportDetailsGamemode", "Gamemode")
 			"BugReportServerName" -> getValueFromLanguageFile("buttonNames.bugReportDetailsServerName", "Server Name")
@@ -452,7 +453,13 @@ object bugreportGUI {
 		return details
 	}
 
-	fun setupDefaultGUI(gui: Inventory, player: Player, report: String?, reportIDGUI: Int?, isArchivedGUI: Boolean) {
+	private fun setupDefaultGUI(
+		gui: Inventory,
+		player: Player,
+		report: String?,
+		reportIDGUI: Int?,
+		isArchivedGUI: Boolean,
+	) {
 		if (report == null) {
 			player.sendMessage(returnStartingMessage(ChatColor.RED) + " Error 101: Report is null. Please report this to the plugin developer.")
 			return
@@ -482,11 +489,10 @@ object bugreportGUI {
 
 		if (gamemode == "null") gamemode = "Unknown"
 
-		val usernameItem: ItemStack
-		if (BugReportManager.config.getBoolean("enablePlayerHeads")) {
-			usernameItem = DataSource.getPlayerHead(username)
+		val usernameItem: ItemStack = if (config.getBoolean("enablePlayerHeads")) {
+			getPlayerHead(username)
 		} else {
-			usernameItem = createInfoItem(
+			createInfoItem(
 				Material.PLAYER_HEAD,
 				ChatColor.GOLD.toString() + "Username",
 				ChatColor.WHITE.toString() + username,
@@ -514,7 +520,7 @@ object bugreportGUI {
 		)
 		var statusItem: ItemStack? = null
 
-		val statuses: List<Map<*, *>> = BugReportManager.config.getMapList("statuses")
+		val statuses: List<Map<*, *>> = config.getMapList("statuses")
 		var statusFound = false
 
 		for (statusMap in statuses) {
@@ -611,7 +617,7 @@ object bugreportGUI {
 		gui.setItem(42, deleteButton)
 
 		if ("null" != category && "" != category) {
-			val categoryList: List<Map<*, *>> = BugReportManager.config.getMapList("reportCategories")
+			val categoryList: List<Map<*, *>> = config.getMapList("reportCategories")
 
 			val categoryNameOptional = categoryList.stream()
 				.filter { categoryMap: Map<*, *> -> categoryMap["id"].toString().toInt() == category.toInt() }
@@ -635,7 +641,6 @@ object bugreportGUI {
 		}
 
 		player.openInventory(gui)
-		Bukkit.getPluginManager()
-			.registerEvents(BugReportManager.BugReportDetailsListener(gui, reportIDGUI!!), plugin)
+		getPluginManager().registerEvents(BugReportManager.BugReportDetailsListener(gui, reportIDGUI!!), plugin)
 	}
 }

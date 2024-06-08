@@ -8,7 +8,7 @@ class Category internal constructor(
 	@JvmField val id: Int,
 	@JvmField val name: String,
 	@JvmField val color: String,
-	private val itemStack: ItemStack
+	private val itemStack: ItemStack,
 ) {
 	fun getName(): String {
 		return name
