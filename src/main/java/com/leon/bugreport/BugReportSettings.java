@@ -16,11 +16,14 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.metadata.MetadataValue;
 import org.bukkit.profile.PlayerProfile;
 import org.bukkit.profile.PlayerTextures;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.Serial;
 import java.net.URL;
 import java.util.*;
 import java.util.function.Consumer;
@@ -35,9 +38,42 @@ import static com.leon.bugreport.gui.bugreportGUI.openBugReportDetailsGUI;
 import static com.leon.bugreport.gui.bugreportGUI.updateBugReportItems;
 
 public class BugReportSettings {
+	private static final Map<String, String[]> entireLanguageList = new LinkedHashMap<>() {
+		@Serial
+		private static final long serialVersionUID = -2578293471267967277L;
+
+		{
+			put("en_US", new String[]{guiTextures.EnglishTexture, "English"});
+			put("fr_FR", new String[]{guiTextures.FrenchTexture, "French"});
+			put("de_DE", new String[]{guiTextures.GermanTexture, "German"});
+			put("es_ES", new String[]{guiTextures.SpanishTexture, "Spanish"});
+			put("it_IT", new String[]{guiTextures.ItalianTexture, "Italian"});
+			put("ko_KR", new String[]{guiTextures.KoreanTexture, "Korean"});
+			put("pt_BR", new String[]{guiTextures.BrazilianTexture, "Brazilian"});
+			put("ru_RU", new String[]{guiTextures.RussianTexture, "Russian"});
+			put("zh_CN", new String[]{guiTextures.SimplifiedChineseTexture, "Simplified Chinese"});
+			put("zh_TW", new String[]{guiTextures.TraditionalChineseTexture, "Traditional Chinese"});
+		}
+	};
+
 	private static Integer newReportIDGUI;
 
 	public BugReportSettings() {
+	}
+
+	public static int getCurrentLanguagePage(@NotNull Player player) {
+		List<MetadataValue> metadata = player.getMetadata("currentLanguagePage");
+		if (debugMode) {
+			plugin.getLogger().info("Current language page for " + player.getName() + " is " + (!metadata.isEmpty() ? metadata.get(0).asInt() : 0));
+		}
+		return !metadata.isEmpty() ? metadata.get(0).asInt() : 1;
+	}
+
+	public static void setCurrentLanguagePage(@NotNull Player player, int page) {
+		if (debugMode) {
+			plugin.getLogger().info("Setting current language page to " + page + " for " + player.getName());
+		}
+		player.setMetadata("currentLanguagePage", new FixedMetadataValue(plugin, page));
 	}
 
 	private static void setBorder(Inventory gui, Material borderMaterial) {
@@ -142,48 +178,91 @@ public class BugReportSettings {
 		if (debugMode) {
 			plugin.getLogger().info("Language toggle clicked by " + player.getName());
 		}
-		player.openInventory(openLanguageGUI());
+
+		int currentPage = getCurrentLanguagePage(player);
+		player.openInventory(openLanguageGUI(player, currentPage));
 	}
 
-	private static @NotNull Inventory openLanguageGUI() {
+	private static @NotNull Inventory openLanguageGUI(Player player, int page) {
+		if (page < 1) {
+			page = 1;
+		}
+
+		setCurrentLanguagePage(player, page);
+
 		Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Report - " + getValueFromLanguageFile("buttonNames.language", "Language"));
 
 		setBorder(gui, Material.GRAY_STAINED_GLASS_PANE);
 
-		gui.setItem(10, createCustomPlayerHead(guiTextures.EnglishTexture, "English", 11));
-		gui.setItem(11, createCustomPlayerHead(guiTextures.FrenchTexture, "French", 12));
-		gui.setItem(12, createCustomPlayerHead(guiTextures.GermanTexture, "German", 13));
-		gui.setItem(13, createCustomPlayerHead(guiTextures.SpanishTexture, "Spanish", 14));
-		gui.setItem(14, createCustomPlayerHead(guiTextures.ItalianTexture, "Italian", 15));
-		gui.setItem(15, createCustomPlayerHead(guiTextures.SimplifiedChineseTexture, "Simplified Chinese", 16));
-		gui.setItem(16, createCustomPlayerHead(guiTextures.RussianTexture, "Russian", 17));
+		int maxLanguagesPerPage = 7;
+		int start = (page - 1) * maxLanguagesPerPage;
+		int end = Math.min(start + maxLanguagesPerPage, entireLanguageList.size());
+
+		List<Map.Entry<String, String[]>> languageEntries = new ArrayList<>(entireLanguageList.entrySet());
+
+		int slot = 10;
+		for (int i = start; i < end; i++) {
+			Map.Entry<String, String[]> entry = languageEntries.get(i);
+			String languageCode = entry.getKey();
+			String[] languageData = entry.getValue();
+			String texture = languageData[0];
+			String languageName = languageData[1];
+
+			int modelData = getModelDataFromLanguage(languageName);
+			gui.setItem(slot, createCustomPlayerHead(texture, languageName, modelData));
+			slot++;
+			if ((slot - 9) % 9 == 0) {
+				slot += 2;
+			}
+		}
+
+		if (page > 1) {
+			gui.setItem(36, createButton(Material.ARROW, getValueFromLanguageFile("buttonNames.back", "Back")));
+		}
+		if (end < entireLanguageList.size()) {
+			gui.setItem(44, createButton(Material.ARROW, getValueFromLanguageFile("buttonNames.forward", "Forward")));
+		}
 
 		String language = config.getString("language");
 
-		for (int i = 19; i < 26; i++) {
+		for (int i = 19; i < 19 + (end - start); i++) {
 			gui.setItem(i, createButton(Material.GRAY_DYE, getValueFromLanguageFile("buttonNames.false", "Off")));
 		}
 
-		switch (Objects.requireNonNull(language)) {
-			case "en_US" ->
-					gui.setItem(28 - 9, createButton(Material.LIME_DYE, getValueFromLanguageFile("buttonNames.true", "On")));
-			case "fr_FR" ->
-					gui.setItem(29 - 9, createButton(Material.LIME_DYE, getValueFromLanguageFile("buttonNames.true", "On")));
-			case "de_DE" ->
-					gui.setItem(30 - 9, createButton(Material.LIME_DYE, getValueFromLanguageFile("buttonNames.true", "On")));
-			case "es_ES" ->
-					gui.setItem(31 - 9, createButton(Material.LIME_DYE, getValueFromLanguageFile("buttonNames.true", "On")));
-			case "it_IT" ->
-					gui.setItem(32 - 9, createButton(Material.LIME_DYE, getValueFromLanguageFile("buttonNames.true", "On")));
-			case "zh_CN" ->
-					gui.setItem(33 - 9, createButton(Material.LIME_DYE, getValueFromLanguageFile("buttonNames.true", "On")));
-			case "ru_RU" ->
-					gui.setItem(34 - 9, createButton(Material.LIME_DYE, getValueFromLanguageFile("buttonNames.true", "On")));
+		for (int i = start; i < end; i++) {
+			Map.Entry<String, String[]> entry = languageEntries.get(i);
+			String languageCode = entry.getKey();
+			String[] languageData = entry.getValue();
+			String texture = languageData[0];
+			String languageName = languageData[1];
+
+			if (Objects.equals(language, languageCode)) {
+				int slotIndex = 19 + (i - start);
+				if (slotIndex >= 19 && slotIndex < 26) {
+					gui.setItem(slotIndex, createButton(Material.LIME_DYE, getValueFromLanguageFile("buttonNames.true", "On")));
+				}
+			}
 		}
 
-		gui.setItem(40, createButton(Material.BARRIER, ChatColor.RED + getValueFromLanguageFile("buttonNames.back", "Back")));
+		gui.setItem(40, createButton(Material.BARRIER, ChatColor.RED + getValueFromLanguageFile("buttonNames.close", "Close")));
 
 		return gui;
+	}
+
+	private static int getModelDataFromLanguage(String language) {
+		return switch (language) {
+			case "English" -> 11;
+			case "French" -> 12;
+			case "German" -> 13;
+			case "Spanish" -> 14;
+			case "Italian" -> 15;
+			case "Korean" -> 16;
+			case "Brazilian" -> 17;
+			case "Russian" -> 18;
+			case "Simplified Chinese" -> 19;
+			case "Traditional Chinese" -> 20;
+			default -> 0;
+		};
 	}
 
 	public static @NotNull ItemStack createCustomPlayerHead(String texture, String name, int modelData) {
@@ -298,7 +377,8 @@ public class BugReportSettings {
 			}
 			reloadConfig();
 
-			player.openInventory(openLanguageGUI());
+			int currentPage = getCurrentLanguagePage(player);
+			player.openInventory(openLanguageGUI(player, currentPage));
 		}
 
 		@EventHandler(priority = EventPriority.NORMAL)
@@ -468,8 +548,14 @@ public class BugReportSettings {
 						case 13 -> setLanguage("de_DE", "German", player);
 						case 14 -> setLanguage("es_ES", "Spanish", player);
 						case 15 -> setLanguage("it_IT", "Italian", player);
-						case 16 -> setLanguage("zh_CN", "Simplified Chinese", player);
-						case 17 -> setLanguage("ru_RU", "Russian", player);
+						case 16 -> setLanguage("ko_KR", "Korean", player);
+						case 17 -> setLanguage("pt_BR", "Brazilian", player);
+						case 18 -> setLanguage("ru_RU", "Russian", player);
+						case 19 -> setLanguage("zh_CN", "Simplified Chinese", player);
+						case 20 -> setLanguage("zh_TW", "Traditional Chinese", player);
+						default -> {
+							return;
+						}
 					}
 				}
 
@@ -479,11 +565,25 @@ public class BugReportSettings {
 					return;
 				}
 
-				if (customItemDisplayName.equals("buttonNames.back")) {
-					playButtonClickSound(player);
-
-					player.openInventory(getSettingsGUI());
-					return;
+				int currentPage = getCurrentLanguagePage(player);
+				switch (customItemDisplayName) {
+					case "buttonNames.close" -> {
+						playButtonClickSound(player);
+						player.closeInventory();
+						return;
+					}
+					case "buttonNames.forward" -> {
+						playButtonClickSound(player);
+						setCurrentLanguagePage(player, currentPage + 1);
+						player.openInventory(openLanguageGUI(player, currentPage + 1));
+						return;
+					}
+					case "buttonNames.back" -> {
+						playButtonClickSound(player);
+						setCurrentLanguagePage(player, currentPage - 1);
+						player.openInventory(openLanguageGUI(player, currentPage - 1));
+						return;
+					}
 				}
 			}
 

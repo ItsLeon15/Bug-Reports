@@ -15,7 +15,9 @@ import java.util.Map;
 import static com.leon.bugreport.BugReportManager.debugMode;
 
 public class BugReportLanguage {
-	public static final List<String> languageCodes = List.of("en_US", "es_ES", "de_DE", "fr_FR", "it_IT", "pt_BR", "ru_RU", "zh_CN", "zh_TW");
+	public static final List<String> languageCodes = List.of(
+			"en_US", "es_ES", "de_DE", "fr_FR", "it_IT", "ko_KR", "pt_BR", "ru_RU", "zh_CN", "zh_TW"
+	);
 	private static File langFolder;
 	private static String languageCode;
 	private static Map<String, String> langConfig;

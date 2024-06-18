@@ -299,7 +299,7 @@ public class BugReportManager implements Listener {
 		player.playSound(player.getLocation(), "ui.button.click", 0.6F, 1.0F);
 	}
 
-	private static void createNavigationButtons(String forward, @NotNull Inventory bugReportGUI, int index) {
+	public static void createNavigationButtons(String forward, @NotNull Inventory bugReportGUI, int index) {
 		ItemStack forwardButton = new ItemStack(Material.ARROW);
 		ItemMeta forwardMeta = forwardButton.getItemMeta();
 		Objects.requireNonNull(forwardMeta).setDisplayName(ChatColor.GREEN + getValueFromLanguageFile("buttonNames." + forward, forward.substring(0, 1).toUpperCase() + forward.substring(1)));
