@@ -58,11 +58,7 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 
 	@Override
 	public void onEnable() {
-		try {
-			reportManager = new BugReportManager(this);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		reportManager = new BugReportManager(this);
 
 		try {
 			PlanHook.getInstance().hookIntoPlan();
@@ -107,6 +103,7 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 	@Override
 	public void onDisable() {
 		bugReports.clear();
+
 		try {
 			dataSource.close();
 		} catch (Exception e) {

@@ -188,7 +188,8 @@ public class DataSource {
 
 	public static @NotNull ItemStack getPlayerHead(String playerName) {
 		Map<String, CacheEntry> cache = loadCache();
-		cleanOutdatedCache(true); // TODO
+		cleanOutdatedCache(true);
+
 		if (playerName == null || playerName.trim().isEmpty()) {
 			return getDefaultPlayerHead();
 		}

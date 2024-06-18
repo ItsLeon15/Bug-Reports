@@ -303,19 +303,22 @@ public class BugReportSettings {
 
 		@EventHandler(priority = EventPriority.NORMAL)
 		public void onInventoryClick(@NotNull InventoryClickEvent event) {
-			String displayName = ChatColor.stripColor(event.getView().getTitle());
+			String cleanedDisplayName = ChatColor.stripColor(event.getView().getTitle());
 
-			if (displayName.contains("Bug Report - ")) {
-				displayName = displayName.substring(13);
+			if (cleanedDisplayName.contains("Bug Report - ")) {
+				cleanedDisplayName = cleanedDisplayName.substring(13);
 			}
 
 			if (debugMode) {
-				plugin.getLogger().info("Clicked inventory: " + displayName);
+				plugin.getLogger().info("Clicked inventory: " + cleanedDisplayName);
 			}
 
-			String customDisplayName = getEnglishValueFromValue(displayName);
+			String customDisplayName = getKeyFromTranslation(cleanedDisplayName);
+			if (customDisplayName == null || customDisplayName.equals(" ")) {
+				return;
+			}
 
-			if (customDisplayName.contains("Status Selection")) {
+			if (customDisplayName.equals("buttonNames.statusSelection")) {
 				event.setCancelled(true);
 
 				Player player = (Player) event.getWhoClicked();
@@ -336,18 +339,6 @@ public class BugReportSettings {
 
 				String itemDisplayName = itemMeta.getDisplayName();
 				String customItemDisplayName = ChatColor.stripColor(itemDisplayName);
-				String englishItemDisplayName = getEnglishValueFromValue(customItemDisplayName);
-
-				if (englishItemDisplayName.equals("Back")) {
-					playButtonClickSound(player);
-
-					List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
-					String report = reports.stream().filter(reportString -> reportString.contains("Report ID: " + newReportIDGUI)).findFirst().orElse(null);
-					Boolean fromArchivedGUI = report != null && report.contains("Archived") && report.contains("Archived: 1");
-
-					openBugReportDetailsGUI(player, report, newReportIDGUI, fromArchivedGUI);
-					return;
-				}
 
 				List<Map<?, ?>> statuses = config.getMapList("statuses");
 				for (Map<?, ?> statusMap : statuses) {
@@ -362,9 +353,25 @@ public class BugReportSettings {
 						player.closeInventory();
 					}
 				}
+
+				String englishItemDisplayName = getKeyFromTranslation(itemDisplayName);
+				if (englishItemDisplayName == null || englishItemDisplayName.equals(" ")) {
+					return;
+				}
+
+				if (englishItemDisplayName.equals("buttonNames.back")) {
+					playButtonClickSound(player);
+
+					List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
+					String report = reports.stream().filter(reportString -> reportString.contains("Report ID: " + newReportIDGUI)).findFirst().orElse(null);
+					Boolean fromArchivedGUI = report != null && report.contains("Archived") && report.contains("Archived: 1");
+
+					openBugReportDetailsGUI(player, report, newReportIDGUI, fromArchivedGUI);
+					return;
+				}
 			}
 
-			if (customDisplayName.contains("Settings")) {
+			if (customDisplayName.equals("buttonNames.settings")) {
 				event.setCancelled(true);
 
 				Player player = (Player) event.getWhoClicked();
@@ -384,9 +391,12 @@ public class BugReportSettings {
 				}
 
 				String itemDisplayName = itemMeta.getDisplayName();
-				String customItemDisplayName = getEnglishValueFromValue(itemDisplayName);
+				String customItemDisplayName = getKeyFromTranslation(itemDisplayName);
+				if (customItemDisplayName == null || customItemDisplayName.equals(" ")) {
+					return;
+				}
 
-				if (customItemDisplayName.equals("Close")) {
+				if (customItemDisplayName.equals("buttonNames.close")) {
 					player.closeInventory();
 					return;
 				}
@@ -400,9 +410,9 @@ public class BugReportSettings {
 				}
 
 				switch (customItemDisplayName) {
-					case "Enable Bug Report Notifications" -> setBugReportNotificationsToggle(player);
-					case "Enable Category Selection" -> setCategorySelectionToggle(player);
-					case "Set Max Reports Per Player" -> {
+					case "buttonNames.enableBugReportNotifications" -> setBugReportNotificationsToggle(player);
+					case "buttonNames.enableCategorySelection" -> setCategorySelectionToggle(player);
+					case "buttonNames.setMaxReportsPerPlayer" -> {
 						playButtonClickSound(player);
 
 						player.closeInventory();
@@ -414,25 +424,25 @@ public class BugReportSettings {
 						setMaxReportsClickMap.put(player.getUniqueId(), String.valueOf(true));
 						setMaxReportsClickMap.put(player.getUniqueId(), customItemDisplayName);
 					}
-					case "Set Report Cooldown" -> {
+					case "buttonNames.setReportCooldown" -> {
 						player.closeInventory();
 						player.sendMessage(returnStartingMessage(ChatColor.YELLOW) + "Enter the cooldown between reports in seconds. Or type 'cancel' to cancel.");
 
 						setReportCooldownClickMap.put(player.getUniqueId(), String.valueOf(true));
 						setReportCooldownClickMap.put(player.getUniqueId(), customItemDisplayName);
 					}
-					case "Other Settings" -> {
+					case "buttonNames.otherSettings" -> {
 						playButtonClickSound(player);
 						player.openInventory(getOtherSettingsGUI());
 					}
-					case "View Status" -> {
+					case "buttonNames.viewStatus" -> {
 						playButtonClickSound(player);
 						player.openInventory(getViewStatusGUI());
 					}
 				}
 			}
 
-			if (customDisplayName.contains("Language")) {
+			if (customDisplayName.equals("buttonNames.language")) {
 				event.setCancelled(true);
 
 				Player player = (Player) event.getWhoClicked();
@@ -445,15 +455,6 @@ public class BugReportSettings {
 
 				ItemMeta itemMeta = clickedItem.getItemMeta();
 				if (itemMeta == null || !itemMeta.hasDisplayName()) {
-					return;
-				}
-
-				String itemDisplayName = itemMeta.getDisplayName();
-				String customItemDisplayName = getEnglishValueFromValue(itemDisplayName);
-				if (customItemDisplayName.equals("Back")) {
-					playButtonClickSound(player);
-
-					player.openInventory(getSettingsGUI());
 					return;
 				}
 
@@ -471,9 +472,22 @@ public class BugReportSettings {
 						case 17 -> setLanguage("ru_RU", "Russian", player);
 					}
 				}
+
+				String itemDisplayName = itemMeta.getDisplayName();
+				String customItemDisplayName = getKeyFromTranslation(itemDisplayName);
+				if (customItemDisplayName == null || customItemDisplayName.equals(" ")) {
+					return;
+				}
+
+				if (customItemDisplayName.equals("buttonNames.back")) {
+					playButtonClickSound(player);
+
+					player.openInventory(getSettingsGUI());
+					return;
+				}
 			}
 
-			if (customDisplayName.contains("Other Settings")) {
+			if (customDisplayName.contains("buttonNames.otherSettings")) {
 				event.setCancelled(true);
 
 				Player player = (Player) event.getWhoClicked();
@@ -491,9 +505,12 @@ public class BugReportSettings {
 				}
 
 				String itemDisplayName = itemMeta.getDisplayName();
-				String customItemDisplayName = getEnglishValueFromValue(itemDisplayName);
+				String customItemDisplayName = getKeyFromTranslation(itemDisplayName);
+				if (customItemDisplayName == null || customItemDisplayName.equals(" ")) {
+					return;
+				}
 
-				if (customItemDisplayName.equals("Back")) {
+				if (customItemDisplayName.equals("buttonNames.back")) {
 					playButtonClickSound(player);
 
 					player.openInventory(getSettingsGUI());
@@ -501,13 +518,13 @@ public class BugReportSettings {
 				}
 
 				switch (customItemDisplayName) {
-					case "Enable Title Message" -> setTitleMessage(player);
-					case "Enable Player Heads" -> setPlayerHead(player);
-					case "Enable Report Book" -> setReportBook(player);
+					case "buttonNames.enableTitleMessage" -> setTitleMessage(player);
+					case "buttonNames.enablePlayerHeads" -> setPlayerHead(player);
+					case "buttonNames.enableReportBook" -> setReportBook(player);
 				}
 			}
 
-			if (customDisplayName.contains("View Status")) {
+			if (customDisplayName.contains("buttonNames.viewStatus")) {
 				event.setCancelled(true);
 
 				Player player = (Player) event.getWhoClicked();
@@ -525,25 +542,15 @@ public class BugReportSettings {
 				}
 
 				String itemDisplayName = itemMeta.getDisplayName();
-				String customItemDisplayName = getEnglishValueFromValue(itemDisplayName);
-
-				if (customItemDisplayName.equals("Back")) {
-					playButtonClickSound(player);
-
-					player.openInventory(getSettingsGUI());
-					return;
-				}
-
-				if (customItemDisplayName.equals(" ")) {
-					return;
-				}
+				String strippedDisplayName = ChatColor.stripColor(itemDisplayName);
+				String customItemDisplayName = getKeyFromTranslation(strippedDisplayName);
 
 				List<Map<?, ?>> statuses = config.getMapList("statuses");
 				for (Map<?, ?> statusMap : statuses) {
 					String statusName = (String) statusMap.get("name");
 					Integer statusID = (Integer) statusMap.get("id");
 
-					if (statusName.equals(customItemDisplayName)) {
+					if (statusName.equals(strippedDisplayName)) {
 						playButtonClickSound(player);
 
 						savedStatusName = statusName;
@@ -552,38 +559,47 @@ public class BugReportSettings {
 						player.openInventory(getStatusInfoGUI(statusMap));
 					}
 				}
+
+				if (customItemDisplayName == null || customItemDisplayName.equals(" ")) {
+					return;
+				}
+
+				if (customItemDisplayName.equals("buttonNames.back")) {
+					playButtonClickSound(player);
+
+					player.openInventory(getSettingsGUI());
+					return;
+				}
 			}
 
-			if (customDisplayName.contains("Edit Status")) {
+			if (customDisplayName.contains("buttonNames.editStatus")) {
 				event.setCancelled(true);
 
 				Player player = (Player) event.getWhoClicked();
+
 				Inventory clickedInventory = event.getClickedInventory();
 				ItemStack clickedItem = event.getCurrentItem();
-
 				if (clickedInventory == null || clickedItem == null || clickedItem.getType() == Material.AIR) {
 					return;
 				}
 
 				ItemMeta itemMeta = clickedItem.getItemMeta();
-
 				if (itemMeta == null || !itemMeta.hasDisplayName()) {
 					return;
 				}
 
 				String itemDisplayName = itemMeta.getDisplayName();
-				String customItemDisplayName = getEnglishValueFromValue(itemDisplayName);
+				String customItemDisplayName = getKeyFromTranslation(itemDisplayName);
+				if (customItemDisplayName == null || customItemDisplayName.equals(" ")) {
+					return;
+				}
 
 				switch (customItemDisplayName) {
-					case "Back" -> {
+					case "buttonNames.back" -> {
 						playButtonClickSound(player);
 						player.openInventory(getViewStatusGUI());
-						return;
 					}
-					case " " -> {
-						return;
-					}
-					case "Delete" -> {
+					case "buttonNames.delete" -> {
 						List<Map<?, ?>> statuses = config.getMapList("statuses");
 						for (Map<?, ?> statusMap : statuses) {
 							String statusName = (String) statusMap.get("name");
@@ -598,68 +614,67 @@ public class BugReportSettings {
 							}
 						}
 					}
-				}
+					case "buttonNames.statusName" -> {
+						List<Map<?, ?>> statuses = config.getMapList("statuses");
+						for (Map<?, ?> statusMap : statuses) {
+							String statusName = (String) statusMap.get("name");
+							if (statusMap.get("id").equals(savedStatusID)) {
+								playButtonClickSound(player);
 
-				if (customItemDisplayName.equals("Status Name")) {
-					List<Map<?, ?>> statuses = config.getMapList("statuses");
-					for (Map<?, ?> statusMap : statuses) {
-						String statusName = (String) statusMap.get("name");
-						if (statusMap.get("id").equals(savedStatusID)) {
-							playButtonClickSound(player);
+								player.closeInventory();
+								player.sendMessage(returnStartingMessage(ChatColor.YELLOW) + "Type the new name for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
 
-							player.closeInventory();
-							player.sendMessage(returnStartingMessage(ChatColor.YELLOW) + "Type the new name for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
-
-							renameStatusClickMap.put(player.getUniqueId(), String.valueOf(true));
-							renameStatusClickMap.put(player.getUniqueId(), statusName);
+								renameStatusClickMap.put(player.getUniqueId(), String.valueOf(true));
+								renameStatusClickMap.put(player.getUniqueId(), statusName);
+							}
 						}
 					}
-				}
 
-				if (customItemDisplayName.equals("Status Material")) {
-					List<Map<?, ?>> statuses = config.getMapList("statuses");
-					for (Map<?, ?> statusMap : statuses) {
-						String statusName = (String) statusMap.get("name");
-						if (statusMap.get("id").equals(savedStatusID)) {
-							playButtonClickSound(player);
-							player.closeInventory();
+					case "buttonNames.statusMaterial" -> {
+						List<Map<?, ?>> statuses = config.getMapList("statuses");
+						for (Map<?, ?> statusMap : statuses) {
+							String statusName = (String) statusMap.get("name");
+							if (statusMap.get("id").equals(savedStatusID)) {
+								playButtonClickSound(player);
+								player.closeInventory();
 
-							player.sendMessage(returnStartingMessage(ChatColor.YELLOW) + "Type the new material for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
-							setNewMaterialStatusClickMap.put(player.getUniqueId(), String.valueOf(true));
-							setNewMaterialStatusClickMap.put(player.getUniqueId(), statusName);
+								player.sendMessage(returnStartingMessage(ChatColor.YELLOW) + "Type the new material for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
+								setNewMaterialStatusClickMap.put(player.getUniqueId(), String.valueOf(true));
+								setNewMaterialStatusClickMap.put(player.getUniqueId(), statusName);
+							}
 						}
 					}
-				}
 
-				if (customItemDisplayName.equals("Status Color")) {
-					List<Map<?, ?>> statuses = config.getMapList("statuses");
-					for (Map<?, ?> statusMap : statuses) {
-						String statusName = (String) statusMap.get("name");
-						if (statusMap.get("id").equals(savedStatusID)) {
-							playButtonClickSound(player);
+					case "buttonNames.statusColor" -> {
+						List<Map<?, ?>> statuses = config.getMapList("statuses");
+						for (Map<?, ?> statusMap : statuses) {
+							String statusName = (String) statusMap.get("name");
+							if (statusMap.get("id").equals(savedStatusID)) {
+								playButtonClickSound(player);
 
-							player.closeInventory();
-							player.sendMessage(returnStartingMessage(ChatColor.YELLOW) + "Type the new color for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
+								player.closeInventory();
+								player.sendMessage(returnStartingMessage(ChatColor.YELLOW) + "Type the new color for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
 
-							setNewColorStatusClickMap.put(player.getUniqueId(), String.valueOf(true));
-							setNewColorStatusClickMap.put(player.getUniqueId(), statusName);
+								setNewColorStatusClickMap.put(player.getUniqueId(), String.valueOf(true));
+								setNewColorStatusClickMap.put(player.getUniqueId(), statusName);
+							}
 						}
 					}
-				}
 
-				if (customItemDisplayName.equals("Status Description")) {
-					List<Map<?, ?>> statuses = config.getMapList("statuses");
-					for (Map<?, ?> statusMap : statuses) {
-						String statusName = (String) statusMap.get("name");
+					case "buttonNames.statusDescription" -> {
+						List<Map<?, ?>> statuses = config.getMapList("statuses");
+						for (Map<?, ?> statusMap : statuses) {
+							String statusName = (String) statusMap.get("name");
 
-						if (statusMap.get("id").equals(savedStatusID)) {
-							playButtonClickSound(player);
+							if (statusMap.get("id").equals(savedStatusID)) {
+								playButtonClickSound(player);
 
-							player.closeInventory();
-							player.sendMessage(returnStartingMessage(ChatColor.YELLOW) + "Type the new description for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
+								player.closeInventory();
+								player.sendMessage(returnStartingMessage(ChatColor.YELLOW) + "Type the new description for the status (" + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ") or 'cancel' to cancel.");
 
-							setNewDescriptionStatusClickMap.put(player.getUniqueId(), String.valueOf(true));
-							setNewDescriptionStatusClickMap.put(player.getUniqueId(), statusName);
+								setNewDescriptionStatusClickMap.put(player.getUniqueId(), String.valueOf(true));
+								setNewDescriptionStatusClickMap.put(player.getUniqueId(), statusName);
+							}
 						}
 					}
 				}
@@ -914,8 +929,12 @@ public class BugReportSettings {
 								}
 							} else {
 								value = value.substring(0, 1).toUpperCase() + value.substring(1).toLowerCase();
-								String customDisplayName = getEnglishValueFromValue(value);
-								if (customDisplayName.contains("Cancel")) {
+								String customDisplayName = getKeyFromTranslation(value);
+								if (customDisplayName == null || customDisplayName.equals(" ")) {
+									return;
+								}
+
+								if (customDisplayName.equals("buttonNames.cancel")) {
 									player.sendMessage(returnStartingMessage(ChatColor.GREEN) + getValueFromLanguageFile("buttonNames.cancelled", "Cancelled"));
 								} else {
 									if (checkForKey("useTitleInsteadOfMessage", true)) {
@@ -1059,9 +1078,8 @@ public class BugReportSettings {
 
 		private void handleSettingUpdate(AsyncPlayerChatEvent event, @NotNull Player player, @NotNull Map<UUID, String> settingClickMap, String displayName, String ignoredConfigKey, Consumer<String> updateLogic) {
 			String clickDisplayName = settingClickMap.get(player.getUniqueId());
-			String displayNameDefault = getEnglishValueFromValue(displayName);
 
-			if (clickDisplayName != null && clickDisplayName.equals(displayNameDefault)) {
+			if (clickDisplayName != null && clickDisplayName.equals(displayName)) {
 				event.setCancelled(true);
 
 				BukkitScheduler scheduler = Bukkit.getServer().getScheduler();

@@ -21,6 +21,7 @@ import java.util.*;
 
 import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
 import static com.leon.bugreport.BugReportDatabase.getStaticUUID;
+import static com.leon.bugreport.BugReportLanguage.getKeyFromTranslation;
 import static com.leon.bugreport.BugReportManager.*;
 import static com.leon.bugreport.BugReportSettings.createCustomPlayerHead;
 import static com.leon.bugreport.gui.bugreportGUI.openBugReportDetailsGUI;
@@ -79,19 +80,22 @@ public class BugReportConfirmationGUI {
 												Boolean fromArchivedGUI) implements Listener {
 		@EventHandler(priority = EventPriority.NORMAL)
 		public void onInventoryClick(@NotNull InventoryClickEvent event) {
-			String displayName = ChatColor.stripColor(event.getView().getTitle());
-
+			String displayName = event.getView().getTitle();
 			if (debugMode) {
 				plugin.getLogger().info("Clicked inventory: " + displayName);
 			}
 
-			String customDisplayName = BugReportLanguage.getEnglishValueFromValue(displayName);
-			boolean isArchivedDetails = customDisplayName.startsWith("Archive Bug Report");
-			boolean isDeletedDetails = customDisplayName.startsWith("Delete Bug Report");
+			String customDisplayName = getKeyFromTranslation(displayName);
+			if (customDisplayName == null || customDisplayName.equals(" ")) {
+				return;
+			}
+
+			boolean isArchivedDetails = customDisplayName.equals("buttonNames.confirmationArchive");
+			boolean isDeletedDetails = customDisplayName.equals("buttonNames.confirmationDelete");
 
 			if (!isArchivedDetails && !isDeletedDetails) {
-				plugin.getLogger().warning("Something went wrong with the languages folder. Please remove the file and restart the server.");
-				plugin.getLogger().warning("If the issue persists, please contact the developer.");
+				plugin.getLogger().severe("Something went wrong with the languages folder. Please remove the file and restart the server.");
+				plugin.getLogger().severe("If the issue persists, please contact the developer.");
 				logErrorMessage("Something went wrong with the languages folder.");
 				return;
 			}
@@ -115,7 +119,10 @@ public class BugReportConfirmationGUI {
 			}
 
 			String itemDisplayName = itemMeta.getDisplayName();
-			String customItemDisplayName = BugReportLanguage.getEnglishValueFromValue(ChatColor.stripColor(itemDisplayName));
+			String customItemDisplayName = getKeyFromTranslation(itemDisplayName);
+			if (customItemDisplayName == null || customItemDisplayName.equals(" ")) {
+				return;
+			}
 
 			if (debugMode) {
 				plugin.getLogger().info("Clicked item: " + customItemDisplayName);
@@ -126,7 +133,7 @@ public class BugReportConfirmationGUI {
 					plugin.getLogger().info("Opening archived confirmation GUI.");
 				}
 				switch (customItemDisplayName) {
-					case "Archive" -> {
+					case "buttonNames.archive" -> {
 						playButtonClickSound(player);
 
 						if (debugMode) {
@@ -138,7 +145,7 @@ public class BugReportConfirmationGUI {
 
 						HandlerList.unregisterAll(this);
 					}
-					case "Back" -> {
+					case "buttonNames.back" -> {
 						playButtonClickSound(player);
 
 						if (debugMode) {
@@ -153,8 +160,9 @@ public class BugReportConfirmationGUI {
 				if (debugMode) {
 					plugin.getLogger().info("Opening delete confirmation GUI.");
 				}
-				switch (customItemDisplayName) {
-					case "Delete" -> {
+
+				switch (Objects.requireNonNull(customItemDisplayName)) {
+					case "buttonNames.delete" -> {
 						playButtonClickSound(player);
 
 						if (debugMode) {
@@ -166,7 +174,7 @@ public class BugReportConfirmationGUI {
 
 						HandlerList.unregisterAll(this);
 					}
-					case "Back" -> {
+					case "buttonNames.back" -> {
 						playButtonClickSound(player);
 
 						if (debugMode) {

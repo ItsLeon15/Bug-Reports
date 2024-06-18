@@ -11,17 +11,14 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import static com.leon.bugreport.BugReportManager.debugMode;
 
 public class BugReportLanguage {
 	public static final List<String> languageCodes = List.of("en_US", "es_ES", "de_DE", "fr_FR", "it_IT", "pt_BR", "ru_RU", "zh_CN", "zh_TW");
-	private static File enLangTempFile;
 	private static File langFolder;
 	private static String languageCode;
 	private static Map<String, String> langConfig;
-	private static Map<String, String> enLangConfig;
 	private static Plugin plugin;
 
 	public BugReportLanguage(@NotNull Plugin plugin) {
@@ -52,43 +49,19 @@ public class BugReportLanguage {
 		return value;
 	}
 
-	private static void ensureTempEnglishFileExists() {
-		if (enLangTempFile == null) {
-			enLangTempFile = new File(langFolder, "temp/en_US_temp.yml");
-		}
-
-		enLangTempFile.getParentFile().mkdirs();
-		plugin.saveResource("languages/temp/en_US_temp.yml", true);
-	}
-
-	private static void reloadEnglishTempConfig() {
-		enLangConfig = flattenYamlConfiguration(YamlConfiguration.loadConfiguration(enLangTempFile));
-	}
-
-	private static void checkIfEnglishFileModified() {
-		ensureTempEnglishFileExists();
-		reloadEnglishTempConfig();
-	}
-
-	public static @Nullable String getEnglishValueFromValue(String value) {
-		checkIfEnglishFileModified();
-
-		String strippedValue = ChatColor.stripColor(value);
-
-		for (Map.Entry<String, String> entry : langConfig.entrySet()) {
-			if (entry.getValue().equals(strippedValue)) {
-				String key = entry.getKey();
-				String englishValue = enLangConfig.get("en_US." + key);
-				return englishValue != null ? englishValue : strippedValue;
+	public static @Nullable String getKeyFromTranslation(String translation) {
+		String cleanedTranslation = ChatColor.stripColor(translation);
+		if (langConfig != null) {
+			for (Map.Entry<String, String> entry : langConfig.entrySet()) {
+				if (entry.getValue().equals(cleanedTranslation)) {
+					return entry.getKey();
+				}
 			}
 		}
-
-		return strippedValue;
+		return null;
 	}
 
 	public static void loadLanguageFiles() {
-		ensureTempEnglishFileExists();
-
 		File[] files = langFolder.listFiles();
 		if (files == null || files.length == 0) {
 			plugin.getLogger().warning("No language files found in the 'languages' folder.");
@@ -120,15 +93,16 @@ public class BugReportLanguage {
 			}
 		}
 
-		checkIfEnglishFileModified();
-
 		langConfig = new HashMap<>();
 
 		File langFile = new File(langFolder, languageCode + ".yml");
 		if (langFile.exists()) {
 			YamlConfiguration yamlConfig = YamlConfiguration.loadConfiguration(langFile);
 			ConfigurationSection langSection = yamlConfig.getConfigurationSection(languageCode);
-			langConfig = flattenYamlConfiguration(Objects.requireNonNullElse(langSection, yamlConfig));
+			if (langSection == null) {
+				langSection = yamlConfig;
+			}
+			langConfig = flattenYamlConfiguration(langSection);
 		} else {
 			plugin.getLogger().warning("Language file '" + languageCode + ".yml' not found.");
 		}

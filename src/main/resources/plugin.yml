@@ -1,5 +1,5 @@
 name: BugReport
-version: 0.12.3
+version: 0.12.4
 main: com.leon.bugreport.BugReportPlugin
 api-version: 1.13
 author: ItsLeon15
