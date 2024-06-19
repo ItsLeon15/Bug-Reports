@@ -72,17 +72,18 @@ public class BugReportManager implements Listener {
 		pluginTitle = Objects.requireNonNull(config.getString("pluginTitle", "[Bug Report]"));
 
 		if (pluginTitle.contains("&")) {
-			String[] parts = pluginTitle.split("&");
+			pluginTitle = pluginTitle.replace("&", "§");
+			String[] parts = pluginTitle.split("§");
 			for (int i = 1; i < parts.length; i++) {
 				String colorCode = extractValidColorCode(parts[i]);
 
 				if (colorCode != null) {
 					ChatColor endingPluginTitleColorOther = getChatColorByCode("§" + colorCode);
-					if (endingPluginTitleColorOther != null) endingPluginTitleColor = endingPluginTitleColorOther;
+					if (endingPluginTitleColorOther != null) {
+						endingPluginTitleColor = endingPluginTitleColorOther;
+					}
 				}
 			}
-
-			pluginTitle = pluginTitle.replace("&", "§");
 		}
 
 		pluginColor = stringColorToColorCode(Objects.requireNonNull(config.getString("pluginColor", "Yellow").toUpperCase()));
@@ -95,9 +96,12 @@ public class BugReportManager implements Listener {
 	}
 
 	private static @Nullable String extractValidColorCode(String input) {
-		input = input.replaceAll("[^0-9a-fA-F]", "");
-		input = input.trim().substring(0, 1);
-		if (input.matches("[0-9a-fA-F]")) {
+		input = input.replaceAll("[^0-9a-fA-FklmnorKLMNOR]", "").trim();
+		if (input.length() < 1) {
+			return null;
+		}
+		input = input.substring(0, 1);
+		if (input.matches("[0-9a-fA-FklmnorKLMNOR]")) {
 			return input;
 		}
 		return null;
