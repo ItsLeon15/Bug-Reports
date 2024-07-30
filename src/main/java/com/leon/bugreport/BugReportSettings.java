@@ -1002,53 +1002,55 @@ public class BugReportSettings {
 		public void onPlayerChat(@NotNull AsyncPlayerChatEvent event) {
 			Player player = event.getPlayer();
 
-			if (setMaxReportsClickMap.containsKey(player.getUniqueId())) {
-				handleSettingUpdate(event, player, setMaxReportsClickMap,
-						getValueFromLanguageFile("buttonNames.setMaxReportsPerPlayer", "Set Max Reports Per Player"),
-						"max-reports-per-player", (value) -> {
-							int maxReports;
-							if (value.matches("[0-9]+")) {
-								try {
-									maxReports = Integer.parseInt(value);
-								} catch (NumberFormatException e) {
-									if (checkForKey("useTitleInsteadOfMessage", true)) {
-										player.sendTitle(returnStartingMessage(ChatColor.RED), getValueFromLanguageFile("enterValidNumber", "Please enter a valid number"), 10, 70, 20);
-									} else {
-										player.sendMessage(returnStartingMessage(ChatColor.RED) + getValueFromLanguageFile("enterValidNumber", "Please enter a valid number"));
-									}
-									return;
-								}
-								config.set("max-reports-per-player", maxReports);
-								saveConfig();
-								if (checkForKey("useTitleInsteadOfMessage", true)) {
-									player.sendTitle(returnStartingMessage(ChatColor.GREEN), getValueFromLanguageFile("maxReportsPerPlayerSuccessMessage", "Max reports per player has been set to %amount%").replace("%amount%", String.valueOf(maxReports)), 10, 70, 20);
-								} else {
-									player.sendMessage(returnStartingMessage(ChatColor.GREEN)
-											+ getValueFromLanguageFile("maxReportsPerPlayerSuccessMessage", "Max reports per player has been set to %amount%")
-											.replace("%amount%", String.valueOf(maxReports)));
-								}
-							} else {
-								value = value.substring(0, 1).toUpperCase() + value.substring(1).toLowerCase();
-								String customDisplayName = getKeyFromTranslation(value);
-								if (customDisplayName == null || customDisplayName.equals(" ")) {
-									return;
-								}
+			System.out.println(player.getUniqueId());
+			System.out.println(setMaxReportsClickMap.containsKey(player.getUniqueId()));
+			System.out.println(setMaxReportsClickMap);
 
-								if (customDisplayName.equals("buttonNames.cancel")) {
-									player.sendMessage(returnStartingMessage(ChatColor.GREEN) + getValueFromLanguageFile("buttonNames.cancelled", "Cancelled"));
-								} else {
-									if (checkForKey("useTitleInsteadOfMessage", true)) {
-										player.sendTitle(returnStartingMessage(ChatColor.RED), getValueFromLanguageFile("enterValidNumber", "Please enter a valid number"), 10, 70, 20);
-									} else {
-										player.sendMessage(returnStartingMessage(ChatColor.RED) + getValueFromLanguageFile("enterValidNumber", "Please enter a valid number"));
-									}
-								}
+			if (setMaxReportsClickMap.containsKey(player.getUniqueId())) {
+				handleSettingUpdate(event, player, setMaxReportsClickMap, "buttonNames.setMaxReportsPerPlayer", "max-reports-per-player", (value) -> {
+					int maxReports;
+					if (value.matches("[0-9]+")) {
+						try {
+							maxReports = Integer.parseInt(value);
+						} catch (NumberFormatException e) {
+							if (checkForKey("useTitleInsteadOfMessage", true)) {
+								player.sendTitle(returnStartingMessage(ChatColor.RED), getValueFromLanguageFile("enterValidNumber", "Please enter a valid number"), 10, 70, 20);
+							} else {
+								player.sendMessage(returnStartingMessage(ChatColor.RED) + getValueFromLanguageFile("enterValidNumber", "Please enter a valid number"));
 							}
-						});
+							return;
+						}
+						config.set("max-reports-per-player", maxReports);
+						saveConfig();
+						if (checkForKey("useTitleInsteadOfMessage", true)) {
+							player.sendTitle(returnStartingMessage(ChatColor.GREEN), getValueFromLanguageFile("maxReportsPerPlayerSuccessMessage", "Max reports per player has been set to %amount%").replace("%amount%", String.valueOf(maxReports)), 10, 70, 20);
+						} else {
+							player.sendMessage(returnStartingMessage(ChatColor.GREEN)
+									+ getValueFromLanguageFile("maxReportsPerPlayerSuccessMessage", "Max reports per player has been set to %amount%")
+									.replace("%amount%", String.valueOf(maxReports)));
+						}
+					} else {
+						value = value.substring(0, 1).toUpperCase() + value.substring(1).toLowerCase();
+						String customDisplayName = getKeyFromTranslation(value);
+						if (customDisplayName == null || customDisplayName.equals(" ")) {
+							return;
+						}
+
+						if (customDisplayName.equals("buttonNames.cancel")) {
+							player.sendMessage(returnStartingMessage(ChatColor.GREEN) + getValueFromLanguageFile("buttonNames.cancelled", "Cancelled"));
+						} else {
+							if (checkForKey("useTitleInsteadOfMessage", true)) {
+								player.sendTitle(returnStartingMessage(ChatColor.RED), getValueFromLanguageFile("enterValidNumber", "Please enter a valid number"), 10, 70, 20);
+							} else {
+								player.sendMessage(returnStartingMessage(ChatColor.RED) + getValueFromLanguageFile("enterValidNumber", "Please enter a valid number"));
+							}
+						}
+					}
+				});
 			}
 
 			if (setReportCooldownClickMap.containsKey(player.getUniqueId())) {
-				handleSettingUpdate(event, player, setReportCooldownClickMap, "Set Report Cooldown", "report-cooldown", (value) -> {
+				handleSettingUpdate(event, player, setReportCooldownClickMap, "buttonNames.setReportCooldown", "report-cooldown", (value) -> {
 					int reportCooldown;
 					try {
 						reportCooldown = Integer.parseInt(value);
