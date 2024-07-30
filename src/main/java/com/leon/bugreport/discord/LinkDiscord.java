@@ -223,19 +223,19 @@ public class LinkDiscord {
 					webhook.setContent(content.toString().trim());
 				}
 			} catch (Exception e) {
-				throwException("Error sending additional pings to Discord: " + e.getMessage());
+				throwException("Error 045: Error sending additional pings to Discord: " + e.getMessage());
 			} finally {
 				try {
 					webhook.execute();
 				} catch (IOException e) {
-					throwException("Error sending bug report to Discord: " + e.getMessage());
+					throwException("Error 025: Error sending bug report to Discord: " + e.getMessage());
 				}
 			}
 		} else {
 			try {
 				webhook.execute();
 			} catch (IOException e) {
-				throwException("Error sending bug report to Discord: " + e.getMessage());
+				throwException("Error 025: Error sending bug report to Discord: " + e.getMessage());
 			}
 		}
 	}
