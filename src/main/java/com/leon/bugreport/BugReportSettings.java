@@ -303,8 +303,8 @@ public class BugReportSettings {
 					plugin.getLogger().info("Custom player head created successfully.");
 				}
 			} catch (Exception e) {
-				plugin.getLogger().warning("Failed to create custom player head: " + e.getMessage());
-				logErrorMessage("Failed to create custom player head: " + e.getMessage());
+				plugin.getLogger().warning("Error 028: Failed to create custom player head: " + e.getMessage());
+				logErrorMessage("Error 028: Failed to create custom player head: " + e.getMessage());
 				return new ItemStack(Material.PLAYER_HEAD);
 			}
 		}

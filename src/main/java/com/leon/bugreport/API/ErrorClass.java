@@ -16,23 +16,23 @@ public class ErrorClass {
 		try {
 			appendToFile(errorMessage);
 		} catch (Exception e) {
-			plugin.getLogger().warning("Failed to write to error log file");
-			logErrorMessage("Failed to write to error log file");
+			plugin.getLogger().warning("Error 011: Failed to write to error log file");
+			logErrorMessage("Error 011: Failed to write to error log file");
 		}
 	}
 
 	private static void cacheDirectoryExists() {
 		if (!LOG_DIR.exists() && !LOG_DIR.mkdirs()) {
-			plugin.getLogger().warning("Failed to create cache directory");
-			logErrorMessage("Failed to create cache directory");
+			plugin.getLogger().warning("Error 012: Failed to create cache directory");
+			logErrorMessage("Error 012: Failed to create cache directory");
 		}
 	}
 
 	public static void createErrorLog() {
 		try {
 			if (!ERROR_FILE.exists() && !ERROR_FILE.createNewFile()) {
-				plugin.getLogger().warning("Failed to create error log file");
-				logErrorMessage("Failed to create error log file");
+				plugin.getLogger().warning("Error 013: Failed to create error log file");
+				logErrorMessage("Error 013: Failed to create error log file");
 			}
 		} catch (Exception ignored) {
 
@@ -48,8 +48,8 @@ public class ErrorClass {
 			fileWriter.write('[' + formattedTime + "] " + error + '\n');
 			fileWriter.close();
 		} catch (Exception e) {
-			plugin.getLogger().warning("Failed to write to error log file");
-			logErrorMessage("Failed to write to error log file");
+			plugin.getLogger().warning("Error 014: Failed to write to error log file");
+			logErrorMessage("Error 014: Failed to write to error log file");
 		}
 	}
 }

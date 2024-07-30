@@ -114,8 +114,8 @@ public class BugReportManager implements Listener {
 
 	public static boolean checkCategoryConfig() {
 		if (!config.contains("reportCategories")) {
-			plugin.getLogger().warning(getValueFromLanguageFile("missingReportCategoryMessage", "Missing reportCategories in config.yml"));
-			logErrorMessage(getValueFromLanguageFile("missingReportCategoryMessage", "Missing reportCategories in config.yml"));
+			plugin.getLogger().warning("Error 020: Missing reportCategories in config.yml");
+			logErrorMessage("Error 020: Missing reportCategories in config.yml");
 			return false;
 		}
 
@@ -126,8 +126,8 @@ public class BugReportManager implements Listener {
 
 			for (int i = 0; i < keys.length; i++) {
 				if (values[i] == null) {
-					plugin.getLogger().warning(getValueFromLanguageFile("missingValueMessage", "Missing '%key%' in reportCategories in config.yml").replace("%key%", keys[i].toString()));
-					logErrorMessage(getValueFromLanguageFile("missingValueMessage", "Missing '%key%' in reportCategories in config.yml").replace("%key%", keys[i].toString()));
+					plugin.getLogger().warning("Error 021: Missing '%key%' in reportCategories in config.yml".replace("%key%", keys[i].toString()));
+					logErrorMessage("Error 021: Missing '%key%' in reportCategories in config.yml".replace("%key%", keys[i].toString()));
 					return false;
 				}
 			}
@@ -209,8 +209,8 @@ public class BugReportManager implements Listener {
 		try {
 			config.save(configFile);
 		} catch (Exception e) {
-			plugin.getLogger().warning("Error saving config.yml: " + e.getMessage());
-			logErrorMessage("Error saving config.yml: " + e.getMessage());
+			plugin.getLogger().warning("Error 022: Error saving config.yml: " + e.getMessage());
+			logErrorMessage("Error 022: Error saving config.yml: " + e.getMessage());
 		}
 	}
 
@@ -490,8 +490,8 @@ public class BugReportManager implements Listener {
 
 			return categories;
 		} else {
-			plugin.getLogger().warning(getValueFromLanguageFile("wentWrongLoadingCategoriesMessage", "Something went wrong while loading the report categories"));
-			logErrorMessage(getValueFromLanguageFile("wentWrongLoadingCategoriesMessage", "Something went wrong while loading the report categories"));
+			plugin.getLogger().warning("Error 023: Something went wrong while loading the report categories");
+			logErrorMessage("Error 023: Something went wrong while loading the report categories");
 			return null;
 		}
 	}
@@ -560,8 +560,8 @@ public class BugReportManager implements Listener {
 			}
 			String webhookURL = config.getString("webhookURL", "");
 			if (webhookURL.isEmpty()) {
-				plugin.getLogger().warning(getValueFromLanguageFile("missingDiscordWebhookURLMessage", "Missing webhookURL in config.yml"));
-				logErrorMessage(getValueFromLanguageFile("missingDiscordWebhookURLMessage", "Missing webhookURL in config.yml"));
+				plugin.getLogger().warning("Error 024: Missing webhookURL in config.yml");
+				logErrorMessage("Error 024: Missing webhookURL in config.yml");
 			}
 
 			try {
@@ -570,8 +570,8 @@ public class BugReportManager implements Listener {
 					plugin.getLogger().info("Bug report sent to Discord.");
 				}
 			} catch (Exception e) {
-				plugin.getLogger().warning("Error sending bug report to Discord: " + e.getMessage());
-				logErrorMessage("Error sending bug report to Discord: " + e.getMessage());
+				plugin.getLogger().warning("Error 025: Error sending bug report to Discord: " + e.getMessage());
+				logErrorMessage("Error 025: Error sending bug report to Discord: " + e.getMessage());
 			}
 		}
 

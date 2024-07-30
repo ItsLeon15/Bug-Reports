@@ -41,7 +41,7 @@ public class UniversalTabCompleter implements TabCompleter {
 					plugin.getLogger().info("No tab-completion for categories.");
 				}
 			} else if (config.getBoolean("enablePluginReportCategoriesGUI") && config.getBoolean("enablePluginReportCategoriesTabComplete")) {
-				plugin.getLogger().warning("enablePluginReportCategoriesGUI and enablePluginReportCategoriesTabComplete are both true! Either one of them has to be true or both false. Using GUI now.");
+				plugin.getLogger().warning("Error 029: enablePluginReportCategoriesGUI and enablePluginReportCategoriesTabComplete are both true! Either one of them has to be true or both false. Using the default UI.");
 			} else if (!config.getBoolean("enablePluginReportCategoriesGUI") && config.getBoolean("enablePluginReportCategoriesTabComplete")) {
 				if (args.length == 1) {
 					if (sender.hasPermission("bugreport.admin") || sender.hasPermission("bugreport.use")) {

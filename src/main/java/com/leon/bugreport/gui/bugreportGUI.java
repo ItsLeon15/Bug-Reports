@@ -99,8 +99,8 @@ public class bugreportGUI {
 
 	private static void setupGUIFromConfig(Inventory gui, Player player, @NotNull YamlConfiguration guiConfig, String report, Integer reportIDGUI, Boolean isArchivedGUI) {
 		if (!validateGUIConfig(guiConfig)) {
-			plugin.getLogger().severe("The layout of the customGUI.yml file is incorrect. Falling back to the default layout.");
-			logErrorMessage("The layout of the customGUI.yml file is incorrect. Falling back to the default layout");
+			plugin.getLogger().severe("Error 044: The layout of the customGUI.yml file is incorrect. Falling back to the default layout.");
+			logErrorMessage("Error 044: The layout of the customGUI.yml file is incorrect. Falling back to the default layout");
 			setupDefaultGUI(gui, player, report, reportIDGUI, isArchivedGUI);
 			return;
 		}

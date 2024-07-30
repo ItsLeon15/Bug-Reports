@@ -94,9 +94,8 @@ public class BugReportConfirmationGUI {
 			boolean isDeletedDetails = customDisplayName.equals("buttonNames.confirmationDelete");
 
 			if (!isArchivedDetails && !isDeletedDetails) {
-				plugin.getLogger().severe("Something went wrong with the languages folder. Please remove the file and restart the server.");
-				plugin.getLogger().severe("If the issue persists, please contact the developer.");
-				logErrorMessage("Something went wrong with the languages folder.");
+				plugin.getLogger().severe("Error 043: Something went wrong with the languages folder. Please remove the folder and restart the server.");
+				logErrorMessage("Error 043: Something went wrong with the languages folder. Please remove the folder and restart the server.");
 				return;
 			}
 

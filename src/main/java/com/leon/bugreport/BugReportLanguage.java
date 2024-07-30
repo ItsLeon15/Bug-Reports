@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
 import static com.leon.bugreport.BugReportManager.debugMode;
 
 public class BugReportLanguage {
@@ -33,7 +34,8 @@ public class BugReportLanguage {
 		}
 
 		if (!languageCodes.contains(languageCode)) {
-			plugin.getLogger().warning("Invalid language code '" + languageCode + "'. Defaulting to 'en_US'.");
+			plugin.getLogger().warning("Error 016: Invalid language code '" + languageCode + "'. Defaulting to 'en_US'.");
+			logErrorMessage("Error 016: Invalid language code '" + languageCode + "'. Defaulting to 'en_US'.");
 			languageCode = "en_US";
 		}
 
@@ -66,7 +68,8 @@ public class BugReportLanguage {
 	public static void loadLanguageFiles() {
 		File[] files = langFolder.listFiles();
 		if (files == null || files.length == 0) {
-			plugin.getLogger().warning("No language files found in the 'languages' folder.");
+			plugin.getLogger().warning("Error 017: No language files found in the 'languages' folder.");
+			logErrorMessage("Error 017: No language files found in the 'languages' folder.");
 			for (String languageCode : languageCodes) {
 				plugin.saveResource("languages/" + languageCode + ".yml", false);
 			}
@@ -76,8 +79,8 @@ public class BugReportLanguage {
 				for (File file : files) {
 					if (file.getName().equalsIgnoreCase(languageCode + ".yml")) {
 						if (isFileEmpty(file)) {
-							plugin.getLogger().warning("Language file '" + languageCode + ".yml' is empty.");
-							plugin.getLogger().warning("Creating new file.");
+							plugin.getLogger().warning("Error 018: Language file '" + languageCode + ".yml' is empty. Creating new file.");
+							logErrorMessage("Error 018: Language file '" + languageCode + ".yml' is empty. Creating new file.");
 							plugin.saveResource("languages/" + languageCode + ".yml", true);
 						}
 						found = true;
@@ -89,7 +92,8 @@ public class BugReportLanguage {
 					if (resourceAvailable) {
 						plugin.saveResource("languages/" + languageCode + ".yml", false);
 					} else {
-						plugin.getLogger().warning("Language file '" + languageCode + ".yml' not found in resources.");
+						plugin.getLogger().warning("Error 019: Language file '" + languageCode + ".yml' not found in resources.");
+						logErrorMessage("Error 019: Language file '" + languageCode + ".yml' not found in resources.");
 					}
 				}
 			}
@@ -106,7 +110,8 @@ public class BugReportLanguage {
 			}
 			langConfig = flattenYamlConfiguration(langSection);
 		} else {
-			plugin.getLogger().warning("Language file '" + languageCode + ".yml' not found.");
+			plugin.getLogger().warning("Error 019: Language file '" + languageCode + ".yml' not found in resources.");
+			logErrorMessage("Error 019: Language file '" + languageCode + ".yml' not found in resources.");
 		}
 
 		if (debugMode) {

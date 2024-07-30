@@ -29,7 +29,7 @@ public class UpdateChecker {
 						}
 					}
 				} catch (IOException e) {
-					plugin.getLogger().warning("Unable to check for updates: " + e.getMessage());
+					plugin.getLogger().warning("Error 033: Unable to check for updates: " + e.getMessage());
 				}
 			}
 		}.runTaskAsynchronously(plugin);

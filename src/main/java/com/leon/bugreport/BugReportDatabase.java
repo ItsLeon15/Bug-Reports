@@ -58,9 +58,8 @@ public class BugReportDatabase {
 				}
 			}
 		} catch (Exception e) {
-			plugin.getLogger().severe("Failed to add missing columns.");
-			plugin.getLogger().severe(e.getMessage());
-			logErrorMessage("Failed to add missing columns." + e.getMessage());
+			plugin.getLogger().severe("Error 035: Failed to add missing columns." + e.getMessage());
+			logErrorMessage("Error 035: Failed to add missing columns." + e.getMessage());
 		}
 	}
 
@@ -80,9 +79,8 @@ public class BugReportDatabase {
 				playerDataStatement.close();
 			}
 		} catch (Exception e) {
-			plugin.getLogger().severe("Failed to set player last login timestamp.");
-			plugin.getLogger().severe(e.getMessage());
-			logErrorMessage("Failed to set player last login timestamp." + e.getMessage());
+			plugin.getLogger().severe("Error 036: Failed to set player last login timestamp." + e.getMessage());
+			logErrorMessage("Error 036: Failed to set player last login timestamp." + e.getMessage());
 		}
 	}
 
@@ -96,9 +94,8 @@ public class BugReportDatabase {
 			}
 			statement.close();
 		} catch (Exception e) {
-			plugin.getLogger().severe("Failed to get player last login timestamp.");
-			plugin.getLogger().severe(e.getMessage());
-			logErrorMessage("Failed to get player last login timestamp." + e.getMessage());
+			plugin.getLogger().severe("Error 037: Failed to get player last login timestamp." + e.getMessage());
+			logErrorMessage("Error 037: Failed to get player last login timestamp." + e.getMessage());
 		}
 		return 0;
 	}
@@ -117,9 +114,8 @@ public class BugReportDatabase {
 			}
 			statement.close();
 		} catch (Exception e) {
-			plugin.getLogger().severe("Failed to get bug report location.");
-			plugin.getLogger().severe(e.getMessage());
-			logErrorMessage("Failed to get bug report location." + e.getMessage());
+			plugin.getLogger().severe("Error 038: Failed to get bug report location." + e.getMessage());
+			logErrorMessage("Error 038: Failed to get bug report location." + e.getMessage());
 		}
 		return null;
 	}
@@ -133,9 +129,8 @@ public class BugReportDatabase {
 				}
 			}
 		} catch (Exception e) {
-			plugin.getLogger().severe("Failed to add missing columns.");
-			plugin.getLogger().severe(e.getMessage());
-			logErrorMessage("Failed to add missing columns." + e.getMessage());
+			plugin.getLogger().severe("Error 039: Failed to add missing columns." + e.getMessage());
+			logErrorMessage("Error 039: Failed to add missing columns." + e.getMessage());
 		}
 	}
 
@@ -158,8 +153,8 @@ public class BugReportDatabase {
 
 			connectRemote(host, port, database, username, password);
 		} else {
-			plugin.getLogger().warning("Invalid database type. Please use 'local' or 'mysql'.");
-			logErrorMessage("Invalid database type. Please use 'local' or 'mysql'.");
+			plugin.getLogger().warning("Error 015: Invalid database type. Please use 'local' or 'mysql'.");
+			logErrorMessage("Error 015: Invalid database type. Please use 'local' or 'mysql'.");
 		}
 	}
 
@@ -374,11 +369,10 @@ public class BugReportDatabase {
 			resultSet.close();
 			statement.close();
 		} catch (SQLException e) {
-			plugin.getLogger().severe("Failed to load bug reports.");
-			logErrorMessage("Failed to load bug reports.");
+			plugin.getLogger().severe("Error 040: Failed to load bug reports.");
+			logErrorMessage("Error 040: Failed to load bug reports.");
 			if (e.getMessage().startsWith("[SQLITE_CORRUPT]")) {
-				plugin.getLogger().severe("Your database is corrupted. Please delete the database file and restart the server.");
-				plugin.getLogger().severe("File path: plugins/BugReport/bugreports.db");
+				plugin.getLogger().severe("Error 041: Your database is corrupted. Please delete the database file and restart the server. File path: plugins/BugReport/bugreports.db");
 				plugin.getLogger().severe("If you need help, please join the discord server: https://discord.gg/ZvdNYqmsbx");
 			} else {
 				plugin.getLogger().severe(e.getMessage());

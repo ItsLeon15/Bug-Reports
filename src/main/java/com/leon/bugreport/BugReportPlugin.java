@@ -72,8 +72,8 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 
 		if (!getDataFolder().exists()) {
 			if (!getDataFolder().mkdirs()) {
-				plugin.getLogger().warning("Failed to create data folder.");
-				logErrorMessage("Failed to create data folder.");
+				plugin.getLogger().warning("Error 026: Failed to create data folder.");
+				logErrorMessage("Error 026: Failed to create data folder.");
 			}
 		}
 
@@ -107,8 +107,8 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 		try {
 			dataSource.close();
 		} catch (Exception e) {
-			plugin.getLogger().warning("Failed to close database connection.");
-			logErrorMessage("Failed to close database connection.");
+			plugin.getLogger().warning("Error 027: Failed to close database connection.");
+			logErrorMessage("Error 027: Failed to close database connection.");
 		}
 
 		this.getServer().getMessenger().unregisterOutgoingPluginChannel(this);

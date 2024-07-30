@@ -1,6 +1,5 @@
 package com.leon.bugreport.discord;
 
-import com.leon.bugreport.BugReportPlugin;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -82,14 +81,14 @@ public class LinkDiscord {
 		}
 
 		if (!config.contains("discordEmbedFields")) {
-			plugin.getLogger().warning("discordEmbedFields key is not present in the config. Sending an empty embed.");
-			logErrorMessage("discordEmbedFields key is not present in the config. Sending an empty embed.");
+			plugin.getLogger().warning("Error 001: discordEmbedFields key is not present in the config. Sending an empty embed.");
+			logErrorMessage("Error 001: discordEmbedFields key is not present in the config. Sending an empty embed.");
 		}
 
 		List<Map<?, ?>> discordEmbedFields = config.getMapList("discordEmbedFields");
 		if (discordEmbedFields.isEmpty()) {
-			plugin.getLogger().warning("discordEmbedFields is empty in the config. Bug report not sent to Discord.");
-			logErrorMessage("discordEmbedFields is empty in the config. Bug report not sent to Discord.");
+			plugin.getLogger().warning("Error 002: discordEmbedFields is empty in the config. Bug report not sent to Discord.");
+			logErrorMessage("Error 002: discordEmbedFields is empty in the config. Bug report not sent to Discord.");
 			sendEmptyEmbedOrDefault(username);
 			return;
 		}
@@ -281,8 +280,8 @@ public class LinkDiscord {
 			errorLogged = false;
 		} catch (Exception e) {
 			if (!errorLogged) {
-				BugReportPlugin.getPlugin().getLogger().warning("Error getting UUID from API: " + e.getMessage());
-				logErrorMessage("Error getting UUID from API: " + e.getMessage());
+				plugin.getLogger().warning("Error 042: Error getting UUID from API: " + e.getMessage());
+				logErrorMessage("Error 042: Error getting UUID from API: " + e.getMessage());
 				errorLogged = true;
 			}
 			return "Unknown UUID";

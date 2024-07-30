@@ -162,8 +162,8 @@ public class BugReportCommand implements CommandExecutor, Listener {
 						}
 					}
 					if (!foundAndRemoved) {
-						plugin.getLogger().warning("Logging: Failed to find and remove book for player " + player.getName());
-						logErrorMessage("Logging: Failed to find and remove book for player " + player.getName());
+						plugin.getLogger().warning("Error 030: Failed to find and remove book for player " + player.getName());
+						logErrorMessage("Error 030: Failed to find and remove book for player " + player.getName());
 					} else {
 						plugin.getLogger().info("Logging: Removed book for player " + player.getName());
 					}
@@ -189,8 +189,8 @@ public class BugReportCommand implements CommandExecutor, Listener {
 					}
 				}
 				if (foundBook) {
-					plugin.getLogger().warning("Logging: Failed to remove book for player " + player.getName());
-					logErrorMessage("Logging: Failed to remove book for player " + player.getName());
+					plugin.getLogger().warning("Error 031: Failed to remove book for player " + player.getName());
+					logErrorMessage("Error 031: Failed to remove book for player " + player.getName());
 				} else {
 					plugin.getLogger().info("Logging: Removed book for player " + player.getName());
 				}
@@ -275,8 +275,8 @@ public class BugReportCommand implements CommandExecutor, Listener {
 			try {
 				reportManager.submitBugReport(player, String.join(" ", args), null);
 			} catch (Exception e) {
-				plugin.getLogger().warning("Failed to submit bug report");
-				logErrorMessage("Failed to submit bug report");
+				plugin.getLogger().warning("Error 032: Failed to submit bug report");
+				logErrorMessage("Error 032: Failed to submit bug report");
 				throw new RuntimeException(e);
 			}
 
