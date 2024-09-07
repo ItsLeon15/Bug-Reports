@@ -405,7 +405,14 @@ public class BugReportDatabase {
 	private static void connectLocal() {
 		try {
 			File databaseFile = new File("plugins/BugReport/bugreports.db");
+			if (!databaseFile.exists()) {
+				if (databaseFile.createNewFile()) {
+					plugin.getLogger().info("Created local database file");
+				}
+			}
 			HikariConfig hikariConfig = new HikariConfig();
+			hikariConfig.setDriverClassName("org.sqlite.JDBC");
+			hikariConfig.setConnectionTestQuery("SELECT 1");
 			hikariConfig.setJdbcUrl("jdbc:sqlite:" + databaseFile.getAbsolutePath());
 			dataSource = new HikariDataSource(hikariConfig);
 			plugin.getLogger().info("Connected to local database");

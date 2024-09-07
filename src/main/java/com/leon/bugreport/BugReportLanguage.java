@@ -17,7 +17,7 @@ import static com.leon.bugreport.BugReportManager.debugMode;
 
 public class BugReportLanguage {
 	public static final List<String> languageCodes = List.of(
-			"en_US", "es_ES", "de_DE", "fr_FR", "it_IT", "ko_KR", "pt_BR", "ru_RU", "zh_CN", "zh_TW"
+			"en_US", "es_ES", "de_DE", "fr_FR", "it_IT", "ko_KR", "pt_BR", "ru_RU", "zh_CN", "zh_TW", "cs_CZ"
 	);
 	private static File langFolder;
 	private static String languageCode;

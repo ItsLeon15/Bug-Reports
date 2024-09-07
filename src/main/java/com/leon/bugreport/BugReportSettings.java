@@ -21,12 +21,18 @@ import org.bukkit.metadata.MetadataValue;
 import org.bukkit.profile.PlayerProfile;
 import org.bukkit.profile.PlayerTextures;
 import org.bukkit.scheduler.BukkitScheduler;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.Serial;
 import java.net.URL;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
 import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
@@ -53,6 +59,7 @@ public class BugReportSettings {
 			put("ru_RU", new String[]{guiTextures.RussianTexture, "Russian"});
 			put("zh_CN", new String[]{guiTextures.SimplifiedChineseTexture, "Simplified Chinese"});
 			put("zh_TW", new String[]{guiTextures.TraditionalChineseTexture, "Traditional Chinese"});
+			put("cs_CZ", new String[]{guiTextures.CzechTexture, "Czech"});
 		}
 	};
 
@@ -95,6 +102,7 @@ public class BugReportSettings {
 		ItemStack offIcon = createButton(Material.GRAY_DYE, ChatColor.RED + getValueFromLanguageFile("buttonNames.false", "Off"));
 		ItemStack otherSettings = createButton(Material.BOOK, ChatColor.YELLOW + getValueFromLanguageFile("buttonNames.otherSettings", "Other Settings"));
 		ItemStack viewAllStatus = createButton(Material.BOOKSHELF, ChatColor.YELLOW + getValueFromLanguageFile("buttonNames.viewStatus", "View Status"));
+		ItemStack exportAllBugReports = createButton(Material.WRITTEN_BOOK, ChatColor.YELLOW + getValueFromLanguageFile("buttonNames.exportAllBugReportsButton", "Export All Bug Reports"));
 
 		setBorder(gui, Material.GRAY_STAINED_GLASS_PANE);
 
@@ -111,8 +119,73 @@ public class BugReportSettings {
 		gui.setItem(21, getCategorySelectionToggle() ? onIcon : offIcon);
 
 		gui.setItem(40, createButton(Material.BARRIER, ChatColor.RED + getValueFromLanguageFile("buttonNames.close", "Close")));
+		gui.setItem(44, exportAllBugReports);
 
 		return gui;
+	}
+
+	private static void exportAllBugReports(@NotNull Player player) {
+		playButtonClickSound(player);
+
+		if (debugMode) {
+			plugin.getLogger().info("Export all bug reports clicked by " + player.getName());
+		}
+
+		player.closeInventory();
+		player.sendMessage(returnStartingMessage(ChatColor.YELLOW) + getValueFromLanguageFile("exportAllBugReports", "Exporting all bug reports..."));
+
+		File reportFile = new File(plugin.getDataFolder(), "all_exported_bug_reports.csv");
+
+		Set<String> headers = new LinkedHashSet<>();
+		List<Map<String, String>> parsedReports = new ArrayList<>();
+
+		for (Map.Entry<UUID, List<String>> entry : bugReports.entrySet()) {
+			List<String> logDetailsList = entry.getValue();
+
+			for (String logDetails : logDetailsList) {
+				Map<String, String> parsedReport = parseLogEntry(logDetails);
+				headers.addAll(parsedReport.keySet());
+				parsedReports.add(parsedReport);
+			}
+		}
+
+		try (FileWriter csvWriter = new FileWriter(reportFile)) {
+			csvWriter.append(String.join(",", headers)).append("\n");
+
+			for (Map<String, String> report : parsedReports) {
+				List<String> row = new ArrayList<>();
+				for (String header : headers) {
+					String value = report.getOrDefault(header, "");
+					if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
+						value = "\"" + value.replace("\"", "\"\"") + "\"";
+					}
+					row.add(value);
+				}
+				csvWriter.append(String.join(",", row)).append("\n");
+			}
+
+		} catch (IOException e) {
+			player.sendMessage(returnStartingMessage(ChatColor.RED) + getValueFromLanguageFile("exportAllBugReportsFailed", "Failed to export all bug reports"));
+			plugin.getLogger().warning("Error 046: Failed to export all bug reports: " + e.getMessage());
+			logErrorMessage("Error 046: Failed to export all bug reports: " + e.getMessage());
+		}
+
+		player.sendMessage(returnStartingMessage(ChatColor.GREEN) + getValueFromLanguageFile("exportAllBugReportsSuccess", "Exported all bug reports"));
+	}
+
+	private static @NotNull Map<String, String> parseLogEntry(String log) {
+		Map<String, String> parsedData = new LinkedHashMap<>();
+
+		Pattern pattern = Pattern.compile("(?m)(^\\w.+?):\\s(.+)");
+		Matcher matcher = pattern.matcher(log);
+
+		while (matcher.find()) {
+			String key = matcher.group(1).trim();
+			String value = matcher.group(2).trim();
+			parsedData.put(key, value);
+		}
+
+		return parsedData;
 	}
 
 	private static boolean getDiscordWebhookToggle() {
@@ -249,7 +322,8 @@ public class BugReportSettings {
 		return gui;
 	}
 
-	private static int getModelDataFromLanguage(String language) {
+	@Contract(pure = true)
+	private static int getModelDataFromLanguage(@NotNull String language) {
 		return switch (language) {
 			case "English" -> 11;
 			case "French" -> 12;
@@ -261,6 +335,7 @@ public class BugReportSettings {
 			case "Russian" -> 18;
 			case "Simplified Chinese" -> 19;
 			case "Traditional Chinese" -> 20;
+			case "Czech" -> 21;
 			default -> 0;
 		};
 	}
@@ -481,6 +556,11 @@ public class BugReportSettings {
 					return;
 				}
 
+				if (customItemDisplayName.equals("buttonNames.exportAllBugReportsButton")) {
+					exportAllBugReports(player);
+					return;
+				}
+
 				if (clickedItem.getItemMeta().hasCustomModelData()) {
 					if (clickedItem.getItemMeta().getCustomModelData() == 1) {
 						setDiscordWebhookToggle(player);
@@ -553,6 +633,7 @@ public class BugReportSettings {
 						case 18 -> setLanguage("ru_RU", "Russian", player);
 						case 19 -> setLanguage("zh_CN", "Simplified Chinese", player);
 						case 20 -> setLanguage("zh_TW", "Traditional Chinese", player);
+						case 21 -> setLanguage("cs_CZ", "Czech", player);
 						default -> {
 							return;
 						}
@@ -1001,10 +1082,6 @@ public class BugReportSettings {
 		@EventHandler(priority = EventPriority.NORMAL)
 		public void onPlayerChat(@NotNull AsyncPlayerChatEvent event) {
 			Player player = event.getPlayer();
-
-			System.out.println(player.getUniqueId());
-			System.out.println(setMaxReportsClickMap.containsKey(player.getUniqueId()));
-			System.out.println(setMaxReportsClickMap);
 
 			if (setMaxReportsClickMap.containsKey(player.getUniqueId())) {
 				handleSettingUpdate(event, player, setMaxReportsClickMap, "buttonNames.setMaxReportsPerPlayer", "max-reports-per-player", (value) -> {
