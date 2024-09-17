@@ -5,6 +5,7 @@ import com.leon.bugreport.extensions.PlanHook;
 import com.leon.bugreport.gui.BugReportConfirmationGUI;
 import com.leon.bugreport.listeners.PluginMessageListener;
 import com.leon.bugreport.listeners.ReportCreatedEvent;
+import com.leon.bugreport.logging.ErrorMessages;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -114,8 +115,9 @@ public class BugReportManager implements Listener {
 
 	public static boolean checkCategoryConfig() {
 		if (!config.contains("reportCategories")) {
-			plugin.getLogger().warning("Error 020: Missing reportCategories in config.yml");
-			logErrorMessage("Error 020: Missing reportCategories in config.yml");
+			String errorMessage = ErrorMessages.getErrorMessage(20);
+			plugin.getLogger().warning(errorMessage);
+			logErrorMessage(errorMessage);
 			return false;
 		}
 
@@ -126,8 +128,11 @@ public class BugReportManager implements Listener {
 
 			for (int i = 0; i < keys.length; i++) {
 				if (values[i] == null) {
-					plugin.getLogger().warning("Error 021: Missing '%key%' in reportCategories in config.yml".replace("%key%", keys[i].toString()));
-					logErrorMessage("Error 021: Missing '%key%' in reportCategories in config.yml".replace("%key%", keys[i].toString()));
+					String errorMessage = ErrorMessages.getErrorMessage(21);
+					String finalErrorMessage = errorMessage.replaceAll("%key%", keys[i].toString());
+
+					plugin.getLogger().warning(finalErrorMessage);
+					logErrorMessage(finalErrorMessage);
 					return false;
 				}
 			}
@@ -209,8 +214,9 @@ public class BugReportManager implements Listener {
 		try {
 			config.save(configFile);
 		} catch (Exception e) {
-			plugin.getLogger().warning("Error 022: Error saving config.yml: " + e.getMessage());
-			logErrorMessage("Error 022: Error saving config.yml: " + e.getMessage());
+			String errorMessage = ErrorMessages.getErrorMessageWithAdditionalMessage(22, e.getMessage());
+			plugin.getLogger().warning(errorMessage);
+			logErrorMessage(errorMessage);
 		}
 	}
 
@@ -490,8 +496,9 @@ public class BugReportManager implements Listener {
 
 			return categories;
 		} else {
-			plugin.getLogger().warning("Error 023: Something went wrong while loading the report categories");
-			logErrorMessage("Error 023: Something went wrong while loading the report categories");
+			String errorMessage = ErrorMessages.getErrorMessage(23);
+			plugin.getLogger().warning(errorMessage);
+			logErrorMessage(errorMessage);
 			return null;
 		}
 	}
@@ -539,7 +546,7 @@ public class BugReportManager implements Listener {
 		if (debugMode) {
 			plugin.getLogger().info("Adding bug report to database...");
 		}
-		database.addBugReport(playerName, playerId, worldName, header, message, location, gamemode, serverName);
+		BugReportDatabase.addBugReport(playerName, playerId, worldName, header, message, location, gamemode, serverName);
 
 		if (config.getBoolean("enableBugReportNotifications", true)) {
 			if (debugMode) {
@@ -560,8 +567,10 @@ public class BugReportManager implements Listener {
 			}
 			String webhookURL = config.getString("webhookURL", "");
 			if (webhookURL.isEmpty()) {
-				plugin.getLogger().warning("Error 024: Missing webhookURL in config.yml");
-				logErrorMessage("Error 024: Missing webhookURL in config.yml");
+				String errorMessage = ErrorMessages.getErrorMessage(24);
+
+				plugin.getLogger().warning(errorMessage);
+				logErrorMessage(errorMessage);
 			}
 
 			try {
@@ -570,8 +579,10 @@ public class BugReportManager implements Listener {
 					plugin.getLogger().info("Bug report sent to Discord.");
 				}
 			} catch (Exception e) {
-				plugin.getLogger().warning("Error 025: Error sending bug report to Discord: " + e.getMessage());
-				logErrorMessage("Error 025: Error sending bug report to Discord: " + e.getMessage());
+				String errorMessage = ErrorMessages.getErrorMessageWithAdditionalMessage(25, e.getMessage());
+
+				plugin.getLogger().warning(errorMessage);
+				logErrorMessage(errorMessage);
 			}
 		}
 

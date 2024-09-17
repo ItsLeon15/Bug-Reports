@@ -1,5 +1,7 @@
 package com.leon.bugreport.API;
 
+import com.leon.bugreport.logging.ErrorMessages;
+
 import java.io.File;
 import java.io.FileWriter;
 
@@ -9,33 +11,49 @@ public class ErrorClass {
 	private static final File LOG_DIR = new File("plugins/BugReport/logs");
 	private static final File ERROR_FILE = new File(LOG_DIR, "error.log");
 
-	public static void logErrorMessage(String errorMessage) {
+	public static void logErrorMessage(String message) {
+		int errorTries = 0;
+		while (errorTries < 3) {
+			try {
+				logErrorMessageInternal(message);
+				return;
+			} catch (Exception e) {
+				errorTries++;
+			}
+		}
+	}
+
+	private static void logErrorMessageInternal(String message) {
 		cacheDirectoryExists();
 		createErrorLog();
 
 		try {
-			appendToFile(errorMessage);
+			appendToFile(message);
 		} catch (Exception e) {
-			plugin.getLogger().warning("Error 011: Failed to write to error log file");
-			logErrorMessage("Error 011: Failed to write to error log file");
+			String errorMessage = ErrorMessages.getErrorMessage(11);
+			plugin.getLogger().warning(errorMessage);
+			logErrorMessage(errorMessage);
 		}
 	}
 
 	private static void cacheDirectoryExists() {
 		if (!LOG_DIR.exists() && !LOG_DIR.mkdirs()) {
-			plugin.getLogger().warning("Error 012: Failed to create cache directory");
-			logErrorMessage("Error 012: Failed to create cache directory");
+			String errorMessage = ErrorMessages.getErrorMessage(12);
+
+			plugin.getLogger().warning(errorMessage);
+			logErrorMessage(errorMessage);
 		}
 	}
 
 	public static void createErrorLog() {
 		try {
 			if (!ERROR_FILE.exists() && !ERROR_FILE.createNewFile()) {
-				plugin.getLogger().warning("Error 013: Failed to create error log file");
-				logErrorMessage("Error 013: Failed to create error log file");
+				String errorMessage = ErrorMessages.getErrorMessage(13);
+
+				plugin.getLogger().warning(errorMessage);
+				logErrorMessage(errorMessage);
 			}
 		} catch (Exception ignored) {
-
 		}
 	}
 
@@ -48,8 +66,10 @@ public class ErrorClass {
 			fileWriter.write('[' + formattedTime + "] " + error + '\n');
 			fileWriter.close();
 		} catch (Exception e) {
-			plugin.getLogger().warning("Error 014: Failed to write to error log file");
-			logErrorMessage("Error 014: Failed to write to error log file");
+			String errorMessage = ErrorMessages.getErrorMessage(14);
+
+			plugin.getLogger().warning(errorMessage);
+			logErrorMessage(errorMessage);
 		}
 	}
 }

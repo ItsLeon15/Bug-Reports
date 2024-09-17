@@ -44,6 +44,7 @@ zh_TW:
     bugReportDetailsLocation: "位置"
     bugReportDetailsGamemode: "遊戲模式"
     bugReportDetailsServerName: "伺服器名稱"
+    categories: "錯誤報告類別"
     exportAllBugReportsButton: "導出所有錯誤報告"
   missingValueMessage: "在 config.yml 中缺少 '%key%' 的報告類別"
   missingReportCategoryMessage: "在 config.yml 中缺少報告類別"

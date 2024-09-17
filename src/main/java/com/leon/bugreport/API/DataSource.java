@@ -5,6 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
+import com.leon.bugreport.logging.ErrorMessages;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import org.bukkit.Bukkit;
@@ -57,8 +58,9 @@ public class DataSource {
 				return new HashMap<>();
 			}
 		} catch (IOException e) {
-			plugin.getLogger().warning("Error 003: Failed to load cache");
-			logErrorMessage("Error 003: Failed to load cache");
+			String errorMessage = ErrorMessages.getErrorMessage(3);
+			plugin.getLogger().warning(errorMessage);
+			logErrorMessage(errorMessage);
 			return new HashMap<>();
 		}
 	}
@@ -69,8 +71,9 @@ public class DataSource {
 			String jsonString = new Gson().toJson(cache);
 			writer.write(jsonString);
 		} catch (IOException e) {
-			plugin.getLogger().warning("Error 004: Failed to save cache");
-			logErrorMessage("Error 004: Failed to save cache");
+			String errorMessage = ErrorMessages.getErrorMessage(4);
+			plugin.getLogger().warning(errorMessage);
+			logErrorMessage(errorMessage);
 		}
 	}
 
@@ -82,8 +85,9 @@ public class DataSource {
 
 	private static void ensureCacheDirectoryExists() {
 		if (!CACHE_DIR.exists() && !CACHE_DIR.mkdirs()) {
-			plugin.getLogger().warning("Error 005: Failed to create cache directory");
-			logErrorMessage("Error 005: Failed to create cache directory");
+			String errorMessage = ErrorMessages.getErrorMessage(5);
+			plugin.getLogger().warning(errorMessage);
+			logErrorMessage(errorMessage);
 		}
 	}
 
@@ -199,8 +203,11 @@ public class DataSource {
 
 			String cacheInvalidReason = returnFalseIfCacheIsInvalid(cache);
 			if (cacheInvalidReason != null) {
-				plugin.getLogger().warning("Error 034: Cache is invalid: " + cacheInvalidReason);
-				logErrorMessage("Error 034: Cache is invalid: " + cacheInvalidReason);
+				String errorMessage = ErrorMessages.getErrorMessageWithAdditionalMessage(34, cacheInvalidReason);
+
+				plugin.getLogger().warning(errorMessage);
+				logErrorMessage(errorMessage);
+
 				saveCache(new HashMap<>());
 				cache = loadCache(); // Reset cache if invalid
 			}
@@ -215,8 +222,11 @@ public class DataSource {
 
 			return base64 != null && !base64.isEmpty() ? createSkullItem(base64, playerName) : getDefaultPlayerHead();
 		} catch (Exception e) {
-			plugin.getLogger().warning("Error 006: Failed to get player head for " + playerName + ": " + e.getMessage());
-			logErrorMessage("Error 006: Failed to get player head for " + playerName + ": " + e.getMessage());
+			String errorMessage = ErrorMessages.getErrorMessageWithAdditionalMessage(6, e.getMessage());
+			String finalErrorMessage = errorMessage.replaceAll("%playerName%", playerName);
+
+			plugin.getLogger().warning(finalErrorMessage);
+			logErrorMessage(finalErrorMessage);
 			return getDefaultPlayerHead();
 		}
 	}
@@ -263,8 +273,9 @@ public class DataSource {
 				skullMeta.setDisplayName(displayName);
 				playerHead.setItemMeta(skullMeta);
 			} catch (Exception e) {
-				plugin.getLogger().warning("Error 007: Failed to set custom player head texture: " + e.getMessage());
-				logErrorMessage("Error 007: Failed to set custom player head texture: " + e.getMessage());
+				String errorMessage = ErrorMessages.getErrorMessageWithAdditionalMessage(7, e.getMessage());
+				plugin.getLogger().warning(errorMessage);
+				logErrorMessage(errorMessage);
 				return new ItemStack(Material.PLAYER_HEAD); // Fallback to default head on failure
 			}
 		}
@@ -295,8 +306,10 @@ public class DataSource {
 				throw new IllegalArgumentException("Base64 data for player " + playerName + " not found in cache.");
 			}
 		} catch (Exception e) {
-			plugin.getLogger().warning("Error 008: Failed to get cached player head for " + playerName);
-			logErrorMessage("Error 008: Failed to get cached player head for " + playerName);
+			String errorMessage = ErrorMessages.getErrorMessage(8);
+			String finalErrorMessage = errorMessage.replaceAll("%playerName%", playerName);
+			plugin.getLogger().warning(finalErrorMessage);
+			logErrorMessage(finalErrorMessage);
 		}
 		head.setItemMeta(skullMeta);
 		return head;
@@ -330,8 +343,9 @@ public class DataSource {
 
 	private static void setSkullWithBase64(@NotNull SkullMeta skullMeta, String base64) {
 		if (base64 == null || base64.isEmpty()) {
-			plugin.getLogger().warning("Error 009: Base64 string is empty. Cannot set custom player head texture.");
-			logErrorMessage("Error 009: Base64 string is empty. Cannot set custom player head texture.");
+			String errorMessage = ErrorMessages.getErrorMessage(9);
+			plugin.getLogger().warning(errorMessage);
+			logErrorMessage(errorMessage);
 			return;
 		}
 
@@ -340,8 +354,10 @@ public class DataSource {
 			profileField.setAccessible(true);
 			profileField.set(skullMeta, createGameProfile(base64));
 		} catch (NoSuchFieldException | IllegalAccessException e) {
-			plugin.getLogger().warning("Error 010: Failed to set custom player head texture: " + e.getMessage());
-			logErrorMessage("Error 010: Failed to set custom player head texture: " + e.getMessage());
+			String errorMessage = ErrorMessages.getErrorMessageWithAdditionalMessage(10, e.getMessage());
+
+			plugin.getLogger().warning(errorMessage);
+			logErrorMessage(errorMessage);
 		}
 	}
 

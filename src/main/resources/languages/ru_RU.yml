@@ -44,6 +44,7 @@ ru_RU:
     bugReportDetailsLocation: "Расположение"
     bugReportDetailsGamemode: "Игровой режим"
     bugReportDetailsServerName: "Имя сервера"
+    categories: "Категории отчетов об ошибках"
     exportAllBugReportsButton: "Экспортировать все отчеты об ошибках"
   missingValueMessage: "Отсутствует '%key%' в reportCategories в config.yml"
   missingReportCategoryMessage: "Отсутствуют reportCategories в config.yml"

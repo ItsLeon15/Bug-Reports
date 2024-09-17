@@ -2,6 +2,7 @@ package com.leon.bugreport.commands;
 
 import com.leon.bugreport.BugReportManager;
 import com.leon.bugreport.Category;
+import com.leon.bugreport.logging.ErrorMessages;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -162,8 +163,11 @@ public class BugReportCommand implements CommandExecutor, Listener {
 						}
 					}
 					if (!foundAndRemoved) {
-						plugin.getLogger().warning("Error 030: Failed to find and remove book for player " + player.getName());
-						logErrorMessage("Error 030: Failed to find and remove book for player " + player.getName());
+						String errorMessage = ErrorMessages.getErrorMessage(30);
+						String finalErrorMessage = errorMessage.replaceAll("%playerName%", player.getName());
+
+						plugin.getLogger().warning(finalErrorMessage);
+						logErrorMessage(finalErrorMessage);
 					} else {
 						plugin.getLogger().info("Logging: Removed book for player " + player.getName());
 					}
@@ -189,8 +193,11 @@ public class BugReportCommand implements CommandExecutor, Listener {
 					}
 				}
 				if (foundBook) {
-					plugin.getLogger().warning("Error 031: Failed to remove book for player " + player.getName());
-					logErrorMessage("Error 031: Failed to remove book for player " + player.getName());
+					String errorMessage = ErrorMessages.getErrorMessage(31);
+					String finalErrorMessage = errorMessage.replaceAll("%playerName%", player.getName());
+
+					plugin.getLogger().warning(finalErrorMessage);
+					logErrorMessage(finalErrorMessage);
 				} else {
 					plugin.getLogger().info("Logging: Removed book for player " + player.getName());
 				}
@@ -275,8 +282,10 @@ public class BugReportCommand implements CommandExecutor, Listener {
 			try {
 				reportManager.submitBugReport(player, String.join(" ", args), null);
 			} catch (Exception e) {
-				plugin.getLogger().warning("Error 032: Failed to submit bug report");
-				logErrorMessage("Error 032: Failed to submit bug report");
+				String errorMessage = ErrorMessages.getErrorMessage(32);
+
+				plugin.getLogger().warning(errorMessage);
+				logErrorMessage(errorMessage);
 				throw new RuntimeException(e);
 			}
 
@@ -312,7 +321,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 	}
 
 	private void openCategorySelectionGUI(Player player) {
-		Inventory gui = Bukkit.createInventory(null, 9, YELLOW + "Bug Report Categories");
+		Inventory gui = Bukkit.createInventory(null, 9, ChatColor.YELLOW + getValueFromLanguageFile("buttonNames.categories", "Bug Report Categories"));
 
 		List<Category> categories = reportManager.getReportCategories();
 
@@ -326,7 +335,7 @@ public class BugReportCommand implements CommandExecutor, Listener {
 
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onInventoryClick(@NotNull InventoryClickEvent event) {
-		if (!event.getView().getTitle().equals(YELLOW + "Bug Report Categories")) {
+		if (!event.getView().getTitle().equals(ChatColor.YELLOW + getValueFromLanguageFile("buttonNames.categories", "Bug Report Categories"))) {
 			return;
 		}
 

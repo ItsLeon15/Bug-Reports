@@ -1,5 +1,6 @@
 package com.leon.bugreport.listeners;
 
+import com.leon.bugreport.logging.ErrorMessages;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -8,6 +9,8 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Scanner;
 import java.util.function.Consumer;
+
+import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
 
 public class UpdateChecker {
 	private final JavaPlugin plugin;
@@ -29,7 +32,10 @@ public class UpdateChecker {
 						}
 					}
 				} catch (IOException e) {
-					plugin.getLogger().warning("Error 033: Unable to check for updates: " + e.getMessage());
+					String errorMessage = ErrorMessages.getErrorMessage(33);
+
+					plugin.getLogger().warning(errorMessage);
+					logErrorMessage(errorMessage);
 				}
 			}
 		}.runTaskAsynchronously(plugin);

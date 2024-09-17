@@ -44,6 +44,7 @@ pt_BR:
     bugReportDetailsLocation: "Localização"
     bugReportDetailsGamemode: "Modo de jogo"
     bugReportDetailsServerName: "Nome do servidor"
+    categories: "Categorias de relatório de erro"
     exportAllBugReportsButton: "Exportar todos os relatórios de erro"
   missingValueMessage: "Faltando '%key%' em reportCategories no config.yml"
   missingReportCategoryMessage: "Faltando reportCategories no config.yml"

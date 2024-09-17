@@ -1,6 +1,7 @@
 package com.leon.bugreport.gui;
 
 import com.leon.bugreport.keys.guiTextures;
+import com.leon.bugreport.logging.ErrorMessages;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -99,8 +100,11 @@ public class bugreportGUI {
 
 	private static void setupGUIFromConfig(Inventory gui, Player player, @NotNull YamlConfiguration guiConfig, String report, Integer reportIDGUI, Boolean isArchivedGUI) {
 		if (!validateGUIConfig(guiConfig)) {
-			plugin.getLogger().severe("Error 044: The layout of the customGUI.yml file is incorrect. Falling back to the default layout.");
-			logErrorMessage("Error 044: The layout of the customGUI.yml file is incorrect. Falling back to the default layout");
+			String errorMessage = ErrorMessages.getErrorMessage(44);
+
+			plugin.getLogger().severe(errorMessage);
+			logErrorMessage(errorMessage);
+
 			setupDefaultGUI(gui, player, report, reportIDGUI, isArchivedGUI);
 			return;
 		}

@@ -1,5 +1,6 @@
 package com.leon.bugreport.discord;
 
+import com.leon.bugreport.logging.ErrorMessages;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -81,14 +82,16 @@ public class LinkDiscord {
 		}
 
 		if (!config.contains("discordEmbedFields")) {
-			plugin.getLogger().warning("Error 001: discordEmbedFields key is not present in the config. Sending an empty embed.");
-			logErrorMessage("Error 001: discordEmbedFields key is not present in the config. Sending an empty embed.");
+			String errorMessage = ErrorMessages.getErrorMessage(1);
+			plugin.getLogger().warning(errorMessage);
+			logErrorMessage(errorMessage);
 		}
 
 		List<Map<?, ?>> discordEmbedFields = config.getMapList("discordEmbedFields");
 		if (discordEmbedFields.isEmpty()) {
-			plugin.getLogger().warning("Error 002: discordEmbedFields is empty in the config. Bug report not sent to Discord.");
-			logErrorMessage("Error 002: discordEmbedFields is empty in the config. Bug report not sent to Discord.");
+			String errorMessage = ErrorMessages.getErrorMessage(2);
+			plugin.getLogger().warning(errorMessage);
+			logErrorMessage(errorMessage);
 			sendEmptyEmbedOrDefault(username);
 			return;
 		}
@@ -223,19 +226,28 @@ public class LinkDiscord {
 					webhook.setContent(content.toString().trim());
 				}
 			} catch (Exception e) {
-				throwException("Error 045: Error sending additional pings to Discord: " + e.getMessage());
+				String errorMessage = ErrorMessages.getErrorMessageWithAdditionalMessage(45, e.getMessage());
+
+				plugin.getLogger().warning(errorMessage);
+				logErrorMessage(errorMessage);
 			} finally {
 				try {
 					webhook.execute();
 				} catch (IOException e) {
-					throwException("Error 025: Error sending bug report to Discord: " + e.getMessage());
+					String errorMessage = ErrorMessages.getErrorMessageWithAdditionalMessage(25, e.getMessage());
+
+					plugin.getLogger().warning(errorMessage);
+					logErrorMessage(errorMessage);
 				}
 			}
 		} else {
 			try {
 				webhook.execute();
 			} catch (IOException e) {
-				throwException("Error 025: Error sending bug report to Discord: " + e.getMessage());
+				String errorMessage = ErrorMessages.getErrorMessageWithAdditionalMessage(25, e.getMessage());
+
+				plugin.getLogger().warning(errorMessage);
+				logErrorMessage(errorMessage);
 			}
 		}
 	}
@@ -280,8 +292,11 @@ public class LinkDiscord {
 			errorLogged = false;
 		} catch (Exception e) {
 			if (!errorLogged) {
-				plugin.getLogger().warning("Error 042: Error getting UUID from API: " + e.getMessage());
-				logErrorMessage("Error 042: Error getting UUID from API: " + e.getMessage());
+				String errorMessage = ErrorMessages.getErrorMessageWithAdditionalMessage(42, e.getMessage());
+
+				plugin.getLogger().warning(errorMessage);
+				logErrorMessage(errorMessage);
+
 				errorLogged = true;
 			}
 			return "Unknown UUID";

@@ -1,5 +1,6 @@
 package com.leon.bugreport;
 
+import com.leon.bugreport.logging.ErrorMessages;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -34,8 +35,11 @@ public class BugReportLanguage {
 		}
 
 		if (!languageCodes.contains(languageCode)) {
-			plugin.getLogger().warning("Error 016: Invalid language code '" + languageCode + "'. Defaulting to 'en_US'.");
-			logErrorMessage("Error 016: Invalid language code '" + languageCode + "'. Defaulting to 'en_US'.");
+			String errorMessage = ErrorMessages.getErrorMessage(16);
+			String finalErrorMessage = errorMessage.replaceAll("%languageCode%", languageCode);
+
+			plugin.getLogger().warning(finalErrorMessage);
+			logErrorMessage(finalErrorMessage);
 			languageCode = "en_US";
 		}
 
@@ -68,8 +72,10 @@ public class BugReportLanguage {
 	public static void loadLanguageFiles() {
 		File[] files = langFolder.listFiles();
 		if (files == null || files.length == 0) {
-			plugin.getLogger().warning("Error 017: No language files found in the 'languages' folder.");
-			logErrorMessage("Error 017: No language files found in the 'languages' folder.");
+			String errorMessage = ErrorMessages.getErrorMessage(17);
+
+			plugin.getLogger().warning(errorMessage);
+			logErrorMessage(errorMessage);
 			for (String languageCode : languageCodes) {
 				plugin.saveResource("languages/" + languageCode + ".yml", false);
 			}
@@ -79,8 +85,11 @@ public class BugReportLanguage {
 				for (File file : files) {
 					if (file.getName().equalsIgnoreCase(languageCode + ".yml")) {
 						if (isFileEmpty(file)) {
-							plugin.getLogger().warning("Error 018: Language file '" + languageCode + ".yml' is empty. Creating new file.");
-							logErrorMessage("Error 018: Language file '" + languageCode + ".yml' is empty. Creating new file.");
+							String errorMessage = ErrorMessages.getErrorMessage(18);
+							String finalErrorMessage = errorMessage.replaceAll("%languageCode%", languageCode);
+
+							plugin.getLogger().warning(finalErrorMessage);
+							logErrorMessage(finalErrorMessage);
 							plugin.saveResource("languages/" + languageCode + ".yml", true);
 						}
 						found = true;
@@ -92,8 +101,11 @@ public class BugReportLanguage {
 					if (resourceAvailable) {
 						plugin.saveResource("languages/" + languageCode + ".yml", false);
 					} else {
-						plugin.getLogger().warning("Error 019: Language file '" + languageCode + ".yml' not found in resources.");
-						logErrorMessage("Error 019: Language file '" + languageCode + ".yml' not found in resources.");
+						String errorMessage = ErrorMessages.getErrorMessage(19);
+						String finalErrorMessage = errorMessage.replaceAll("%languageCode%", languageCode);
+
+						plugin.getLogger().warning(finalErrorMessage);
+						logErrorMessage(finalErrorMessage);
 					}
 				}
 			}
@@ -110,8 +122,11 @@ public class BugReportLanguage {
 			}
 			langConfig = flattenYamlConfiguration(langSection);
 		} else {
-			plugin.getLogger().warning("Error 019: Language file '" + languageCode + ".yml' not found in resources.");
-			logErrorMessage("Error 019: Language file '" + languageCode + ".yml' not found in resources.");
+			String errorMessage = ErrorMessages.getErrorMessage(19);
+			String finalErrorMessage = errorMessage.replaceAll("%languageCode%", languageCode);
+
+			plugin.getLogger().warning(finalErrorMessage);
+			logErrorMessage(finalErrorMessage);
 		}
 
 		if (debugMode) {

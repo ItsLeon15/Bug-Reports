@@ -7,6 +7,7 @@ import com.leon.bugreport.extensions.PlanHook;
 import com.leon.bugreport.listeners.ItemDropEvent;
 import com.leon.bugreport.listeners.ReportListener;
 import com.leon.bugreport.listeners.UpdateChecker;
+import com.leon.bugreport.logging.ErrorMessages;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -72,8 +73,10 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 
 		if (!getDataFolder().exists()) {
 			if (!getDataFolder().mkdirs()) {
-				plugin.getLogger().warning("Error 026: Failed to create data folder.");
-				logErrorMessage("Error 026: Failed to create data folder.");
+				String errorMessage = ErrorMessages.getErrorMessage(26);
+
+				plugin.getLogger().warning(errorMessage);
+				logErrorMessage(errorMessage);
 			}
 		}
 
@@ -107,8 +110,10 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 		try {
 			dataSource.close();
 		} catch (Exception e) {
-			plugin.getLogger().warning("Error 027: Failed to close database connection.");
-			logErrorMessage("Error 027: Failed to close database connection.");
+			String errorMessage = ErrorMessages.getErrorMessage(27);
+
+			plugin.getLogger().warning(errorMessage);
+			logErrorMessage(errorMessage);
 		}
 
 		this.getServer().getMessenger().unregisterOutgoingPluginChannel(this);

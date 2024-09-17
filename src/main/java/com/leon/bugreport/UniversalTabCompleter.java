@@ -1,5 +1,6 @@
 package com.leon.bugreport;
 
+import com.leon.bugreport.logging.ErrorMessages;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
@@ -32,6 +33,7 @@ public class UniversalTabCompleter implements TabCompleter {
 					completions.add("reload");
 					completions.add("debug");
 					completions.add("version");
+					completions.add("export");
 				}
 				completions.add("help");
 			}
@@ -41,7 +43,8 @@ public class UniversalTabCompleter implements TabCompleter {
 					plugin.getLogger().info("No tab-completion for categories.");
 				}
 			} else if (config.getBoolean("enablePluginReportCategoriesGUI") && config.getBoolean("enablePluginReportCategoriesTabComplete")) {
-				plugin.getLogger().warning("Error 029: enablePluginReportCategoriesGUI and enablePluginReportCategoriesTabComplete are both true! Either one of them has to be true or both false. Using the default UI.");
+				String errorMessage = ErrorMessages.getErrorMessage(29);
+				plugin.getLogger().warning(errorMessage);
 			} else if (!config.getBoolean("enablePluginReportCategoriesGUI") && config.getBoolean("enablePluginReportCategoriesTabComplete")) {
 				if (args.length == 1) {
 					if (sender.hasPermission("bugreport.admin") || sender.hasPermission("bugreport.use")) {

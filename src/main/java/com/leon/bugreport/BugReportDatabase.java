@@ -2,6 +2,7 @@ package com.leon.bugreport;
 
 import com.leon.bugreport.extensions.BugReportPair;
 import com.leon.bugreport.extensions.PlanHook;
+import com.leon.bugreport.logging.ErrorMessages;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.bukkit.Bukkit;
@@ -58,8 +59,10 @@ public class BugReportDatabase {
 				}
 			}
 		} catch (Exception e) {
-			plugin.getLogger().severe("Error 035: Failed to add missing columns." + e.getMessage());
-			logErrorMessage("Error 035: Failed to add missing columns." + e.getMessage());
+			String errorMessage = ErrorMessages.getErrorMessageWithAdditionalMessage(35, e.getMessage());
+
+			plugin.getLogger().severe(errorMessage);
+			logErrorMessage(errorMessage);
 		}
 	}
 
@@ -79,8 +82,10 @@ public class BugReportDatabase {
 				playerDataStatement.close();
 			}
 		} catch (Exception e) {
-			plugin.getLogger().severe("Error 036: Failed to set player last login timestamp." + e.getMessage());
-			logErrorMessage("Error 036: Failed to set player last login timestamp." + e.getMessage());
+			String errorMessage = ErrorMessages.getErrorMessageWithAdditionalMessage(36, e.getMessage());
+
+			plugin.getLogger().severe(errorMessage);
+			logErrorMessage(errorMessage);
 		}
 	}
 
@@ -94,8 +99,10 @@ public class BugReportDatabase {
 			}
 			statement.close();
 		} catch (Exception e) {
-			plugin.getLogger().severe("Error 037: Failed to get player last login timestamp." + e.getMessage());
-			logErrorMessage("Error 037: Failed to get player last login timestamp." + e.getMessage());
+			String errorMessage = ErrorMessages.getErrorMessageWithAdditionalMessage(37, e.getMessage());
+
+			plugin.getLogger().severe(errorMessage);
+			logErrorMessage(errorMessage);
 		}
 		return 0;
 	}
@@ -114,8 +121,10 @@ public class BugReportDatabase {
 			}
 			statement.close();
 		} catch (Exception e) {
-			plugin.getLogger().severe("Error 038: Failed to get bug report location." + e.getMessage());
-			logErrorMessage("Error 038: Failed to get bug report location." + e.getMessage());
+			String errorMessage = ErrorMessages.getErrorMessageWithAdditionalMessage(38, e.getMessage());
+
+			plugin.getLogger().severe(errorMessage);
+			logErrorMessage(errorMessage);
 		}
 		return null;
 	}
@@ -129,8 +138,10 @@ public class BugReportDatabase {
 				}
 			}
 		} catch (Exception e) {
-			plugin.getLogger().severe("Error 039: Failed to add missing columns." + e.getMessage());
-			logErrorMessage("Error 039: Failed to add missing columns." + e.getMessage());
+			String errorMessage = ErrorMessages.getErrorMessageWithAdditionalMessage(39, e.getMessage());
+
+			plugin.getLogger().severe(errorMessage);
+			logErrorMessage(errorMessage);
 		}
 	}
 
@@ -153,8 +164,10 @@ public class BugReportDatabase {
 
 			connectRemote(host, port, database, username, password);
 		} else {
-			plugin.getLogger().warning("Error 015: Invalid database type. Please use 'local' or 'mysql'.");
-			logErrorMessage("Error 015: Invalid database type. Please use 'local' or 'mysql'.");
+			String errorMessage = ErrorMessages.getErrorMessage(15);
+
+			plugin.getLogger().warning(errorMessage);
+			logErrorMessage(errorMessage);
 		}
 	}
 
@@ -369,10 +382,14 @@ public class BugReportDatabase {
 			resultSet.close();
 			statement.close();
 		} catch (SQLException e) {
-			plugin.getLogger().severe("Error 040: Failed to load bug reports.");
-			logErrorMessage("Error 040: Failed to load bug reports.");
+			String errorMessage = ErrorMessages.getErrorMessageWithAdditionalMessage(40, e.getMessage());
+
+			plugin.getLogger().severe(errorMessage);
+			logErrorMessage(errorMessage);
 			if (e.getMessage().startsWith("[SQLITE_CORRUPT]")) {
-				plugin.getLogger().severe("Error 041: Your database is corrupted. Please delete the database file and restart the server. File path: plugins/BugReport/bugreports.db");
+				String errorMessageCorrupt = ErrorMessages.getErrorMessage(41);
+
+				plugin.getLogger().severe(errorMessageCorrupt);
 				plugin.getLogger().severe("If you need help, please join the discord server: https://discord.gg/ZvdNYqmsbx");
 			} else {
 				plugin.getLogger().severe(e.getMessage());
@@ -555,6 +572,38 @@ public class BugReportDatabase {
 		loadBugReports();
 	}
 
+	public static void addBugReport(String username, @NotNull UUID playerId, String world, String header, String fullMessage, String location, String gamemode, String serverName) {
+		try (Connection connection = dataSource.getConnection()) {
+			PreparedStatement statement = connection.prepareStatement("INSERT INTO bug_reports(player_id, header, message, username, world, archived, report_id, timestamp, location, gamemode, status, serverName) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			int report_id = 1;
+			ResultSet resultSet = connection.createStatement().executeQuery("SELECT report_id FROM bug_reports ORDER BY report_id DESC LIMIT 1");
+			if (resultSet.next()) {
+				report_id = resultSet.getInt("report_id") + 1;
+			}
+			statement.setString(1, playerId.toString());
+			statement.setString(2, header);
+			statement.setString(3, fullMessage);
+			statement.setString(4, username);
+			statement.setString(5, world);
+			statement.setInt(6, 0);
+			statement.setInt(7, report_id);
+			statement.setLong(8, System.currentTimeMillis());
+			statement.setString(9, location);
+			statement.setString(10, gamemode);
+			statement.setString(11, "0");
+			statement.setString(12, serverName);
+
+			if (Bukkit.getPluginManager().isPluginEnabled("Plan")) {
+				PlanHook.getInstance().updateHook(playerId, username);
+			}
+
+			statement.executeUpdate();
+			statement.close();
+		} catch (Exception e) {
+			plugin.getLogger().severe("Failed to add bug report.");
+			plugin.getLogger().severe(e.getMessage());
+		}
+	}
 
 	private void makeAllHeadersEqualReport_ID() {
 		try (Connection connection = dataSource.getConnection()) {
@@ -603,38 +652,5 @@ public class BugReportDatabase {
 			plugin.getLogger().severe(e.getMessage());
 		}
 
-	}
-
-	public void addBugReport(String username, @NotNull UUID playerId, String world, String header, String fullMessage, String location, String gamemode, String serverName) {
-		try (Connection connection = dataSource.getConnection()) {
-			PreparedStatement statement = connection.prepareStatement("INSERT INTO bug_reports(player_id, header, message, username, world, archived, report_id, timestamp, location, gamemode, status, serverName) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-			int report_id = 1;
-			ResultSet resultSet = connection.createStatement().executeQuery("SELECT report_id FROM bug_reports ORDER BY report_id DESC LIMIT 1");
-			if (resultSet.next()) {
-				report_id = resultSet.getInt("report_id") + 1;
-			}
-			statement.setString(1, playerId.toString());
-			statement.setString(2, header);
-			statement.setString(3, fullMessage);
-			statement.setString(4, username);
-			statement.setString(5, world);
-			statement.setInt(6, 0);
-			statement.setInt(7, report_id);
-			statement.setLong(8, System.currentTimeMillis());
-			statement.setString(9, location);
-			statement.setString(10, gamemode);
-			statement.setString(11, "0");
-			statement.setString(12, serverName);
-
-			if (Bukkit.getPluginManager().isPluginEnabled("Plan")) {
-				PlanHook.getInstance().updateHook(playerId, username);
-			}
-
-			statement.executeUpdate();
-			statement.close();
-		} catch (Exception e) {
-			plugin.getLogger().severe("Failed to add bug report.");
-			plugin.getLogger().severe(e.getMessage());
-		}
 	}
 }

@@ -44,6 +44,7 @@ fr_FR:
     bugReportDetailsLocation: "Emplacement"
     bugReportDetailsGamemode: "Mode de jeu"
     bugReportDetailsServerName: "Nom du serveur"
+    categories: "Catégories de rapport de bogue"
     exportAllBugReportsButton: "Exporter tous les rapports de bug"
   missingValueMessage: "Valeur manquante pour la clé '%key%' dans reportCategories dans config.yml"
   missingReportCategoryMessage: "ReportCategories manquant dans config.yml"

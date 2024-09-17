@@ -3,6 +3,7 @@ package com.leon.bugreport.gui;
 import com.leon.bugreport.BugReportDatabase;
 import com.leon.bugreport.BugReportLanguage;
 import com.leon.bugreport.keys.guiTextures;
+import com.leon.bugreport.logging.ErrorMessages;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -94,8 +95,11 @@ public class BugReportConfirmationGUI {
 			boolean isDeletedDetails = customDisplayName.equals("buttonNames.confirmationDelete");
 
 			if (!isArchivedDetails && !isDeletedDetails) {
-				plugin.getLogger().severe("Error 043: Something went wrong with the languages folder. Please remove the folder and restart the server.");
-				logErrorMessage("Error 043: Something went wrong with the languages folder. Please remove the folder and restart the server.");
+				String errorMessage = ErrorMessages.getErrorMessage(43);
+
+				plugin.getLogger().severe(errorMessage);
+				logErrorMessage(errorMessage);
+
 				return;
 			}
 

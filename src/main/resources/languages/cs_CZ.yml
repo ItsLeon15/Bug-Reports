@@ -44,6 +44,7 @@ cs_CZ:
     bugReportDetailsLocation: "Umístění"
     bugReportDetailsGamemode: "Herní mód"
     bugReportDetailsServerName: "Název serveru"
+    categories: "Kategorie chybových hlášení"
     exportAllBugReportsButton: "Exportovat všechny chybové hlášení"
   missingValueMessage: "Chybí '%key%' v reportCategories v config.yml"
   missingReportCategoryMessage: "Chybí reportCategories v config.yml"

@@ -1,5 +1,6 @@
 package com.leon.bugreport.commands;
 
+import com.leon.bugreport.API.DataBackup;
 import com.leon.bugreport.BugReportDatabase;
 import com.leon.bugreport.BugReportLanguage;
 import com.leon.bugreport.BugReportManager;
@@ -13,6 +14,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.util.Objects;
 
 import static com.leon.bugreport.BugReportManager.*;
@@ -36,6 +38,8 @@ public class BugListCommand implements CommandExecutor {
 				{"buglist reload", "Reloads the plugin and config."},
 				{"buglist debug <0/1>", "Sets the debug mode."},
 				{"buglist version", "Displays the plugin version."},
+				{"buglist import <File Name>", "Imports bug reports from a CSV file."},
+				{"buglist export <File Name>", "Exports bug reports to a CSV file."},
 				{"buglistarchived", "Opens the buglist archived GUI."},
 				{"buglistsettings", "Opens the buglist settings GUI."},
 				{"buglinkdiscord", "Links Bug Report to a Discord channel."}
@@ -68,6 +72,7 @@ public class BugListCommand implements CommandExecutor {
 				case "reload" -> returnReloadCommand(player);
 				case "debug" -> returnDebugCommand(player, args);
 				case "version" -> returnVersionCommand(player);
+				case "export" -> returnExportCommand(player, args);
 				default -> returnDefaultCommand(player);
 			}
 
@@ -145,6 +150,23 @@ public class BugListCommand implements CommandExecutor {
 			versionMessage.append(ChatColor.GOLD).append("Author: ").append(ChatColor.WHITE).append(pluginAuthor).append("\n");
 			player.sendMessage(versionMessage.toString());
 		});
+	}
+
+	private void returnExportCommand(Player player, String @NotNull [] args) {
+		if (args.length < 2) {
+			player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
+					+ "Please enter a file name.");
+			return;
+		}
+
+		File file = new File(args[1]);
+		if (file.exists()) {
+			player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
+					+ "The file already exists.");
+			return;
+		}
+
+		DataBackup.exportAllBugReports(player);
 	}
 
 	private void returnDefaultCommand(Player player) {

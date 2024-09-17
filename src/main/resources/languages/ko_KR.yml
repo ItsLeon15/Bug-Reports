@@ -44,6 +44,7 @@ ko_KR:
     bugReportDetailsLocation: "위치"
     bugReportDetailsGamemode: "게임 모드"
     bugReportDetailsServerName: "서버 이름"
+    categories: "버그 보고서 카테고리"
     exportAllBugReportsButton: "모든 버그 보고서 내보내기"
   missingValueMessage: "config.yml의 보고서 카테고리에 '%key%' 누락"
   missingReportCategoryMessage: "config.yml에 보고서 카테고리가 없습니다."

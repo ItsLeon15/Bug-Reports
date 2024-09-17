@@ -32,14 +32,14 @@ public class Category {
 	}
 
 	public String getDescription() {
-		ItemMeta itemMeta = itemStack.getItemMeta ();
-		if (itemMeta == null || !itemMeta.hasLore ()) {
+		ItemMeta itemMeta = itemStack.getItemMeta();
+		if (itemMeta == null || !itemMeta.hasLore()) {
 			return "";
 		}
-		return Objects.requireNonNull (itemMeta.getLore ()).get (0);
+		return Objects.requireNonNull(itemMeta.getLore()).get(0);
 	}
 
 	public Material getItem() {
-		return itemStack.getType ();
+		return itemStack.getType();
 	}
 }
