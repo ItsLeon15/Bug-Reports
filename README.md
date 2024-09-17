@@ -47,19 +47,18 @@ language selector and more!
 
 ## Bug List GUI
 
-![https://www.spigotmc.org/attachments/bug-report-list-gui-png.795626/](https://www.spigotmc.org/attachments/bug-report-list-gui-png.795626/)
+![https://www.spigotmc.org/attachments/bug-report-list-gui-png.795626/](https://cdn.platinumhost.io/storage/images/BugReport/bug-report-list-gui.webp)
 
 ## Bug Details GUI
 
-![https://www.spigotmc.org/attachments/bug-report-details-png.795652/](https://www.spigotmc.org/attachments/bug-report-details-png.795652/)
+![https://cdn.platinumhost.io/storage/images/BugReport/bug-report-details.webp](https://cdn.platinumhost.io/storage/images/BugReport/bug-report-details.webp)
 
 ## Plan Support
 
 Bug Report now supports the Plan API. To use Bug Report with Plan, you will need to install Plan onto your Spigot Server
 and it should set up everything automatically.
 
-![https://proxy.spigotmc.org/11743b792604519bd95c3ab037a541508e8a5712?url=https%3A%2F%2Fcdn.discordapp.com%2Fattachments%2F1126552957597519892%2F1197707477647638569%2Fimage.png](https://proxy.spigotmc.org/11743b792604519bd95c3ab037a541508e8a5712?url=https%3A%2F%2Fcdn.discordapp.com%2Fattachments%2F1126552957597519892%2F1197707477647638569%2Fimage.png)
-
+![https://cdn.platinumhost.io/storage/images/BugReport/bug-report-details.webp](https://cdn.platinumhost.io/storage/images/BugReport/plan-bug-report.webp)
 ## Placeholder API Support
 
 Bug Report now supports Placeholder API, the keys for Bug Report is the following with more to come in the future.
