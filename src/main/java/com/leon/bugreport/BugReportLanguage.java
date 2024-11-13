@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +35,58 @@ public class BugReportLanguage {
 			langFolder.mkdirs();
 		}
 
-		if (!languageCodes.contains(languageCode)) {
+		boolean foundAlternative = false;
+
+		File[] files = langFolder.listFiles();
+		if (files != null) {
+			for (File file : files) {
+				if (file.getName().equalsIgnoreCase(languageCode + ".yml")) {
+					plugin.getLogger().info("Found alternative language file: " + file.getName());
+					languageCode = file.getName().replace(".yml", "");
+
+					File en_US = new File(langFolder, "en_US.yml");
+					if (en_US.exists()) {
+						plugin.getLogger().info("Found en_US.yml");
+						YamlConfiguration en_US_config = YamlConfiguration.loadConfiguration(en_US);
+						YamlConfiguration file_config = YamlConfiguration.loadConfiguration(file);
+
+						plugin.getLogger().info("Getting keys from en_US.yml");
+						List<String> en_US_keys = new ArrayList<>(en_US_config.getKeys(true));
+						plugin.getLogger().info("Getting keys from " + languageCode + ".yml");
+						List<String> file_keys = new ArrayList<>(file_config.getKeys(true));
+
+						en_US_keys.remove(0);
+						file_keys.remove(0);
+
+						en_US_keys.replaceAll(key -> key.replace("en_US.", ""));
+						file_keys.replaceAll(key -> key.replace(languageCode + ".", ""));
+
+						plugin.getLogger().info("Checking for missing keys in " + languageCode + ".yml");
+						for (String key : file_keys) {
+							if (!en_US_keys.contains(key)) {
+								plugin.getLogger().info("Missing key: " + key + " in " + languageCode + ".yml");
+
+								String errorMessage = ErrorMessages.getErrorMessage(16);
+								String finalErrorMessage = errorMessage.replaceAll("%languageCode%", languageCode);
+
+								plugin.getLogger().warning(finalErrorMessage);
+								logErrorMessage(finalErrorMessage);
+								languageCode = "en_US";
+							}
+						}
+
+						plugin.getLogger().info("No missing keys found in " + languageCode + ".yml");
+						plugin.getLogger().info("Loading " + languageCode + ".yml");
+
+						foundAlternative = true;
+					}
+
+					break;
+				}
+			}
+		}
+
+		if (!languageCodes.contains(languageCode) && !foundAlternative) {
 			String errorMessage = ErrorMessages.getErrorMessage(16);
 			String finalErrorMessage = errorMessage.replaceAll("%languageCode%", languageCode);
 

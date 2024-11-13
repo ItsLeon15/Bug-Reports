@@ -316,36 +316,51 @@ public class bugreportGUI {
 	@Contract(pure = true)
 	private static String deriveReportDetailKey(@NotNull String bugReportItemKey) {
 		switch (bugReportItemKey) {
-			case "BugReporter":
+			case "BugReporter" -> {
 				return getValueFromLanguageFile("buttonNames.bugReportDetailsUsername", "Username");
-			case "BugReportUUID":
+			}
+			case "BugReportUUID" -> {
 				return getValueFromLanguageFile("buttonNames.bugReportDetailsUUID", "UUID");
-			case "BugReportWorld":
+			}
+			case "BugReportWorld" -> {
 				return getValueFromLanguageFile("buttonNames.bugReportDetailsWorld", "World");
-			case "BugReportMessage":
+			}
+			case "BugReportMessage" -> {
 				return getValueFromLanguageFile("buttonNames.bugReportDetailsFullMessage", "Full Message");
-			case "BugReportCategory":
+			}
+			case "BugReportCategory" -> {
 				return getValueFromLanguageFile("buttonNames.bugReportDetailsCategory", "Category ID");
-			case "BugReportStatus":
+			}
+			case "BugReportStatus" -> {
 				return getValueFromLanguageFile("buttonNames.bugReportDetailsStatus", "Status") + " (Click to change)";
-			case "BugReportTimestamp":
+			}
+			case "BugReportTimestamp" -> {
 				return getValueFromLanguageFile("buttonNames.bugReportDetailsTimestamp", "Timestamp");
-			case "BugReportLocation":
+			}
+			case "BugReportLocation" -> {
 				return getValueFromLanguageFile("buttonNames.bugReportDetailsLocation", "Location") + ChatColor.BOLD + " (Click to teleport)";
-			case "BugReportGamemode":
+			}
+			case "BugReportGamemode" -> {
 				return getValueFromLanguageFile("buttonNames.bugReportDetailsGamemode", "Gamemode");
-			case "BugReportServerName":
+			}
+			case "BugReportServerName" -> {
 				return getValueFromLanguageFile("buttonNames.bugReportDetailsServerName", "Server Name");
-			case "BugReportUnArchive":
+			}
+			case "BugReportUnArchive" -> {
 				return getValueFromLanguageFile("buttonNames.unarchive", "Unarchive");
-			case "BugReportArchive":
+			}
+			case "BugReportArchive" -> {
 				return getValueFromLanguageFile("buttonNames.archive", "Archive");
-			case "BugReportBack":
+			}
+			case "BugReportBack" -> {
 				return getValueFromLanguageFile("buttonNames.back", "Back");
-			case "BugReportDelete":
+			}
+			case "BugReportDelete" -> {
 				return getValueFromLanguageFile("buttonNames.delete", "Delete");
-			default:
+			}
+			default -> {
 				return bugReportItemKey.replace("BugReport", "");
+			}
 		}
 	}
 
@@ -356,7 +371,11 @@ public class bugreportGUI {
 	 * @return true if the item supports custom textures; false otherwise.
 	 */
 	private static boolean isItemSupportsTexture(String bugReportItemKey) {
-		return List.of("BugReportUUID", "BugReportWorld", "BugReportMessage", "BugReportCategory", "BugReportTimestamp", "BugReportLocation", "BugReportGamemode", "BugReportServerName", "BugReportUnArchive", "BugReportArchive", "BugReportDelete").contains(bugReportItemKey);
+		return List.of(
+				"BugReportUUID", "BugReportWorld", "BugReportMessage", "BugReportCategory",
+				"BugReportTimestamp", "BugReportLocation", "BugReportGamemode", "BugReportServerName",
+				"BugReportUnArchive", "BugReportArchive", "BugReportDelete"
+		).contains(bugReportItemKey);
 	}
 
 	private static @NotNull Map<String, String> parseReportDetails(@NotNull String report) {

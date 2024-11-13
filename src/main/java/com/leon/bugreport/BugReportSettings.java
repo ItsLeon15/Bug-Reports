@@ -496,11 +496,6 @@ public class BugReportSettings {
 					return;
 				}
 
-//				if (customItemDisplayName.equals("buttonNames.inputAllBugReportsButton")) {
-//					importAllBugReports(player);
-//					return;
-//				}
-
 				if (clickedItem.getItemMeta().hasCustomModelData()) {
 					if (clickedItem.getItemMeta().getCustomModelData() == 1) {
 						setDiscordWebhookToggle(player);
