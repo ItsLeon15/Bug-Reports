@@ -99,14 +99,26 @@ public class BugListCommand implements CommandExecutor {
 	}
 
 	private void returnReloadCommand(@NotNull Player player) {
-		BugReportManager.reloadConfig();
-		BugReportLanguage.loadLanguageFiles();
+		// Reload the plugin's configuration
 		plugin.reloadConfig();
+
+		// Fetch the updated language code from the config
+		String updatedLanguageCode = plugin.getConfig().getString("language", "en_US");
+
+		// Reset the languageCode in BugReportLanguage
+		BugReportLanguage.setPluginLanguage(updatedLanguageCode);
+
+		// Reload language files and other components
+		BugReportLanguage.loadLanguageFiles();
+		BugReportManager.reloadConfig();
 		BugReportDatabase.reloadConnection();
 
-		player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN)
-				+ "The plugin has been reloaded.");
+		// Notify the player of the reload completion
+		player.sendMessage(pluginColor + pluginTitle + " " +
+				Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) +
+				"The plugin has been reloaded.");
 	}
+
 
 	private void returnDebugCommand(Player player, String @NotNull [] args) {
 		if (args.length < 2) {
