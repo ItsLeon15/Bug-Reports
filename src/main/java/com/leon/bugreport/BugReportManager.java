@@ -148,6 +148,12 @@ public class BugReportManager implements Listener {
 		language = config.getString("language", "en_US");
 		reloadAllCategories();
 		checkConfig();
+
+		BugReportPlugin pluginInstance = BugReportPlugin.getPlugin();
+		UniversalTabCompleter universalTabCompleter = new UniversalTabCompleter(pluginInstance.reportManager, config);
+
+		Objects.requireNonNull(pluginInstance.getCommand("bugreport")).setTabCompleter(universalTabCompleter);
+		Objects.requireNonNull(pluginInstance.getCommand("buglist")).setTabCompleter(universalTabCompleter);
 	}
 
 	public static void reloadAllCategories() {

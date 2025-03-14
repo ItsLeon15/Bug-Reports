@@ -33,7 +33,7 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 	private static BugReportPlugin instance;
 	private final UpdateChecker updateChecker = new UpdateChecker(this, 110732);
 	private final Set<UUID> notifiedPlayers = new HashSet<>();
-	private BugReportManager reportManager;
+	BugReportManager reportManager;
 
 	@NotNull
 	private static List<String> getNewReports(@NotNull List<String> reports, long lastLoginTimestamp) {
