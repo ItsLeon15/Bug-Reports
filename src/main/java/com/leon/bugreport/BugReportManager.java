@@ -117,7 +117,7 @@ public class BugReportManager implements Listener {
 		return pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, defaultColor);
 	}
 
-	public static boolean checkCategoryConfig() {
+	public static boolean isCategoryConfigInvalid() {
 		if (!config.contains("reportCategories")) {
 			String errorMessage = ErrorMessages.getErrorMessage(20);
 			plugin.getLogger().warning(errorMessage);
@@ -139,6 +139,7 @@ public class BugReportManager implements Listener {
 				}
 			}
 		}
+
 		return false;
 	}
 
@@ -487,7 +488,7 @@ public class BugReportManager implements Listener {
 	}
 
 	private @Nullable List<Category> loadReportCategories() {
-		if (checkCategoryConfig()) {
+		if (isCategoryConfigInvalid()) {
 			String errorMessage = ErrorMessages.getErrorMessage(23);
 			plugin.getLogger().warning(errorMessage);
 			logErrorMessage(errorMessage);

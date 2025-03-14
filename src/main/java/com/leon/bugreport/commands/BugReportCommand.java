@@ -251,8 +251,9 @@ public class BugReportCommand implements CommandExecutor, Listener {
 				lastCommandUsage.put(player.getUniqueId(), System.currentTimeMillis());
 				return true;
 			}
+
 			if (config.getBoolean("enablePluginReportCategoriesGUI", true)) {
-				if (!BugReportManager.checkCategoryConfig()) {
+				if (BugReportManager.isCategoryConfigInvalid()) {
 					player.sendMessage(returnStartingMessage(ChatColor.RED) + getValueFromLanguageFile("bugReportCategoriesNotConfiguredMessage", "Bug report categories are not configured"));
 					return true;
 				}
@@ -321,13 +322,27 @@ public class BugReportCommand implements CommandExecutor, Listener {
 	}
 
 	private void openCategorySelectionGUI(Player player) {
-		Inventory gui = Bukkit.createInventory(null, 9, ChatColor.YELLOW + getValueFromLanguageFile("buttonNames.categories", "Bug Report Categories"));
-
 		List<Category> categories = reportManager.getReportCategories();
+		int categoryCount = categories.size();
+
+		int inventorySize = 9;
+		if (categoryCount > 9) {
+			inventorySize = Math.min(54, ((categoryCount - 1) / 9 + 1) * 9);
+		}
+
+		Inventory gui = Bukkit.createInventory(
+				null,
+				inventorySize,
+				ChatColor.YELLOW + getValueFromLanguageFile("buttonNames.categories", "Bug Report Categories")
+		);
 
 		for (Category category : categories) {
 			ItemStack categoryItem = createCategoryItem(category);
 			gui.addItem(categoryItem);
+		}
+
+		if (categoryCount > 54 && player.hasPermission("bugreport.admin")) {
+			plugin.getLogger().warning("You have more than 54 categories. Only the first 54 will be shown.");
 		}
 
 		player.openInventory(gui);
