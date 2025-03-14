@@ -280,6 +280,52 @@ public class BugReportCommand implements CommandExecutor, Listener {
 				}
 			}
 
+			if (config.getBoolean("enablePluginReportCategoriesTabComplete", false)) {
+				if (BugReportManager.isCategoryConfigInvalid()) {
+					player.sendMessage(returnStartingMessage(ChatColor.RED) + getValueFromLanguageFile("bugReportCategoriesNotConfiguredMessage", "Bug report categories are not configured"));
+					return true;
+				}
+				if (args.length < 2) {
+					player.sendMessage(returnStartingMessage(ChatColor.RED) + "Usage: /bugreport <category> <message>");
+					return true;
+				}
+
+				Integer categoryId = null;
+
+				for (Category category : reportManager.getReportCategories()) {
+					String categoryName = category.getName();
+					String argName = args[0];
+
+					if (categoryName.equalsIgnoreCase(argName) ||
+							categoryName.equalsIgnoreCase(argName.replace("-", " "))) {
+						categoryId = category.getId();
+						break;
+					}
+				}
+
+				if (categoryId == null) {
+					player.sendMessage(returnStartingMessage(ChatColor.RED) + "Category not found");
+					return true;
+				}
+
+				StringBuilder messageBuilder = new StringBuilder();
+				for (int i = 1; i < args.length; i++) {
+					messageBuilder.append(args[i]).append(" ");
+				}
+				String message = messageBuilder.toString().trim();
+
+				reportManager.submitBugReport(player, message, categoryId);
+
+				if (checkForKey("useTitleInsteadOfMessage", true)) {
+					player.sendTitle(GREEN + getValueFromLanguageFile("bugReportConfirmationMessage", "Bug report submitted successfully!"), "", 10, 70, 25);
+				} else {
+					player.sendMessage(returnStartingMessage(ChatColor.GREEN) + getValueFromLanguageFile("bugReportConfirmationMessage", "Bug report submitted successfully!"));
+				}
+
+				lastCommandUsage.put(player.getUniqueId(), System.currentTimeMillis());
+				return true;
+			}
+
 			try {
 				reportManager.submitBugReport(player, String.join(" ", args), null);
 			} catch (Exception e) {
