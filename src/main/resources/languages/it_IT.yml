@@ -79,3 +79,4 @@ it_IT:
   exportAllBugReports: "Esporta tutte le segnalazioni di bug"
   exportAllBugReportsSuccess: "Tutte le segnalazioni di bug esportate"
   exportAllBugReportsFailed: "Non è stato possibile esportare tutte le segnalazioni di bug"
+  clickToEditTheStatus: "Fai clic per modificare lo stato"

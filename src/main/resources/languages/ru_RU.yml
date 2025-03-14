@@ -79,3 +79,4 @@ ru_RU:
   exportAllBugReports: "Экспортировать все отчеты об ошибках"
   exportAllBugReportsSuccess: "Все отчеты об ошибках экспортированы"
   exportAllBugReportsFailed: "Не удалось экспортировать все отчеты об ошибках"
+  clickToEditTheStatus: "Нажмите, чтобы отредактировать статус"

@@ -79,3 +79,4 @@ zh_TW:
   exportAllBugReports: "導出所有錯誤報告"
   exportAllBugReportsSuccess: "已導出所有錯誤報告"
   exportAllBugReportsFailed: "無法導出所有錯誤報告"
+  clickToEditTheStatus: "點擊以編輯狀態"

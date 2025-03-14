@@ -79,3 +79,4 @@ fr_FR:
   exportAllBugReports: "Exporter tous les rapports de bug"
   exportAllBugReportsSuccess: "Tous les rapports de bug exportés"
   exportAllBugReportsFailed: "Impossible d'exporter tous les rapports de bug"
+  clickToEditTheStatus: "Cliquez pour modifier le statut"

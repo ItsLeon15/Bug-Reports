@@ -821,7 +821,7 @@ public class BugReportSettings {
 						ItemMeta statusMeta = statusItem.getItemMeta();
 
 						List<String> statusLore = new ArrayList<>();
-						statusLore.add(ChatColor.GRAY + "Click to edit the status (" + statusColor + statusName + ChatColor.GRAY + ")");
+						statusLore.add(ChatColor.GRAY + getValueFromLanguageFile("clickToEditTheStatus", "Click to edit the status") + " (" + statusColor + statusName + ChatColor.GRAY + ")");
 						Objects.requireNonNull(statusMeta).setLore(statusLore);
 						statusItem.setItemMeta(statusMeta);
 

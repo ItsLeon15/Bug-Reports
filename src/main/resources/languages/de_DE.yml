@@ -79,3 +79,4 @@ de_DE:
   exportAllBugReports: "Alle Fehlerberichte exportieren"
   exportAllBugReportsSuccess: "Alle Fehlerberichte exportiert"
   exportAllBugReportsFailed: "Fehler beim Exportieren aller Fehlerberichte"
+  clickToEditTheStatus: "Klicken Sie hier, um den Status zu bearbeiten"

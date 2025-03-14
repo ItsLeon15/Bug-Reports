@@ -79,3 +79,4 @@ cs_CZ:
   exportAllBugReports: "Exportovat všechny chybové hlášení"
   exportAllBugReportsSuccess: "Všechny chybové hlášení byly exportovány"
   exportAllBugReportsFailed: "Nepodařilo se exportovat všechny chybové hlášení"
+  clickToEditTheStatus: "Click to edit the status"

@@ -79,3 +79,4 @@ zh_CN:
   exportAllBugReports: "导出所有错误报告"
   exportAllBugReportsSuccess: "已导出所有错误报告"
   exportAllBugReportsFailed: "无法导出所有错误报告"
+  clickToEditTheStatus: "点击以编辑状态"

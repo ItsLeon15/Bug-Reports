@@ -79,3 +79,4 @@ ko_KR:
   exportAllBugReports: "모든 버그 보고서 내보내기"
   exportAllBugReportsSuccess: "모든 버그 보고서가 내보내졌습니다."
   exportAllBugReportsFailed: "모든 버그 보고서를 내보내지 못했습니다."
+  clickToEditTheStatus: "상태를 편집하려면 클릭하십시오"
