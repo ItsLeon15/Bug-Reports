@@ -65,7 +65,7 @@ public class BugReportManager implements Listener {
 	public static String pluginTitle;
 	public static int localCurrentPage = 1;
 	public static LinkDiscord discord;
-	private final List<Category> reportCategories;
+	private static List<Category> reportCategories;
 
 	public BugReportManager(Plugin plugin) {
 		BugReportManager.plugin = plugin;
@@ -144,9 +144,14 @@ public class BugReportManager implements Listener {
 	}
 
 	public static void reloadConfig() {
-		language = config.getString("language", "en_US");
 		loadConfig();
+		language = config.getString("language", "en_US");
+		reloadAllCategories();
 		checkConfig();
+	}
+
+	public static void reloadAllCategories() {
+		reportCategories = loadReportCategories();
 	}
 
 	public static void loadConfig() {
@@ -487,7 +492,7 @@ public class BugReportManager implements Listener {
 		return item;
 	}
 
-	private @Nullable List<Category> loadReportCategories() {
+	private static @Nullable List<Category> loadReportCategories() {
 		if (isCategoryConfigInvalid()) {
 			String errorMessage = ErrorMessages.getErrorMessage(23);
 			plugin.getLogger().warning(errorMessage);
