@@ -33,7 +33,7 @@ public class ErrorMessages {
 		errorMessages.put(22, "Error saving config.yml");
 		errorMessages.put(23, "Something went wrong while loading the report categories");
 		errorMessages.put(24, "Missing webhookURL in config.yml");
-		errorMessages.put(25, "Error sending bug report to Discord");
+		errorMessages.put(25, "Error sending notification to Discord");
 		errorMessages.put(26, "Failed to create data folder");
 		errorMessages.put(27, "Failed to close database connection");
 		errorMessages.put(28, "Failed to create custom player head");
@@ -55,6 +55,7 @@ public class ErrorMessages {
 		errorMessages.put(44, "The layout of the customGUI.yml file is incorrect. Falling back to the default layout");
 		errorMessages.put(45, "Error sending additional pings to Discord");
 		errorMessages.put(46, "Failed to export all bug reports");
+		errorMessages.put(47, "Failed to submit bug report to Plan");
 	}
 
 	public static @NotNull String getErrorMessage(int errorNumber) {

@@ -71,13 +71,11 @@ public class BugReportPlugin extends JavaPlugin implements Listener {
 			new BugPlaceholders(this).register();
 		}
 
-		if (!getDataFolder().exists()) {
-			if (!getDataFolder().mkdirs()) {
-				String errorMessage = ErrorMessages.getErrorMessage(26);
+		if (!getDataFolder().exists() && !getDataFolder().mkdirs()) {
+			String errorMessage = ErrorMessages.getErrorMessage(26);
 
-				plugin.getLogger().warning(errorMessage);
-				logErrorMessage(errorMessage);
-			}
+			plugin.getLogger().warning(errorMessage);
+			logErrorMessage(errorMessage);
 		}
 
 		if (getConfig().getBoolean("update-checker")) {

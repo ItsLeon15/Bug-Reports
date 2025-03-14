@@ -24,7 +24,7 @@ public class BugListArchivedCommand implements CommandExecutor {
 
 		if (player.hasPermission("bugreport.admin") || player.hasPermission("bugreport.archived")) {
 			setCurrentPage(player, 1);
-			Inventory bugReportGUI = getArchivedBugReportsGUI(localCurrentPage, player);
+			Inventory bugReportGUI = getArchivedBugReportsGUI(localCurrentPage);
 			player.openInventory(bugReportGUI);
 		} else {
 			player.sendMessage(returnStartingMessage(ChatColor.RED) + "You don't have permission to use this command.");

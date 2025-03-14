@@ -6,12 +6,17 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 import java.awt.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.*;
 
@@ -23,18 +28,112 @@ import static com.leon.bugreport.commands.BugReportCommand.stringColorToColorCod
 
 public class LinkDiscord {
 	private static final String EMBED_TITLE = "New Bug Report";
-	private static final String EMBED_FOOTER_TEXT = "Bug Report V0.12.5";
+	private static final String EMBED_FOOTER_TEXT = "Bug Report V0.13.0";
 	private static final String EMBED_THUMBNAIL = "https://www.spigotmc.org/data/resource_icons/110/110732.jpg";
 	private static final Color EMBED_COLOR = Color.YELLOW;
 	private static boolean errorLogged = false;
-	private String webhookURL;
+	private static String webhookURL;
 
 	public LinkDiscord(String webhookURL) {
-		this.webhookURL = webhookURL;
+		LinkDiscord.webhookURL = webhookURL;
+	}
+
+	private static void modifyDiscordNotification(String notificationMessage, Color color, String bugReportDiscordWebhookID) {
+		String webhookURL = config.getString("webhookURL", "");
+		if (webhookURL.isEmpty()) {
+			String errorMessage = ErrorMessages.getErrorMessage(24);
+			plugin.getLogger().warning(errorMessage);
+			logErrorMessage(errorMessage);
+			return;
+		}
+
+		URL url;
+		try {
+			url = new URL(webhookURL + "/messages/" + bugReportDiscordWebhookID);
+		} catch (MalformedURLException e) {
+			String errorMessage = ErrorMessages.getErrorMessageWithAdditionalMessage(25, "Error editing Discord message: " + e.getMessage());
+			plugin.getLogger().warning(errorMessage);
+			logErrorMessage(errorMessage);
+			return;
+		}
+
+		String host = url.getHost();
+		String path = url.getPath() + (url.getQuery() != null ? "?" + url.getQuery() : "");
+		int port = url.getPort() == -1 ? 443 : url.getPort();
+
+		try {
+			String discordEmbedFooter = config.getString("discordEmbedFooter", EMBED_FOOTER_TEXT);
+			String discordEmbedThumbnail = config.getString("discordEmbedThumbnail", EMBED_THUMBNAIL);
+
+			int colorInt = color.getRGB() & 0xFFFFFF;
+
+			String jsonPayload = "{\"embeds\":[{" +
+					"\"title\":\"" + escapeJson(notificationMessage) + "\"," +
+					"\"color\":" + colorInt + "," +
+					"\"footer\":{\"text\":\"" + escapeJson(discordEmbedFooter) + "\"}," +
+					"\"thumbnail\":{\"url\":\"" + escapeJson(discordEmbedThumbnail) + "\"}" +
+					"}]}";
+			byte[] payloadBytes = jsonPayload.getBytes(StandardCharsets.UTF_8);
+
+			SSLSocketFactory sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+			SSLSocket socket = (SSLSocket) sslSocketFactory.createSocket(host, port);
+
+			String requestBuilder = "PATCH " + path + " HTTP/1.1\r\n" +
+					"Host: " + host + "\r\n" +
+					"Content-Type: application/json\r\n" +
+					"User-Agent: BugReport/0.13.0\r\n" +
+					"Content-Length: " + payloadBytes.length + "\r\n" +
+					"Connection: close\r\n" +
+					"\r\n";
+
+			OutputStream out = socket.getOutputStream();
+			out.write(requestBuilder.getBytes(StandardCharsets.UTF_8));
+			out.write(payloadBytes);
+			out.flush();
+
+			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			String inputLine;
+			StringBuilder response = new StringBuilder();
+			while ((inputLine = in.readLine()) != null) {
+				response.append(inputLine).append("\n");
+			}
+
+			in.close();
+			out.close();
+			socket.close();
+
+			if (!response.toString().contains("HTTP/1.1 2")) {
+				String errorMessage = ErrorMessages.getErrorMessageWithAdditionalMessage(25, "Discord API error: " + response);
+				plugin.getLogger().warning(errorMessage);
+				logErrorMessage(errorMessage);
+			}
+		} catch (Exception e) {
+			String errorMessage = ErrorMessages.getErrorMessageWithAdditionalMessage(25, "Error editing Discord message: " + e.getMessage());
+			plugin.getLogger().warning(errorMessage);
+			logErrorMessage(errorMessage);
+		}
+	}
+
+	private static @NotNull String escapeJson(String text) {
+		if (text == null) return "";
+		return text.replace("\\", "\\\\")
+				.replace("\"", "\\\"")
+				.replace("\n", "\\n")
+				.replace("\r", "\\r")
+				.replace("\t", "\\t");
+	}
+
+	public static void modifyNotification(String bugReportDiscordWebhookID, Color color, String notificationMessage) {
+		if (webhookURL == null || webhookURL.isEmpty()) {
+			plugin.getLogger().info("Webhook URL is not configured. Notification not sent to Discord.");
+			return;
+		}
+
+		modifyDiscordNotification(notificationMessage, color, bugReportDiscordWebhookID);
 	}
 
 	public void setWebhookURL(String webhookURL) {
-		this.webhookURL = webhookURL;
+		LinkDiscord.webhookURL = webhookURL;
 	}
 
 	private DiscordWebhook.EmbedObject generateDefaultEmbed() {
@@ -51,7 +150,7 @@ public class LinkDiscord {
 		return new DiscordWebhook.EmbedObject().setTitle(discordEmbedTitle).setFooter(discordEmbedFooter, null).setColor(discordEmbedColor).setThumbnail(discordEmbedThumbnail);
 	}
 
-	private void sendEmptyEmbedOrDefault(String username, DiscordWebhook.EmbedObject @NotNull ... existingEmbedObject) {
+	private String sendEmptyEmbedOrDefault(String username, DiscordWebhook.EmbedObject @NotNull ... existingEmbedObject) {
 		DiscordWebhook.EmbedObject embedObject = existingEmbedObject.length > 0 ? existingEmbedObject[0] : generateDefaultEmbed();
 
 		String discordEnableUserAuthor = config.getString("discordEnableUserAuthor");
@@ -72,13 +171,13 @@ public class LinkDiscord {
 			embedObject.setThumbnail(discordEmbedThumbnail);
 		}
 
-		sendEmbed(embedObject);
+		return sendEmbed(embedObject);
 	}
 
-	public void sendBugReport(String message, String world, String username, String location, String gamemode, Integer category, String serverName) {
+	public String sendBugReport(String message, String world, String username, String location, String gamemode, Integer category, String serverName) {
 		if (webhookURL == null || webhookURL.isEmpty()) {
 			plugin.getLogger().info("Webhook URL is not configured. Bug report not sent to Discord.");
-			return;
+			return message;
 		}
 
 		if (!config.contains("discordEmbedFields")) {
@@ -93,13 +192,13 @@ public class LinkDiscord {
 			plugin.getLogger().warning(errorMessage);
 			logErrorMessage(errorMessage);
 			sendEmptyEmbedOrDefault(username);
-			return;
+			return message;
 		}
 
-		sendDiscordMessageEmbedFull(message, world, username, location, gamemode, category, serverName, discordEmbedFields);
+		return sendDiscordMessageEmbedFull(message, world, username, location, gamemode, category, serverName, discordEmbedFields);
 	}
 
-	private void sendDiscordMessageEmbedFull(
+	private String sendDiscordMessageEmbedFull(
 			String message,
 			String world,
 			String username,
@@ -133,7 +232,7 @@ public class LinkDiscord {
 			embedObject.addField(name, value, inline);
 		}
 
-		sendEmptyEmbedOrDefault(username, embedObject);
+		return sendEmptyEmbedOrDefault(username, embedObject);
 	}
 
 	private @NotNull String getValueForField(
@@ -170,9 +269,10 @@ public class LinkDiscord {
 		return fieldValue;
 	}
 
-	private void sendEmbed(DiscordWebhook.EmbedObject embedObject) {
+	private String sendEmbed(DiscordWebhook.EmbedObject embedObject) {
 		DiscordWebhook webhook = new DiscordWebhook(webhookURL);
 		webhook.addEmbed(embedObject);
+		String discordWebhookResult = "";
 
 		if (config.getBoolean("discordEnablePing")) {
 			try {
@@ -219,7 +319,7 @@ public class LinkDiscord {
 				}
 
 				if (!content.isEmpty()) {
-					if (config.getString("discordPingMessage") != null && !config.getString("discordPingMessage").isEmpty()) {
+					if (config.getString("discordPingMessage") != null && !Objects.requireNonNull(config.getString("discordPingMessage")).isEmpty()) {
 						content.insert(0, config.getString("discordPingMessage") + " ");
 					}
 
@@ -232,7 +332,7 @@ public class LinkDiscord {
 				logErrorMessage(errorMessage);
 			} finally {
 				try {
-					webhook.execute();
+					discordWebhookResult = webhook.execute();
 				} catch (IOException e) {
 					String errorMessage = ErrorMessages.getErrorMessageWithAdditionalMessage(25, e.getMessage());
 
@@ -242,7 +342,7 @@ public class LinkDiscord {
 			}
 		} else {
 			try {
-				webhook.execute();
+				discordWebhookResult = webhook.execute();
 			} catch (IOException e) {
 				String errorMessage = ErrorMessages.getErrorMessageWithAdditionalMessage(25, e.getMessage());
 
@@ -250,11 +350,8 @@ public class LinkDiscord {
 				logErrorMessage(errorMessage);
 			}
 		}
-	}
 
-	private void throwException(String message) {
-		plugin.getLogger().warning(message);
-		logErrorMessage(message);
+		return discordWebhookResult;
 	}
 
 	private String getCategoryName(Integer category) {
@@ -277,7 +374,7 @@ public class LinkDiscord {
 
 			connection.setRequestMethod("GET");
 			connection.setRequestProperty("Content-Type", "application/json");
-			connection.setRequestProperty("User-Agent", "BugReport/0.12.5");
+			connection.setRequestProperty("User-Agent", "BugReport/0.13.0");
 			connection.setConnectTimeout(5000);
 			connection.setReadTimeout(5000);
 			connection.setDoOutput(true);

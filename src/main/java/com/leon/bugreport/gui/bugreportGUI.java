@@ -7,9 +7,11 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.RegisteredListener;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -47,6 +49,12 @@ public class bugreportGUI {
 		}
 	};
 
+	private static final List<String> TEXTURE_SUPPORTED_ITEMS = List.of(
+			"BugReportUUID", "BugReportWorld", "BugReportMessage", "BugReportCategory",
+			"BugReportTimestamp", "BugReportLocation", "BugReportGamemode", "BugReportServerName",
+			"BugReportUnArchive", "BugReportArchive", "BugReportDelete"
+	);
+
 	public static void generateNewYML() {
 		File configFile = new File(plugin.getDataFolder(), "custom_bug_report_details_GUI.yml");
 		if (!configFile.exists()) {
@@ -71,20 +79,19 @@ public class bugreportGUI {
 	}
 
 	public static void openBugReportDetailsGUI(Player player, String report, Integer reportIDGUI, Boolean isArchivedGUI) {
+		for (HandlerList handlerList : HandlerList.getHandlerLists()) {
+			RegisteredListener[] registeredListeners = handlerList.getRegisteredListeners();
+			for (RegisteredListener registeredListener : registeredListeners) {
+				if (registeredListener.getListener() instanceof BugReportDetailsListener) {
+					handlerList.unregister(registeredListener);
+				}
+			}
+		}
+
 		updateBugReportItems();
 		YamlConfiguration guiConfig = loadGUIConfig();
 		String bugReportTitle = isArchivedGUI ? "Archived Bug Details - #" : "Bug Report Details - #";
-		int guiSize;
-
-		if (guiConfig != null && validateGUIConfig(guiConfig)) {
-			guiSize = guiConfig.getInt("bug_report_details_GUI.guiSize");
-			if (guiSize < 9 || guiSize > 54 || guiSize % 9 != 0) {
-				guiSize = 45;
-				Bukkit.getLogger().warning("Invalid GUI size in customGUI.yml. Falling back to default size.");
-			}
-		} else {
-			guiSize = 45;
-		}
+		int guiSize = determineGUISize(guiConfig);
 
 		Inventory gui = Bukkit.createInventory(player, guiSize, ChatColor.YELLOW + bugReportTitle + reportIDGUI);
 
@@ -95,90 +102,111 @@ public class bugreportGUI {
 		}
 
 		player.openInventory(gui);
-		Bukkit.getPluginManager().registerEvents(new BugReportDetailsListener(gui, reportIDGUI), plugin);
+		Bukkit.getPluginManager().registerEvents(new BugReportDetailsListener(gui, reportIDGUI, report, isArchivedGUI), plugin);
 	}
 
-	private static void setupGUIFromConfig(Inventory gui, Player player, @NotNull YamlConfiguration guiConfig, String report, Integer reportIDGUI, Boolean isArchivedGUI) {
+	private static int determineGUISize(YamlConfiguration guiConfig) {
+		if (guiConfig != null && validateGUIConfig(guiConfig)) {
+			int size = guiConfig.getInt("bug_report_details_GUI.guiSize");
+			if (size >= 9 && size <= 54 && size % 9 == 0) {
+				return size;
+			}
+			Bukkit.getLogger().warning("Invalid GUI size in customGUI.yml. Falling back to default size.");
+		}
+		return 45;
+	}
+
+	private static void setupGUIFromConfig(Inventory gui, Player player, @NotNull YamlConfiguration guiConfig,
+										   String report, Integer reportIDGUI, Boolean isArchivedGUI) {
 		if (!validateGUIConfig(guiConfig)) {
 			String errorMessage = ErrorMessages.getErrorMessage(44);
-
 			plugin.getLogger().severe(errorMessage);
 			logErrorMessage(errorMessage);
-
 			setupDefaultGUI(gui, player, report, reportIDGUI, isArchivedGUI);
 			return;
 		}
 
 		List<?> itemsList = guiConfig.getList("bug_report_details_GUI.items");
+		Map<String, String> reportDetails = parseReportDetails(report);
+
 		for (Object itemObj : Objects.requireNonNull(itemsList)) {
-			if (itemObj instanceof Map<?, ?> itemMap) {
-				try {
-					int slot = Integer.parseInt(itemMap.get("slot").toString());
-					String bugReportItem = itemMap.get("bugReportItem").toString();
-					String materialKey = itemMap.get("material").toString();
-					Material material;
-					ItemStack itemStack;
+			if (!(itemObj instanceof Map<?, ?> itemMap)) continue;
 
-					if ((isArchivedGUI && bugReportItem.equals("BugReportArchive")) || (!isArchivedGUI && bugReportItem.equals("BugReportUnArchive"))) {
-						continue;
-					}
+			try {
+				int slot = Integer.parseInt(itemMap.get("slot").toString());
+				String bugReportItem = itemMap.get("bugReportItem").toString();
 
-					if (materialKey.contains("[") && materialKey.contains("]")) {
-						String[] materials = materialKey.replaceAll("[\\[\\]]", "").split(",\\s*");
-						material = Material.valueOf(isArchivedGUI ? materials[1].trim() : materials[0].trim());
-					} else {
-						material = Material.valueOf(materialKey);
-					}
-
-					Object textureObj = itemMap.get("texture");
-					String texture = textureObj != null ? textureObj.toString() : "";
-
-					Map<String, String> reportDetails = parseReportDetails(report);
-					if (Objects.equals(bugReportItem, "BugReportMessage")) {
-						ItemStack messageItem = createItemForReportDetail(bugReportItem, material, texture, reportDetails, isArchivedGUI);
-						ItemMeta meta = messageItem.getItemMeta();
-						Objects.requireNonNull(meta).setDisplayName(meta.getDisplayName());
-
-						String fullMessage = reportDetails.getOrDefault("Full Message", "N/A");
-						if (fullMessage.length() > 32) {
-							List<String> lore = new ArrayList<>();
-							String[] words = fullMessage.split(" ");
-							StringBuilder currentLine = new StringBuilder();
-							for (String word : words) {
-								if (currentLine.length() + word.length() > 30) {
-									lore.add(currentLine.toString());
-									currentLine = new StringBuilder();
-								}
-
-								currentLine.append(word).append(" ");
-							}
-
-							if (!currentLine.isEmpty()) lore.add(currentLine.toString());
-							meta.setLore(lore);
-						} else {
-							meta.setLore(Collections.singletonList(ChatColor.WHITE + fullMessage));
-						}
-
-						messageItem.setItemMeta(meta);
-						itemStack = messageItem;
-						gui.setItem(slot, itemStack);
-					} else {
-						itemStack = createItemForReportDetail(bugReportItem, material, texture, reportDetails, isArchivedGUI);
-						gui.setItem(slot, itemStack);
-					}
-				} catch (IllegalArgumentException e) {
-					Bukkit.getLogger().warning("Error parsing material or slot number: " + e.getMessage());
+				if ((isArchivedGUI && bugReportItem.equals("BugReportArchive")) ||
+						(!isArchivedGUI && bugReportItem.equals("BugReportUnArchive"))) {
+					continue;
 				}
+
+				String materialKey = itemMap.get("material").toString();
+				Material material = resolveMaterial(materialKey, isArchivedGUI);
+
+				Object textureObj = itemMap.get("texture");
+				String texture = textureObj != null ? textureObj.toString() : "";
+
+				ItemStack itemStack;
+				if (bugReportItem.equals("BugReportMessage")) {
+					itemStack = createMessageItem(bugReportItem, material, texture, reportDetails, isArchivedGUI);
+				} else {
+					itemStack = createItemForReportDetail(bugReportItem, material, texture, reportDetails, isArchivedGUI);
+				}
+
+				gui.setItem(slot, itemStack);
+			} catch (IllegalArgumentException e) {
+				Bukkit.getLogger().warning("Error parsing material or slot number: " + e.getMessage());
 			}
 		}
 	}
 
-	/**
-	 * Validates the custom GUI configuration.
-	 *
-	 * @param guiConfig The custom GUI configuration.
-	 * @return true if the configuration is valid; false otherwise.
-	 */
+	private static Material resolveMaterial(@NotNull String materialKey, boolean isArchivedGUI) {
+		if (materialKey.contains("[") && materialKey.contains("]")) {
+			String[] materials = materialKey.replaceAll("[\\[\\]]", "").split(",\\s*");
+			return Material.valueOf(isArchivedGUI ? materials[1].trim() : materials[0].trim());
+		}
+		return Material.valueOf(materialKey);
+	}
+
+	private static @NotNull ItemStack createMessageItem(String bugReportItem, Material material, String texture,
+														Map<String, String> reportDetails, boolean isArchivedGUI) {
+		ItemStack messageItem = createItemForReportDetail(bugReportItem, material, texture, reportDetails, isArchivedGUI);
+		ItemMeta meta = messageItem.getItemMeta();
+		if (meta == null) return messageItem;
+
+		String fullMessage = reportDetails.getOrDefault("Full Message", "N/A");
+		if (fullMessage.length() > 32) {
+			List<String> lore = formatLongMessage(fullMessage);
+			meta.setLore(lore);
+		} else {
+			meta.setLore(Collections.singletonList(ChatColor.WHITE + fullMessage));
+		}
+
+		messageItem.setItemMeta(meta);
+		return messageItem;
+	}
+
+	private static @NotNull List<String> formatLongMessage(@NotNull String message) {
+		List<String> lore = new ArrayList<>();
+		String[] words = message.split(" ");
+		StringBuilder currentLine = new StringBuilder();
+
+		for (String word : words) {
+			if (currentLine.length() + word.length() > 30) {
+				lore.add(currentLine.toString());
+				currentLine = new StringBuilder();
+			}
+			currentLine.append(word).append(" ");
+		}
+
+		if (!currentLine.isEmpty()) {
+			lore.add(currentLine.toString());
+		}
+
+		return lore;
+	}
+
 	private static boolean validateGUIConfig(@NotNull YamlConfiguration guiConfig) {
 		int guiSize = guiConfig.getInt("bug_report_details_GUI.guiSize", -1);
 		if (guiSize < 9 || guiSize > 54 || guiSize % 9 != 0) {
@@ -202,185 +230,198 @@ public class bugreportGUI {
 			}
 
 			try {
-				Integer.parseInt(itemMap.get("slot").toString());
+				int slot = Integer.parseInt(itemMap.get("slot").toString());
+				if (slot >= guiSize) {
+					Bukkit.getLogger().warning("Slot number in customGUI.yml is greater than the GUI size.");
+					return false;
+				}
 			} catch (NumberFormatException e) {
 				return false;
 			}
 
-			if (Integer.parseInt(itemMap.get("slot").toString()) >= guiSize) {
-				Bukkit.getLogger().warning("Slot number in customGUI.yml is greater than the GUI size.");
+			String itemKey = itemMap.get("bugReportItem").toString();
+			if (!bugReportItems.containsKey(itemKey)) {
+				Bukkit.getLogger().warning("Invalid bugReportItem in customGUI.yml: " + itemKey);
 				return false;
 			}
 
-			if (!bugReportItems.containsKey(itemMap.get("bugReportItem").toString())) {
-				Bukkit.getLogger().warning("Invalid bugReportItem in customGUI.yml: " + itemMap.get("bugReportItem"));
+			if ("BugReporter".equals(itemKey) && !"%player_texture%".equals(itemMap.get("texture"))) {
+				Bukkit.getLogger().warning("Texture for BugReporter item in customGUI.yml must be %player_texture%.");
 				return false;
-			}
-
-			if ("BugReporter".equals(itemMap.get("bugReportItem").toString())) {
-				if (!"%player_texture%".equals(itemMap.get("texture"))) {
-					Bukkit.getLogger().warning("Texture for BugReporter item in customGUI.yml must be %player_texture%.");
-					return false;
-				}
 			}
 		}
 
 		return true;
 	}
 
-	private static @NotNull ItemStack createItemForReportDetail(String bugReportItemKey, Material defaultMaterial, @Nullable String textureBase64, @NotNull Map<String, String> reportDetails, Boolean isArchivedGUI) {
-		String reportDetailKey = deriveReportDetailKey(bugReportItemKey);
-		var ref = new Object() {
-			String detailValue = reportDetails.getOrDefault(reportDetailKey, "N/A");
-		};
+	private static @NotNull ItemStack createItemForReportDetail(
+			@NotNull String bugReportItemKey, Material defaultMaterial,
+			@Nullable String textureBase64,
+			@NotNull Map<String, String> reportDetails,
+			Boolean isArchivedGUI
+	) {
+		if (bugReportItemKey.equals("BugReporter")) {
+			return createBugReporterItem(reportDetails);
+		}
+
+		String detailValue = getDetailValue(bugReportItemKey, reportDetails, isArchivedGUI);
+
+		if (bugReportItemKey.equals("BugReportStatus")) {
+			ItemStack statusItem = createStatusItem(reportDetails, isArchivedGUI);
+			if (statusItem != null) return statusItem;
+		}
+
+		boolean useTexture = TEXTURE_SUPPORTED_ITEMS.contains(bugReportItemKey) &&
+				textureBase64 != null && !textureBase64.trim().isEmpty();
+
+		if (useTexture) {
+			return createCustomPlayerHead(textureBase64,
+					bugReportItems.getOrDefault(bugReportItemKey, "Unknown Item"),
+					1);
+		} else {
+			return createBasicItem(defaultMaterial, bugReportItemKey, detailValue);
+		}
+	}
+
+	private static @NotNull ItemStack createBugReporterItem(@NotNull Map<String, String> reportDetails) {
+		String username = reportDetails.get("Username");
 		ItemStack item;
 
+		if (config.getBoolean("enablePlayerHeads")) {
+			item = getPlayerHead(username);
+		} else {
+			item = createInfoItem(Material.PLAYER_HEAD,
+					ChatColor.GOLD + "Username",
+					ChatColor.WHITE + username,
+					false);
+		}
+
+		ItemMeta meta = item.getItemMeta();
+		if (meta != null) {
+			meta.setDisplayName(ChatColor.YELLOW + bugReportItems.getOrDefault("BugReporter", "Unknown Item"));
+			meta.setLore(Collections.singletonList(ChatColor.WHITE + username));
+			item.setItemMeta(meta);
+		}
+
+		return item;
+	}
+
+	private static @Nullable String getDetailValue(String bugReportItemKey, @NotNull Map<String, String> reportDetails, boolean isArchivedGUI) {
+		String reportDetailKey = deriveReportDetailKey(bugReportItemKey);
+		String detailValue = reportDetails.getOrDefault(reportDetailKey, "N/A");
+
 		switch (bugReportItemKey) {
-			case "BugReportTimestamp" -> ref.detailValue = translateTimestampToDate(Long.parseLong(ref.detailValue));
+			case "BugReportTimestamp" -> {
+				return translateTimestampToDate(Long.parseLong(detailValue));
+			}
 			case "BugReportCategory" -> {
 				String categoryID = reportDetails.getOrDefault("Category ID", "N/A");
 				if (!"N/A".equals(categoryID)) {
 					List<Map<?, ?>> categoryList = config.getMapList("reportCategories");
-					ref.detailValue = categoryList.stream().filter(categoryMap -> categoryID.equals(String.valueOf(categoryMap.get("id")))).map(categoryMap -> (String) categoryMap.get("name")).findFirst().orElse("Unknown Category");
+					return categoryList.stream()
+							.filter(categoryMap -> categoryID.equals(String.valueOf(categoryMap.get("id"))))
+							.map(categoryMap -> (String) categoryMap.get("name"))
+							.findFirst()
+							.orElse("Unknown Category");
 				}
+				return detailValue;
 			}
-			case "BugReporter" -> {
-				String username = reportDetails.get("Username");
-
-				if (config.getBoolean("enablePlayerHeads")) {
-					item = getPlayerHead(username);
-				} else {
-					item = createInfoItem(Material.PLAYER_HEAD, ChatColor.GOLD + "Username", ChatColor.WHITE + username, false);
-				}
-				ItemMeta meta = item.getItemMeta();
-				if (meta != null) {
-					meta.setDisplayName(ChatColor.YELLOW + bugReportItems.getOrDefault(bugReportItemKey, "Unknown Item"));
-					List<String> lore = new ArrayList<>();
-					lore.add(ChatColor.WHITE + username);
-					meta.setLore(lore);
-					item.setItemMeta(meta);
-				}
-				return item;
+			case "BugReportStatus" -> {
+				return isArchivedGUI ? "Archived" : "Active";
 			}
-			case "BugReportStatus" -> ref.detailValue = isArchivedGUI ? "Archived" : "Active";
-			case "BugReportBack", "BugReportDelete", "BugReportArchive", "BugReportUnArchive" -> ref.detailValue = null;
-		}
-
-		if (isItemSupportsTexture(bugReportItemKey) && textureBase64 != null && !textureBase64.trim().isEmpty()) {
-			item = createCustomPlayerHead(textureBase64, bugReportItems.getOrDefault(bugReportItemKey, "Unknown Item"), 1);
-		} else {
-			ItemStack statusItem;
-			String status = reportDetails.get("Status");
-
-			if (status != null) {
-				List<Map<?, ?>> statuses = config.getMapList("statuses");
-				for (Map<?, ?> statusMap : statuses) {
-					if (statusMap.get("id").toString().equals(status)) {
-						String statusName = statusMap.get("name").toString();
-						String statusDescription = statusMap.get("description").toString();
-
-						ChatColor statusColor = ChatColor.valueOf(statusMap.get("color").toString().toUpperCase());
-						Material statusIcon = Material.matchMaterial((String) statusMap.get("icon")) != null ? Material.matchMaterial((String) statusMap.get("icon")) : Material.BARRIER;
-						statusItem = createInfoItem(statusIcon, statusColor + statusName + " (Click to change)", statusColor + statusDescription, false);
-
-						if (bugReportItemKey.equals("BugReportStatus")) {
-							item = statusItem;
-							return item;
-						}
-					}
-				}
+			case "BugReportBack", "BugReportDelete", "BugReportArchive", "BugReportUnArchive" -> {
+				return null;
 			}
-
-			item = new ItemStack(defaultMaterial, 1);
-			ItemMeta meta = item.getItemMeta();
-
-			if (meta != null) {
-				meta.setDisplayName(ChatColor.YELLOW + bugReportItems.getOrDefault(bugReportItemKey, "Unknown Item"));
-				List<String> lore = new ArrayList<>();
-				if (ref.detailValue != null) {
-					lore.add(ChatColor.WHITE + ref.detailValue);
-				}
-				meta.setLore(lore);
-				item.setItemMeta(meta);
+			default -> {
+				return detailValue;
 			}
 		}
+	}
+
+	private static @Nullable ItemStack createStatusItem(@NotNull Map<String, String> reportDetails, boolean isArchivedGUI) {
+		String status = reportDetails.get("Status");
+		if (status == null) {
+			return createInfoItem(
+					isArchivedGUI ? Material.RED_DYE : Material.LIME_DYE,
+					ChatColor.GOLD + "Status (Click to change)",
+					ChatColor.WHITE + (isArchivedGUI ? "Archived" : "Open"),
+					false
+			);
+		}
+
+		List<Map<?, ?>> statuses = config.getMapList("statuses");
+
+		if (status.equals("0")) {
+			Material statusMaterial = isArchivedGUI ? Material.RED_DYE : Material.LIME_DYE;
+			ChatColor statusColor = isArchivedGUI ? ChatColor.RED : ChatColor.GREEN;
+			String statusText = isArchivedGUI ? "Archived" : "Active";
+
+			return createInfoItem(statusMaterial,
+					statusColor + "Status (Click to change)",
+					statusColor + statusText,
+					false);
+		}
+
+		for (Map<?, ?> statusMap : statuses) {
+			if (statusMap.get("id").toString().equals(status)) {
+				String statusName = statusMap.get("name").toString();
+				String statusDesc = statusMap.get("description").toString();
+				ChatColor statusColor = ChatColor.valueOf(statusMap.get("color").toString().toUpperCase());
+
+				String iconStr = statusMap.get("icon").toString();
+				Material statusIcon = Material.matchMaterial(iconStr) != null ?
+						Material.matchMaterial(iconStr) : Material.BARRIER;
+
+				return createInfoItem(statusIcon,
+						statusColor + statusName + " (Click to change)",
+						statusColor + statusDesc,
+						false);
+			}
+		}
+
+		return null;
+	}
+
+	private static @NotNull ItemStack createBasicItem(Material material, String itemKey, String detailValue) {
+		ItemStack item = new ItemStack(material, 1);
+		ItemMeta meta = item.getItemMeta();
+
+		if (meta != null) {
+			meta.setDisplayName(ChatColor.YELLOW + bugReportItems.getOrDefault(itemKey, "Unknown Item"));
+			if (detailValue != null) {
+				meta.setLore(Collections.singletonList(ChatColor.WHITE + detailValue));
+			}
+			item.setItemMeta(meta);
+		}
+
 		return item;
 	}
 
-	/**
-	 * Derives the report detail key from the bug report item key.
-	 *
-	 * @param bugReportItemKey The key of the bug report item.
-	 * @return The derived report detail key.
-	 */
 	@Contract(pure = true)
 	private static String deriveReportDetailKey(@NotNull String bugReportItemKey) {
-		switch (bugReportItemKey) {
-			case "BugReporter" -> {
-				return getValueFromLanguageFile("buttonNames.bugReportDetailsUsername", "Username");
-			}
-			case "BugReportUUID" -> {
-				return getValueFromLanguageFile("buttonNames.bugReportDetailsUUID", "UUID");
-			}
-			case "BugReportWorld" -> {
-				return getValueFromLanguageFile("buttonNames.bugReportDetailsWorld", "World");
-			}
-			case "BugReportMessage" -> {
-				return getValueFromLanguageFile("buttonNames.bugReportDetailsFullMessage", "Full Message");
-			}
-			case "BugReportCategory" -> {
-				return getValueFromLanguageFile("buttonNames.bugReportDetailsCategory", "Category ID");
-			}
-			case "BugReportStatus" -> {
-				return getValueFromLanguageFile("buttonNames.bugReportDetailsStatus", "Status") + " (Click to change)";
-			}
-			case "BugReportTimestamp" -> {
-				return getValueFromLanguageFile("buttonNames.bugReportDetailsTimestamp", "Timestamp");
-			}
-			case "BugReportLocation" -> {
-				return getValueFromLanguageFile("buttonNames.bugReportDetailsLocation", "Location") + ChatColor.BOLD + " (Click to teleport)";
-			}
-			case "BugReportGamemode" -> {
-				return getValueFromLanguageFile("buttonNames.bugReportDetailsGamemode", "Gamemode");
-			}
-			case "BugReportServerName" -> {
-				return getValueFromLanguageFile("buttonNames.bugReportDetailsServerName", "Server Name");
-			}
-			case "BugReportUnArchive" -> {
-				return getValueFromLanguageFile("buttonNames.unarchive", "Unarchive");
-			}
-			case "BugReportArchive" -> {
-				return getValueFromLanguageFile("buttonNames.archive", "Archive");
-			}
-			case "BugReportBack" -> {
-				return getValueFromLanguageFile("buttonNames.back", "Back");
-			}
-			case "BugReportDelete" -> {
-				return getValueFromLanguageFile("buttonNames.delete", "Delete");
-			}
-			default -> {
-				return bugReportItemKey.replace("BugReport", "");
-			}
-		}
-	}
-
-	/**
-	 * Checks if the given item key supports custom textures.
-	 *
-	 * @param bugReportItemKey The key of the bug report item.
-	 * @return true if the item supports custom textures; false otherwise.
-	 */
-	private static boolean isItemSupportsTexture(String bugReportItemKey) {
-		return List.of(
-				"BugReportUUID", "BugReportWorld", "BugReportMessage", "BugReportCategory",
-				"BugReportTimestamp", "BugReportLocation", "BugReportGamemode", "BugReportServerName",
-				"BugReportUnArchive", "BugReportArchive", "BugReportDelete"
-		).contains(bugReportItemKey);
+		return switch (bugReportItemKey) {
+			case "BugReporter" -> getValueFromLanguageFile("buttonNames.bugReportDetailsUsername", "Username");
+			case "BugReportUUID" -> getValueFromLanguageFile("buttonNames.bugReportDetailsUUID", "UUID");
+			case "BugReportWorld" -> getValueFromLanguageFile("buttonNames.bugReportDetailsWorld", "World");
+			case "BugReportMessage" -> getValueFromLanguageFile("buttonNames.bugReportDetailsFullMessage", "Full Message");
+			case "BugReportCategory" -> getValueFromLanguageFile("buttonNames.bugReportDetailsCategory", "Category ID");
+			case "BugReportStatus" -> getValueFromLanguageFile("buttonNames.bugReportDetailsStatus", "Status") + " (Click to change)";
+			case "BugReportTimestamp" -> getValueFromLanguageFile("buttonNames.bugReportDetailsTimestamp", "Timestamp");
+			case "BugReportLocation" -> getValueFromLanguageFile("buttonNames.bugReportDetailsLocation", "Location") + ChatColor.BOLD + " (Click to teleport)";
+			case "BugReportGamemode" -> getValueFromLanguageFile("buttonNames.bugReportDetailsGamemode", "Gamemode");
+			case "BugReportServerName" -> getValueFromLanguageFile("buttonNames.bugReportDetailsServerName", "Server Name");
+			case "BugReportUnArchive" -> getValueFromLanguageFile("buttonNames.unarchive", "Unarchive");
+			case "BugReportArchive" -> getValueFromLanguageFile("buttonNames.archive", "Archive");
+			case "BugReportBack" -> getValueFromLanguageFile("buttonNames.back", "Back");
+			case "BugReportDelete" -> getValueFromLanguageFile("buttonNames.delete", "Delete");
+			default -> bugReportItemKey.replace("BugReport", "");
+		};
 	}
 
 	private static @NotNull Map<String, String> parseReportDetails(@NotNull String report) {
 		Map<String, String> details = new HashMap<>();
 		String[] lines = report.split("\n");
+
 		for (String line : lines) {
 			String[] parts = line.split(":", 2);
 			if (parts.length == 2) {
@@ -389,6 +430,7 @@ public class bugreportGUI {
 				details.put(key, value);
 			}
 		}
+
 		return details;
 	}
 
@@ -398,127 +440,161 @@ public class bugreportGUI {
 			return;
 		}
 
-		String username = getReportByKey(report, "Username");
-		String uuid = getReportByKey(report, "UUID");
-		String world = getReportByKey(report, "World");
-		String fullMessage = getReportByKey(report, "Full Message");
-		String category = getReportByKey(report, "Category ID");
-		String location = getReportByKey(report, "Location");
-		String gamemode = getReportByKey(report, "Gamemode");
-		String status = getReportByKey(report, "Status");
-		String serverName = getReportByKey(report, "serverName");
+		Map<String, String> reportInfo = extractReportInfo(report);
+		setupCommonGuiItems(gui, reportInfo, isArchivedGUI);
+		addCategoryItem(gui, reportInfo.get("category"));
 
-		ItemStack emptyItem = createEmptyItem();
-		String locationTitle;
+		player.openInventory(gui);
+		Bukkit.getPluginManager().registerEvents(new BugReportDetailsListener(gui, reportIDGUI, report, isArchivedGUI), plugin);
+	}
 
-		if (location == null || location.equals("null")) location = "Not found";
+	private static @NotNull Map<String, String> extractReportInfo(String report) {
+		Map<String, String> info = new HashMap<>();
 
-		if (location.length() - location.replace(",", "").length() != 3) {
-			location = "Not found";
-			locationTitle = "Location";
-		} else {
-			locationTitle = "Location " + ChatColor.BOLD + "(Click to teleport)";
+		info.put("username", getReportByKey(report, "Username"));
+		info.put("uuid", getReportByKey(report, "UUID"));
+		info.put("world", getReportByKey(report, "World"));
+		info.put("fullMessage", getReportByKey(report, "Full Message"));
+		info.put("category", getReportByKey(report, "Category ID"));
+		info.put("location", getReportByKey(report, "Location"));
+		info.put("gamemode", getReportByKey(report, "Gamemode"));
+		info.put("status", getReportByKey(report, "Status"));
+		info.put("serverName", getReportByKey(report, "serverName"));
+		info.put("timestamp", getReportByKey(report, "Timestamp"));
+
+		if (info.get("location") == null || info.get("location").equals("null")) {
+			info.put("location", "Not found");
 		}
 
-		if (gamemode == null || gamemode.equals("null")) gamemode = "Unknown";
+		if (info.get("location").length() - info.get("location").replace(",", "").length() != 3) {
+			info.put("location", "Not found");
+			info.put("locationTitle", "Location");
+		} else {
+			info.put("locationTitle", "Location " + ChatColor.BOLD + "(Click to teleport)");
+		}
+
+		if (info.get("gamemode") == null || info.get("gamemode").equals("null")) {
+			info.put("gamemode", "Unknown");
+		}
+
+		return info;
+	}
+
+	private static void setupCommonGuiItems(@NotNull Inventory gui, Map<String, String> info, Boolean isArchivedGUI) {
+		ItemStack emptyItem = createEmptyItem();
+		for (int i = 0; i < gui.getSize(); i++) {
+			gui.setItem(i, emptyItem);
+		}
 
 		ItemStack usernameItem;
 		if (config.getBoolean("enablePlayerHeads")) {
-			usernameItem = getPlayerHead(username);
+			usernameItem = getPlayerHead(info.get("username"));
 		} else {
-			usernameItem = createInfoItem(Material.PLAYER_HEAD, ChatColor.GOLD + "Username", ChatColor.WHITE + username, false);
+			usernameItem = createInfoItem(Material.PLAYER_HEAD, ChatColor.GOLD + "Username", ChatColor.WHITE + info.get("username"), false);
 		}
 
-		boolean isLongMessage = fullMessage.length() > 32;
+		boolean isLongMessage = info.get("fullMessage").length() > 32;
+		String timestampToDate = translateTimestampToDate(Long.parseLong(info.get("timestamp")));
 
-		String timestampToDate = translateTimestampToDate(Long.parseLong(getReportByKey(report, "Timestamp")));
-		ItemStack uuidItem = createInfoItem(Material.NAME_TAG, ChatColor.GOLD + "UUID", ChatColor.WHITE + uuid, false);
-		ItemStack worldItem = createInfoItem(Material.GRASS_BLOCK, ChatColor.GOLD + "World", ChatColor.WHITE + world, false);
-		ItemStack messageItem = createInfoItem(Material.PAPER, ChatColor.GOLD + "Full Message", ChatColor.WHITE + fullMessage, isLongMessage);
-		ItemStack serverNameItem = createInfoItem(Material.COMPASS, ChatColor.GOLD + "Server Name", ChatColor.WHITE + serverName, false);
-		ItemStack statusItem = null;
-
-		if (status == null) {
-			statusItem = createInfoItem(isArchivedGUI ? Material.RED_DYE : Material.LIME_DYE, ChatColor.GOLD + "Status (Click to change)", ChatColor.WHITE + (isArchivedGUI ? "Archived" : "Open"), false);
-		} else {
-			List<Map<?, ?>> statuses = config.getMapList("statuses");
-			boolean statusFound = false;
-
-			for (Map<?, ?> statusMap : statuses) {
-				if (status.equals("0")) {
-					status = isArchivedGUI ? "Archived" : "Active";
-					Material stautsMaterial = isArchivedGUI ? Material.RED_DYE : Material.LIME_DYE;
-					ChatColor statusChatColor = isArchivedGUI ? ChatColor.RED : ChatColor.GREEN;
-
-					statusItem = createInfoItem(stautsMaterial, statusChatColor + "Status (Click to change)", statusChatColor + status, false);
-					statusFound = true;
-					break;
-				}
-
-				if (statusMap.get("id").toString().equals(status)) {
-					String statusName = statusMap.get("name").toString();
-					String statusColor = statusMap.get("color").toString();
-					ChatColor statusChatColor = ChatColor.valueOf(statusColor.toUpperCase());
-					String statusMaterial = statusMap.get("icon").toString().toUpperCase();
-
-					if (statusMaterial.contains("MINECRAFT:")) {
-						statusMaterial = statusMaterial.replace("MINECRAFT:", "");
-					}
-
-					statusItem = createInfoItem(Material.valueOf(statusMaterial), statusChatColor + "Status (Click to change)", statusChatColor + statusName, false);
-					statusFound = true;
-					break;
-				}
-			}
-
-			if (!statusFound) {
-				statusItem = createInfoItem(Material.BARRIER, ChatColor.GOLD + "Status (Click to change)", ChatColor.GOLD + "Unknown", false);
-			}
-		}
-
+		ItemStack uuidItem = createInfoItem(Material.NAME_TAG, ChatColor.GOLD + "UUID", ChatColor.WHITE + info.get("uuid"), false);
+		ItemStack worldItem = createInfoItem(Material.GRASS_BLOCK, ChatColor.GOLD + "World", ChatColor.WHITE + info.get("world"), false);
+		ItemStack messageItem = createInfoItem(Material.PAPER, ChatColor.GOLD + "Full Message", ChatColor.WHITE + info.get("fullMessage"), isLongMessage);
+		ItemStack serverNameItem = createInfoItem(Material.COMPASS, ChatColor.GOLD + "Server Name", ChatColor.WHITE + info.get("serverName"), false);
+		ItemStack statusItem = createStatusItemForDefaultGUI(info.get("status"), isArchivedGUI);
 		ItemStack timestampItem = createInfoItem(Material.CLOCK, ChatColor.GOLD + "Timestamp", ChatColor.WHITE + timestampToDate, false);
-		ItemStack locationItem = createInfoItem(Material.COMPASS, ChatColor.GOLD + locationTitle, ChatColor.WHITE + location, false);
-		ItemStack gamemodeItem = createInfoItem(Material.DIAMOND_SWORD, ChatColor.GOLD + "Gamemode", ChatColor.WHITE + gamemode, false);
+		ItemStack locationItem = createInfoItem(Material.COMPASS, ChatColor.GOLD + info.get("locationTitle"), ChatColor.WHITE + info.get("location"), false);
+		ItemStack gamemodeItem = createInfoItem(Material.DIAMOND_SWORD, ChatColor.GOLD + "Gamemode", ChatColor.WHITE + info.get("gamemode"), false);
+
 		ItemStack backButton = createButton(Material.BARRIER, ChatColor.RED + getValueFromLanguageFile("buttonNames.back", "Back"));
 		ItemStack archiveButton = createCustomPlayerHead(guiTextures.archiveTexture, ChatColor.YELLOW + getValueFromLanguageFile("buttonNames.archive", "Archive"), 16);
 		ItemStack unarchiveButton = createCustomPlayerHead(guiTextures.unarchiveTexture, ChatColor.YELLOW + getValueFromLanguageFile("buttonNames.unarchive", "Unarchive"), 17);
 		ItemStack deleteButton = createCustomPlayerHead(guiTextures.deleteTexture, ChatColor.YELLOW + getValueFromLanguageFile("buttonNames.delete", "Delete"), 18);
-
-		for (int i = 0; i < gui.getSize(); i++) {
-			gui.setItem(i, emptyItem);
-		}
 
 		gui.setItem(0, usernameItem);
 		gui.setItem(2, uuidItem);
 		gui.setItem(4, worldItem);
 		gui.setItem(6, messageItem);
 		gui.setItem(8, serverNameItem);
-
 		gui.setItem(20, statusItem);
 		gui.setItem(22, timestampItem);
 		gui.setItem(24, locationItem);
 		gui.setItem(26, gamemodeItem);
-
 		gui.setItem(38, !isArchivedGUI ? archiveButton : unarchiveButton);
 		gui.setItem(40, backButton);
 		gui.setItem(42, deleteButton);
+	}
 
-		if (!"null".equals(category) && !"".equals(category)) {
-			List<Map<?, ?>> categoryList = config.getMapList("reportCategories");
-
-			Optional<String> categoryNameOptional = categoryList.stream().filter(categoryMap -> Integer.parseInt(categoryMap.get("id").toString()) == Integer.parseInt(category)).map(categoryMap -> categoryMap.get("name").toString()).findFirst();
-
-			if (categoryNameOptional.isPresent()) {
-				String categoryName = categoryNameOptional.get();
-				ItemStack categoryItem = createInfoItem(Material.CHEST, ChatColor.GOLD + "Category Name", ChatColor.WHITE + categoryName, false);
-				gui.setItem(18, categoryItem);
-			}
-		} else {
-			ItemStack categoryItem = createInfoItem(Material.CHEST, ChatColor.GOLD + "Category Name", ChatColor.WHITE + "None", false);
-			gui.setItem(18, categoryItem);
+	private static @NotNull ItemStack createStatusItemForDefaultGUI(String status, boolean isArchivedGUI) {
+		if (status == null) {
+			return createInfoItem(
+					isArchivedGUI ? Material.RED_DYE : Material.LIME_DYE,
+					ChatColor.GOLD + "Status (Click to change)",
+					ChatColor.WHITE + (isArchivedGUI ? "Archived" : "Open"),
+					false
+			);
 		}
 
-		player.openInventory(gui);
-		Bukkit.getPluginManager().registerEvents(new BugReportDetailsListener(gui, reportIDGUI), plugin);
+		List<Map<?, ?>> statuses = config.getMapList("statuses");
+
+		if (status.equals("0")) {
+			Material statusMaterial = isArchivedGUI ? Material.RED_DYE : Material.LIME_DYE;
+			ChatColor statusColor = isArchivedGUI ? ChatColor.RED : ChatColor.GREEN;
+			String statusText = isArchivedGUI ? "Archived" : "Active";
+
+			return createInfoItem(statusMaterial,
+					statusColor + "Status (Click to change)",
+					statusColor + statusText,
+					false);
+		}
+
+		for (Map<?, ?> statusMap : statuses) {
+			if (statusMap.get("id").toString().equals(status)) {
+				String statusName = statusMap.get("name").toString();
+				String statusColor = statusMap.get("color").toString();
+				ChatColor statusChatColor = ChatColor.valueOf(statusColor.toUpperCase());
+				String statusMaterial = statusMap.get("icon").toString().toUpperCase()
+						.replace("MINECRAFT:", "");
+
+				return createInfoItem(Material.valueOf(statusMaterial),
+						statusChatColor + "Status (Click to change)",
+						statusChatColor + statusName,
+						false);
+			}
+		}
+
+		return createInfoItem(Material.BARRIER,
+				ChatColor.GOLD + "Status (Click to change)",
+				ChatColor.GOLD + "Unknown",
+				false);
+	}
+
+	private static void addCategoryItem(Inventory gui, String category) {
+		if (category != null && !"null".equals(category) && !category.isEmpty()) {
+			List<Map<?, ?>> categoryList = config.getMapList("reportCategories");
+
+			Optional<String> categoryNameOptional = categoryList.stream()
+					.filter(categoryMap -> {
+						try {
+							return Integer.parseInt(categoryMap.get("id").toString()) == Integer.parseInt(category);
+						} catch (NumberFormatException e) {
+							return false;
+						}
+					})
+					.map(categoryMap -> categoryMap.get("name").toString())
+					.findFirst();
+
+			String categoryName = categoryNameOptional.orElse("None");
+			ItemStack categoryItem = createInfoItem(Material.CHEST,
+					ChatColor.GOLD + "Category Name",
+					ChatColor.WHITE + categoryName,
+					false);
+			gui.setItem(18, categoryItem);
+		} else {
+			ItemStack categoryItem = createInfoItem(Material.CHEST,
+					ChatColor.GOLD + "Category Name",
+					ChatColor.WHITE + "None",
+					false);
+			gui.setItem(18, categoryItem);
+		}
 	}
 }

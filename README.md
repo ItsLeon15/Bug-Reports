@@ -59,6 +59,7 @@ Bug Report now supports the Plan API. To use Bug Report with Plan, you will need
 and it should set up everything automatically.
 
 ![https://cdn.platinumhost.io/storage/images/BugReport/bug-report-details.webp](https://cdn.platinumhost.io/storage/images/BugReport/plan-bug-report.webp)
+
 ## Placeholder API Support
 
 Bug Report now supports Placeholder API, the keys for Bug Report is the following with more to come in the future.
@@ -100,7 +101,7 @@ update-checker-join: true
 # Gold, Gray, Green, Light_Purple, Red, White, Yellow
 discordEmbedColor: Green
 discordEmbedTitle: New Bug Report
-discordEmbedFooter: Bug Report v0.12.5
+discordEmbedFooter: Bug Report v0.13.0
 discordEmbedThumbnail: https://www.spigotmc.org/data/resource_icons/110/110732.jpg
 discordEnableThumbnail: true
 discordEnableUserAuthor: true

@@ -2,6 +2,7 @@ package com.leon.bugreport.gui;
 
 import com.leon.bugreport.BugReportDatabase;
 import com.leon.bugreport.BugReportLanguage;
+import com.leon.bugreport.discord.LinkDiscord;
 import com.leon.bugreport.keys.guiTextures;
 import com.leon.bugreport.logging.ErrorMessages;
 import org.bukkit.Bukkit;
@@ -18,6 +19,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 
+import java.awt.*;
+import java.util.List;
 import java.util.*;
 
 import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
@@ -28,12 +31,11 @@ import static com.leon.bugreport.BugReportSettings.createCustomPlayerHead;
 import static com.leon.bugreport.gui.bugreportGUI.openBugReportDetailsGUI;
 
 public class BugReportConfirmationGUI {
-	public static void openConfirmationGUI(@NotNull Player player, @NotNull Boolean isArchived, String bugReportID) {
-		player.openInventory(getConfirmationGUI(isArchived, bugReportID));
+	public static void openConfirmationGUI(@NotNull Player player, @NotNull Boolean isArchived) {
+		player.openInventory(getConfirmationGUI(isArchived));
 	}
 
-	public static @NotNull Inventory getConfirmationGUI(boolean isArchived, String bugReportID) {
-		// TODO: Add the bug report ID to the title without any destructive actions.
+	public static @NotNull Inventory getConfirmationGUI(boolean isArchived) {
 		String guiTitle;
 
 		if (isArchived) {
@@ -59,22 +61,28 @@ public class BugReportConfirmationGUI {
 
 	public void archiveReport(@NotNull Player player, @NotNull Integer reportIDGUI, @NotNull Boolean isArchivedDetails) {
 		BugReportDatabase.updateBugReportArchive(reportIDGUI, 1);
-		player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI(localCurrentPage, player) : getBugReportGUI(localCurrentPage, player));
+		player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI(localCurrentPage) : getBugReportGUI(localCurrentPage));
 		player.sendMessage(returnStartingMessage(ChatColor.RED)
 				+ " Bug Report #" + reportIDGUI + " has been archived.");
 	}
 
-	public void deleteReport(@NotNull Player player, @NotNull Integer reportIDGUI, @NotNull Boolean isArchivedDetails) {
-		UUID playerId = player.getUniqueId();
-		BugReportDatabase.deleteBugReport(reportIDGUI);
+	public boolean deleteReport(@NotNull Player player, @NotNull Integer reportIDGUI, @NotNull Boolean isArchivedDetails) {
+		try {
+			UUID playerId = player.getUniqueId();
+			BugReportDatabase.deleteBugReport(reportIDGUI);
 
-		List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
-		reports.removeIf(report -> report.contains("Report ID: " + reportIDGUI));
-		bugReports.put(playerId, reports);
+			List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
+			reports.removeIf(report -> report.contains("Report ID: " + reportIDGUI));
+			bugReports.put(playerId, reports);
 
-		player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI(localCurrentPage, player) : getBugReportGUI(localCurrentPage, player));
-		player.sendMessage(returnStartingMessage(ChatColor.RED)
-				+ " Bug Report #" + reportIDGUI + " has been deleted.");
+			player.openInventory(isArchivedDetails ? getArchivedBugReportsGUI(localCurrentPage) : getBugReportGUI(localCurrentPage));
+			player.sendMessage(returnStartingMessage(ChatColor.RED)
+					+ " Bug Report #" + reportIDGUI + " has been deleted.");
+
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
 	}
 
 	public record BugReportConfirmationListener(Inventory gui, Integer reportIDGUI,
@@ -144,7 +152,23 @@ public class BugReportConfirmationGUI {
 						}
 						new BugReportConfirmationGUI().archiveReport(player, reportIDGUI, true);
 
-						player.openInventory(fromArchivedGUI ? getArchivedBugReportsGUI(localCurrentPage, player) : getBugReportGUI(localCurrentPage, player));
+						if (config.getBoolean("enableDiscordWebhook", true)) {
+							if (debugMode) {
+								plugin.getLogger().info("Sending archive notification to Discord...");
+							}
+
+							String bugReportDiscordWebhookID = BugReportDatabase.getBugReportDiscordWebhookMessageID(reportIDGUI);
+							if (bugReportDiscordWebhookID == null) {
+								String errorMessage = ErrorMessages.getErrorMessage(25);
+
+								plugin.getLogger().warning(errorMessage);
+								logErrorMessage(errorMessage);
+								return;
+							}
+							LinkDiscord.modifyNotification(bugReportDiscordWebhookID, Color.ORANGE, "Bug Report #" + reportIDGUI + " has been archived.");
+						}
+
+						player.openInventory(fromArchivedGUI ? getArchivedBugReportsGUI(localCurrentPage) : getBugReportGUI(localCurrentPage));
 
 						HandlerList.unregisterAll(this);
 					}
@@ -154,7 +178,7 @@ public class BugReportConfirmationGUI {
 						if (debugMode) {
 							plugin.getLogger().info("Going back to bug reports.");
 						}
-						returnFromConfirmationGUI(player, false);
+						returnFromConfirmationGUI(player);
 					}
 				}
 			}
@@ -171,9 +195,33 @@ public class BugReportConfirmationGUI {
 						if (debugMode) {
 							plugin.getLogger().info("Deleting report: " + reportIDGUI);
 						}
-						new BugReportConfirmationGUI().deleteReport(player, reportIDGUI, isArchivedDetails);
 
-						player.openInventory(fromArchivedGUI ? getArchivedBugReportsGUI(localCurrentPage, player) : getBugReportGUI(localCurrentPage, player));
+						String bugReportDiscordWebhookID = null;
+						if (config.getBoolean("enableDiscordWebhook", true)) {
+							bugReportDiscordWebhookID = BugReportDatabase.getBugReportDiscordWebhookMessageID(reportIDGUI);
+						}
+
+						boolean deletionSuccessful = new BugReportConfirmationGUI().deleteReport(player, reportIDGUI, isArchivedDetails);
+
+						if (deletionSuccessful && config.getBoolean("enableDiscordWebhook", true)) {
+							if (debugMode) {
+								plugin.getLogger().info("Sending deletion notification to Discord...");
+							}
+
+							if (bugReportDiscordWebhookID != null) {
+								LinkDiscord.modifyNotification(bugReportDiscordWebhookID, Color.RED, "Bug Report #" + reportIDGUI + " has been deleted.");
+							} else {
+								String errorMessage = ErrorMessages.getErrorMessage(25);
+								plugin.getLogger().warning(errorMessage);
+								logErrorMessage(errorMessage);
+							}
+						}
+
+						player.openInventory(
+								fromArchivedGUI
+										? getArchivedBugReportsGUI(localCurrentPage)
+										: getBugReportGUI(localCurrentPage)
+						);
 
 						HandlerList.unregisterAll(this);
 					}
@@ -183,19 +231,19 @@ public class BugReportConfirmationGUI {
 						if (debugMode) {
 							plugin.getLogger().info("Going back to archived reports.");
 						}
-						returnFromConfirmationGUI(player, false);
+						returnFromConfirmationGUI(player);
 					}
 				}
 			}
 		}
 
-		private void returnFromConfirmationGUI(@NotNull Player player, Boolean fromArchivedGUI) {
-			player.openInventory(fromArchivedGUI ? getArchivedBugReportsGUI(localCurrentPage, player) : getBugReportGUI(localCurrentPage, player));
+		private void returnFromConfirmationGUI(@NotNull Player player) {
+			player.openInventory(getBugReportGUI(localCurrentPage));
 
 			List<String> reports = bugReports.getOrDefault(getStaticUUID(), new ArrayList<>(Collections.singletonList("DUMMY")));
 			String report = reports.stream().filter(reportString -> reportString.contains("Report ID: " + reportIDGUI)).findFirst().orElse(null);
 
-			openBugReportDetailsGUI(player, report, reportIDGUI, fromArchivedGUI);
+			openBugReportDetailsGUI(player, report, reportIDGUI, false);
 
 			HandlerList.unregisterAll(this);
 		}

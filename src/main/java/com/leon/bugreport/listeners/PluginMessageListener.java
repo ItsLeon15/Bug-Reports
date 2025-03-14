@@ -70,7 +70,11 @@ public class PluginMessageListener implements org.bukkit.plugin.messaging.Plugin
 
 						for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
 							if (onlinePlayer.hasPermission("bugreport.admin")) {
-								onlinePlayer.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) + "New Report submitted by " + playerName + " from " + serverName + "!");
+								onlinePlayer.sendMessage(
+										pluginColor + pluginTitle + " "
+												+ Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.GREEN) +
+												"New Report submitted by " + playerName + " from " + serverName + "!"
+								);
 							}
 						}
 					}

@@ -5,7 +5,9 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.awt.*;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.net.URL;
@@ -43,7 +45,7 @@ public class DiscordWebhook {
 		this.embeds.add(embed);
 	}
 
-	public void execute() throws IOException {
+	public String execute() throws IOException {
 		if (this.content == null && this.embeds.isEmpty()) {
 			throw new IllegalArgumentException("Set content or add at least one EmbedObject");
 		}
@@ -135,7 +137,7 @@ public class DiscordWebhook {
 			json.put("embeds", embedObjects.toArray());
 		}
 
-		URL url = new URL(this.url);
+		URL url = new URL(this.url + "?wait=true");
 		HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
 		connection.addRequestProperty("Content-Type", "application/json");
 		connection.addRequestProperty("User-Agent", "BugReport-Webhook");
@@ -147,8 +149,24 @@ public class DiscordWebhook {
 		stream.flush();
 		stream.close();
 
+		BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+		String inputLine;
+		StringBuilder responseStr = new StringBuilder();
+		while ((inputLine = in.readLine()) != null) {
+			responseStr.append(inputLine);
+		}
+		in.close();
 		connection.getInputStream().close();
 		connection.disconnect();
+
+		String response = responseStr.toString();
+		try {
+			com.google.gson.JsonObject jsonResponse = com.google.gson.JsonParser.parseString(response).getAsJsonObject();
+			return jsonResponse.get("id").getAsString();
+		} catch (Exception e) {
+			System.err.println("Error parsing message ID: " + e.getMessage());
+			return response;
+		}
 	}
 
 	public static class EmbedObject {

@@ -58,6 +58,11 @@ public class BugReportDatabase {
 					connection.createStatement().execute("ALTER TABLE bug_reports ADD COLUMN timestamp BIGINT");
 				}
 			}
+			try (ResultSet archivedResultSet = connection.getMetaData().getColumns(null, null, "bug_reports", "discordWebhookMessageID")) {
+				if (!archivedResultSet.next()) {
+					connection.createStatement().execute("ALTER TABLE bug_reports ADD COLUMN discordWebhookMessageID TEXT");
+				}
+			}
 		} catch (Exception e) {
 			String errorMessage = ErrorMessages.getErrorMessageWithAdditionalMessage(35, e.getMessage());
 
@@ -105,6 +110,55 @@ public class BugReportDatabase {
 			logErrorMessage(errorMessage);
 		}
 		return 0;
+	}
+
+	public static String getBugReportById(int reportId, boolean isArchived) {
+		StringBuilder reportBuilder = new StringBuilder();
+
+		try (Connection connection = dataSource.getConnection()) {
+			PreparedStatement statement = connection.prepareStatement(
+					"SELECT * FROM bug_reports WHERE report_id = ? AND archived = ?");
+			statement.setInt(1, reportId);
+			statement.setInt(2, isArchived ? 1 : 0);
+
+			ResultSet resultSet = statement.executeQuery();
+
+			if (resultSet.next()) {
+				String playerId = resultSet.getString("player_id");
+				String header = resultSet.getString("header");
+				String fullMessage = resultSet.getString("message");
+				String username = resultSet.getString("username");
+				String world = resultSet.getString("world");
+				String archived = resultSet.getString("archived");
+				String report_id = resultSet.getString("report_id");
+				long timestamp = resultSet.getLong("timestamp");
+				String location = resultSet.getString("location");
+				String gamemode = resultSet.getString("gamemode");
+				String serverName = resultSet.getString("serverName");
+				String status = resultSet.getString("status");
+
+				reportBuilder.append("Username: ").append(username).append("\n")
+						.append("UUID: ").append(playerId).append("\n")
+						.append("World: ").append(world).append("\n")
+						.append("Full Message: ").append(fullMessage).append("\n")
+						.append("Header: ").append(header).append("\n")
+						.append("Archived: ").append(archived).append("\n")
+						.append("Report ID: ").append(report_id).append("\n")
+						.append("Timestamp: ").append(timestamp).append("\n")
+						.append("Location: ").append(location).append("\n")
+						.append("Gamemode: ").append(gamemode).append("\n")
+						.append("Status: ").append(status).append("\n")
+						.append("Server Name: ").append(serverName);
+			}
+
+			resultSet.close();
+			statement.close();
+		} catch (SQLException e) {
+			plugin.getLogger().severe("Failed to get bug report by ID.");
+			plugin.getLogger().severe(e.getMessage());
+		}
+
+		return reportBuilder.toString();
 	}
 
 	public static @Nullable Location getBugReportLocation(Integer reportIDGUI) {
@@ -443,7 +497,7 @@ public class BugReportDatabase {
 
 	private static void createTables() {
 		try (Connection connection = dataSource.getConnection()) {
-			connection.createStatement().execute("CREATE TABLE IF NOT EXISTS bug_reports(rowid INTEGER, player_id TEXT, header TEXT, message TEXT, username TEXT, world TEXT, archived INTEGER DEFAULT 0, report_id INTEGER, timestamp BIGINT, status TEXT, serverName TEXT)");
+			connection.createStatement().execute("CREATE TABLE IF NOT EXISTS bug_reports(rowid INTEGER, player_id TEXT, header TEXT, message TEXT, username TEXT, world TEXT, archived INTEGER DEFAULT 0, report_id INTEGER, timestamp BIGINT, status TEXT, serverName TEXT, discordWebhookMessageID TEXT)");
 			connection.createStatement().execute("CREATE TABLE IF NOT EXISTS player_data(player_id TEXT, last_login_timestamp BIGINT DEFAULT 0)");
 			connection.createStatement().execute("CREATE TABLE IF NOT EXISTS bugreport_analytics(total_deleted INTEGER DEFAULT 0)");
 		} catch (Exception e) {
@@ -572,9 +626,9 @@ public class BugReportDatabase {
 		loadBugReports();
 	}
 
-	public static void addBugReport(String username, @NotNull UUID playerId, String world, String header, String fullMessage, String location, String gamemode, String serverName) {
+	public static void addBugReport(String username, @NotNull UUID playerId, String world, String header, String fullMessage, String location, String gamemode, String serverName, String discordWebhookMessageID) {
 		try (Connection connection = dataSource.getConnection()) {
-			PreparedStatement statement = connection.prepareStatement("INSERT INTO bug_reports(player_id, header, message, username, world, archived, report_id, timestamp, location, gamemode, status, serverName) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			PreparedStatement statement = connection.prepareStatement("INSERT INTO bug_reports(player_id, header, message, username, world, archived, report_id, timestamp, location, gamemode, status, serverName, discordWebhookMessageID) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 			int report_id = 1;
 			ResultSet resultSet = connection.createStatement().executeQuery("SELECT report_id FROM bug_reports ORDER BY report_id DESC LIMIT 1");
 			if (resultSet.next()) {
@@ -592,6 +646,7 @@ public class BugReportDatabase {
 			statement.setString(10, gamemode);
 			statement.setString(11, "0");
 			statement.setString(12, serverName);
+			statement.setString(13, discordWebhookMessageID);
 
 			if (Bukkit.getPluginManager().isPluginEnabled("Plan")) {
 				PlanHook.getInstance().updateHook(playerId, username);
@@ -603,6 +658,22 @@ public class BugReportDatabase {
 			plugin.getLogger().severe("Failed to add bug report.");
 			plugin.getLogger().severe(e.getMessage());
 		}
+	}
+
+	public static @Nullable String getBugReportDiscordWebhookMessageID(Integer reportIDGUI) {
+		try (Connection connection = dataSource.getConnection()) {
+			PreparedStatement statement = connection.prepareStatement("SELECT discordWebhookMessageID FROM bug_reports WHERE report_id = ?");
+			statement.setInt(1, reportIDGUI);
+			ResultSet resultSet = statement.executeQuery();
+			if (resultSet.next()) {
+				return resultSet.getString("discordWebhookMessageID");
+			}
+			statement.close();
+		} catch (Exception e) {
+			plugin.getLogger().severe("Failed to get bug report discord webhook message ID.");
+			plugin.getLogger().severe(e.getMessage());
+		}
+		return null;
 	}
 
 	private void makeAllHeadersEqualReport_ID() {

@@ -61,6 +61,7 @@ public class BugReportSettings {
 	};
 
 	private static Integer newReportIDGUI;
+	private static Boolean newIsArchivedGUI;
 
 	public BugReportSettings() {
 	}
@@ -209,7 +210,6 @@ public class BugReportSettings {
 		int slot = 10;
 		for (int i = start; i < end; i++) {
 			Map.Entry<String, String[]> entry = languageEntries.get(i);
-			String languageCode = entry.getKey();
 			String[] languageData = entry.getValue();
 			String texture = languageData[0];
 			String languageName = languageData[1];
@@ -238,9 +238,6 @@ public class BugReportSettings {
 		for (int i = start; i < end; i++) {
 			Map.Entry<String, String[]> entry = languageEntries.get(i);
 			String languageCode = entry.getKey();
-			String[] languageData = entry.getValue();
-			String texture = languageData[0];
-			String languageName = languageData[1];
 
 			if (Objects.equals(language, languageCode)) {
 				int slotIndex = 19 + (i - start);
@@ -322,8 +319,9 @@ public class BugReportSettings {
 		return playerHead;
 	}
 
-	public static @NotNull Inventory getStatusSelectionGUI(Integer reportIDGUI) {
+	public static @NotNull Inventory getStatusSelectionGUI(Integer reportIDGUI, Boolean isArchivedGUI) {
 		newReportIDGUI = reportIDGUI;
+		newIsArchivedGUI = isArchivedGUI;
 		Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Report - " + getValueFromLanguageFile("buttonNames.statusSelection", "Status Selection"));
 
 		setBorder(gui, Material.GRAY_STAINED_GLASS_PANE);
@@ -439,8 +437,12 @@ public class BugReportSettings {
 						Integer statusID = (Integer) statusMap.get("id");
 						BugReportDatabase.updateReportStatus(newReportIDGUI, statusID);
 
+						String updatedReport = BugReportDatabase.getBugReportById(newReportIDGUI, newIsArchivedGUI);
+
 						player.sendMessage(returnStartingMessage(ChatColor.YELLOW) + "The status of the report has been updated to " + ChatColor.BOLD + statusName + ChatColor.RESET + pluginColor + ".");
 						player.closeInventory();
+
+						openBugReportDetailsGUI(player, updatedReport, newReportIDGUI, newIsArchivedGUI);
 					}
 				}
 
@@ -491,11 +493,6 @@ public class BugReportSettings {
 					return;
 				}
 
-				if (customItemDisplayName.equals("buttonNames.exportAllBugReportsButton")) {
-					exportAllBugReports(player);
-					return;
-				}
-
 				if (clickedItem.getItemMeta().hasCustomModelData()) {
 					if (clickedItem.getItemMeta().getCustomModelData() == 1) {
 						setDiscordWebhookToggle(player);
@@ -533,6 +530,11 @@ public class BugReportSettings {
 					case "buttonNames.viewStatus" -> {
 						playButtonClickSound(player);
 						player.openInventory(getViewStatusGUI());
+					}
+					case "buttonNames.exportAllBugReports" -> {
+						playButtonClickSound(player);
+						player.sendMessage(returnStartingMessage(ChatColor.YELLOW) + "Exporting all bug reports...");
+						exportAllBugReports(player);
 					}
 				}
 			}
@@ -837,8 +839,8 @@ public class BugReportSettings {
 		private @NotNull Inventory getStatusInfoGUI(@NotNull Map<?, ?> statusMap) {
 			Inventory gui = Bukkit.createInventory(null, 45, ChatColor.YELLOW + "Bug Report - " + getValueFromLanguageFile("buttonNames.editStatus", "Edit Status"));
 
-			Material itemStackMaterial = getMaterialFromMap(statusMap, "icon", Material.BARRIER);
-			ChatColor itemStackColor = getChatColorFromMap(statusMap, "color", ChatColor.WHITE);
+			Material itemStackMaterial = getMaterialFromMap(statusMap);
+			ChatColor itemStackColor = getChatColorFromMap(statusMap);
 
 			setBorder(gui, getStainedGlassPaneColor(statusMap));
 
@@ -863,14 +865,14 @@ public class BugReportSettings {
 			return gui;
 		}
 
-		private Material getMaterialFromMap(@NotNull Map<?, ?> map, String key, Material defaultMaterial) {
-			Object value = map.get(key);
-			return value != null ? Material.matchMaterial((String) value) : defaultMaterial;
+		private Material getMaterialFromMap(@NotNull Map<?, ?> map) {
+			Object value = map.get("icon");
+			return value != null ? Material.matchMaterial((String) value) : Material.BARRIER;
 		}
 
-		private ChatColor getChatColorFromMap(@NotNull Map<?, ?> map, String key, ChatColor defaultColor) {
-			Object value = map.get(key);
-			return value != null ? ChatColor.valueOf((String) value) : defaultColor;
+		private ChatColor getChatColorFromMap(@NotNull Map<?, ?> map) {
+			Object value = map.get("color");
+			return value != null ? ChatColor.valueOf((String) value) : ChatColor.WHITE;
 		}
 
 		private Material getStainedGlassPaneColor(@NotNull Map<?, ?> map) {
@@ -1074,7 +1076,6 @@ public class BugReportSettings {
 						}
 						return;
 					}
-
 					config.set("report-cooldown", reportCooldown);
 					saveConfig();
 					if (checkForKey("useTitleInsteadOfMessage", true)) {

@@ -62,7 +62,7 @@ public class BugListCommand implements CommandExecutor {
 		if (player.hasPermission("bugreport.admin") || player.hasPermission("bugreport.list") || player.isOp()) {
 			if (args.length == 0) {
 				BugReportManager.setCurrentPage(player, 1);
-				Inventory bugReportGUI = BugReportManager.getBugReportGUI(1, player);
+				Inventory bugReportGUI = BugReportManager.getBugReportGUI(1);
 				player.openInventory(bugReportGUI);
 				return true;
 			}
@@ -72,7 +72,7 @@ public class BugListCommand implements CommandExecutor {
 				case "reload" -> returnReloadCommand(player);
 				case "debug" -> returnDebugCommand(player, args);
 				case "version" -> returnVersionCommand(player);
-				case "export" -> returnExportCommand(player, args);
+				case "export" -> DataBackup.exportAllBugReports(player);
 				default -> returnDefaultCommand(player);
 			}
 
@@ -152,26 +152,9 @@ public class BugListCommand implements CommandExecutor {
 		});
 	}
 
-	private void returnExportCommand(Player player, String @NotNull [] args) {
-		if (args.length < 2) {
-			player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
-					+ "Please enter a file name.");
-			return;
-		}
-
-		File file = new File(args[1]);
-		if (file.exists()) {
-			player.sendMessage(pluginColor + pluginTitle + " " + Objects.requireNonNullElse(endingPluginTitleColor, ChatColor.RED)
-					+ "The file already exists.");
-			return;
-		}
-
-		DataBackup.exportAllBugReports(player);
-	}
-
 	private void returnDefaultCommand(Player player) {
 		BugReportManager.setCurrentPage(player, 1);
-		Inventory bugReportGUI = BugReportManager.getBugReportGUI(1, player);
+		Inventory bugReportGUI = BugReportManager.getBugReportGUI(1);
 		player.openInventory(bugReportGUI);
 	}
 }

@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.leon.bugreport</groupId>
 	<artifactId>BugReports</artifactId>
-	<version>0.12.5</version>
+	<version>0.13.0</version>
 	<properties>
 		<maven.compiler.source>17</maven.compiler.source>
 		<maven.compiler.target>17</maven.compiler.target>
