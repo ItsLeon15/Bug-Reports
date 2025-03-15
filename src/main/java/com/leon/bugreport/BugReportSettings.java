@@ -35,6 +35,7 @@ import static com.leon.bugreport.API.DataBackup.exportAllBugReports;
 import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
 import static com.leon.bugreport.BugReportDatabase.getStaticUUID;
 import static com.leon.bugreport.BugReportLanguage.*;
+import static com.leon.bugreport.BugReportLanguage.getValueFromLanguageFile;
 import static com.leon.bugreport.BugReportManager.*;
 import static com.leon.bugreport.commands.BugReportCommand.checkIfChatColorIsValid;
 import static com.leon.bugreport.gui.bugreportGUI.openBugReportDetailsGUI;
@@ -531,9 +532,9 @@ public class BugReportSettings {
 						playButtonClickSound(player);
 						player.openInventory(getViewStatusGUI());
 					}
-					case "buttonNames.exportAllBugReports" -> {
+					case "buttonNames.exportAllBugReportsButton" -> {
 						playButtonClickSound(player);
-						player.sendMessage(returnStartingMessage(ChatColor.YELLOW) + "Exporting all bug reports...");
+						player.sendMessage(returnStartingMessage(ChatColor.YELLOW) + getValueFromLanguageFile("exportAllBugReportsButton", "Exporting all bug reports..."));
 						exportAllBugReports(player);
 					}
 				}

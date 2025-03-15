@@ -25,7 +25,6 @@ public class DataBackup {
 		}
 
 		player.closeInventory();
-		player.sendMessage(returnStartingMessage(ChatColor.YELLOW) + getValueFromLanguageFile("exportAllBugReports", "Exporting all bug reports..."));
 
 		File reportFile = new File(plugin.getDataFolder(), "all_exported_bug_reports.csv");
 
