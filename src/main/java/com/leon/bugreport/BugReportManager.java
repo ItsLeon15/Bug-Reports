@@ -41,7 +41,8 @@ import java.util.stream.Collectors;
 import static com.leon.bugreport.API.DataSource.getPlayerHead;
 import static com.leon.bugreport.API.ErrorClass.logErrorMessage;
 import static com.leon.bugreport.BugReportDatabase.getStaticUUID;
-import static com.leon.bugreport.BugReportLanguage.*;
+import static com.leon.bugreport.BugReportLanguage.getKeyFromTranslation;
+import static com.leon.bugreport.BugReportLanguage.getValueFromLanguageFile;
 import static com.leon.bugreport.BugReportSettings.getSettingsGUI;
 import static com.leon.bugreport.commands.BugReportCommand.getChatColorByCode;
 import static com.leon.bugreport.commands.BugReportCommand.stringColorToColorCode;
@@ -908,9 +909,34 @@ public class BugReportManager implements Listener {
 					plugin.getLogger().info("Sending unarchive notification to Discord...");
 				}
 
-				String webhookMessageID = BugReportDatabase.getBugReportDiscordWebhookMessageID(reportID);
-				if (webhookMessageID != null) {
-					LinkDiscord.modifyNotification(webhookMessageID, Color.GREEN, "Bug Report #" + reportID + " has been unarchived.");
+				String bugReportDiscordWebhookID = BugReportDatabase.getBugReportDiscordWebhookMessageID(reportID);
+				if (bugReportDiscordWebhookID != null) {
+					Map<String, String> fullBugReportSplit = BugReportDatabase.getBugReportById(reportIDGUI);
+
+					String Username = fullBugReportSplit.get("Username");
+					String UUID = fullBugReportSplit.get("UUID");
+					String World = fullBugReportSplit.get("World");
+					String FullMessage = fullBugReportSplit.get("FullMessage");
+					String CategoryID = fullBugReportSplit.get("CategoryID");
+					String Location = fullBugReportSplit.get("Location");
+					String Gamemode = fullBugReportSplit.get("Gamemode");
+					String Status = fullBugReportSplit.get("Status");
+					String ServerName = fullBugReportSplit.get("ServerName");
+
+					LinkDiscord.modifyNotification(
+							Username,
+							UUID,
+							World,
+							Location,
+							Gamemode,
+							Status,
+							CategoryID,
+							ServerName,
+							FullMessage,
+							bugReportDiscordWebhookID,
+							Color.GREEN,
+							"Bug Report #" + reportID + " has been unarchived."
+					);
 				} else {
 					String errorMessage = ErrorMessages.getErrorMessage(25);
 					plugin.getLogger().warning(errorMessage);

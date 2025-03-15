@@ -85,8 +85,11 @@ public class BugReportConfirmationGUI {
 		}
 	}
 
-	public record BugReportConfirmationListener(Inventory gui, Integer reportIDGUI,
-												Boolean fromArchivedGUI) implements Listener {
+	public record BugReportConfirmationListener(
+			Inventory gui,
+			Integer reportIDGUI,
+			Boolean fromArchivedGUI
+	) implements Listener {
 		@EventHandler(priority = EventPriority.NORMAL)
 		public void onInventoryClick(@NotNull InventoryClickEvent event) {
 			String displayName = event.getView().getTitle();
@@ -143,6 +146,7 @@ public class BugReportConfirmationGUI {
 				if (debugMode) {
 					plugin.getLogger().info("Opening archived confirmation GUI.");
 				}
+
 				switch (customItemDisplayName) {
 					case "buttonNames.archive" -> {
 						playButtonClickSound(player);
@@ -165,7 +169,33 @@ public class BugReportConfirmationGUI {
 								logErrorMessage(errorMessage);
 								return;
 							}
-							LinkDiscord.modifyNotification(bugReportDiscordWebhookID, Color.ORANGE, "Bug Report #" + reportIDGUI + " has been archived.");
+
+							Map<String, String> fullBugReportSplit = BugReportDatabase.getBugReportById(reportIDGUI);
+
+							String Username = fullBugReportSplit.get("Username");
+							String UUID = fullBugReportSplit.get("UUID");
+							String World = fullBugReportSplit.get("World");
+							String FullMessage = fullBugReportSplit.get("FullMessage");
+							String CategoryID = fullBugReportSplit.get("CategoryID");
+							String Location = fullBugReportSplit.get("Location");
+							String Gamemode = fullBugReportSplit.get("Gamemode");
+							String Status = fullBugReportSplit.get("Status");
+							String ServerName = fullBugReportSplit.get("ServerName");
+
+							LinkDiscord.modifyNotification(
+									Username,
+									UUID,
+									World,
+									Location,
+									Gamemode,
+									Status,
+									CategoryID,
+									ServerName,
+									FullMessage,
+									bugReportDiscordWebhookID,
+									Color.ORANGE,
+									"Bug Report #" + reportIDGUI + " has been archived."
+							);
 						}
 
 						player.openInventory(fromArchivedGUI ? getArchivedBugReportsGUI(localCurrentPage) : getBugReportGUI(localCurrentPage));
@@ -201,6 +231,18 @@ public class BugReportConfirmationGUI {
 							bugReportDiscordWebhookID = BugReportDatabase.getBugReportDiscordWebhookMessageID(reportIDGUI);
 						}
 
+						Map<String, String> fullBugReportSplit = BugReportDatabase.getBugReportById(reportIDGUI);
+
+						String Username = fullBugReportSplit.get("Username");
+						String UUID = fullBugReportSplit.get("UUID");
+						String World = fullBugReportSplit.get("World");
+						String FullMessage = fullBugReportSplit.get("FullMessage");
+						String CategoryID = fullBugReportSplit.get("CategoryID");
+						String Location = fullBugReportSplit.get("Location");
+						String Gamemode = fullBugReportSplit.get("Gamemode");
+						String Status = fullBugReportSplit.get("Status");
+						String ServerName = fullBugReportSplit.get("ServerName");
+
 						boolean deletionSuccessful = new BugReportConfirmationGUI().deleteReport(player, reportIDGUI, isArchivedDetails);
 
 						if (deletionSuccessful && config.getBoolean("enableDiscordWebhook", true)) {
@@ -209,7 +251,20 @@ public class BugReportConfirmationGUI {
 							}
 
 							if (bugReportDiscordWebhookID != null) {
-								LinkDiscord.modifyNotification(bugReportDiscordWebhookID, Color.RED, "Bug Report #" + reportIDGUI + " has been deleted.");
+								LinkDiscord.modifyNotification(
+										Username,
+										UUID,
+										World,
+										Location,
+										Gamemode,
+										Status,
+										CategoryID,
+										ServerName,
+										FullMessage,
+										bugReportDiscordWebhookID,
+										Color.RED,
+										"Bug Report #" + reportIDGUI + " has been deleted."
+								);
 							} else {
 								String errorMessage = ErrorMessages.getErrorMessage(25);
 								plugin.getLogger().warning(errorMessage);

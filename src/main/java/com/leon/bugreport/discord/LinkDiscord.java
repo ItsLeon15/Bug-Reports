@@ -38,7 +38,20 @@ public class LinkDiscord {
 		LinkDiscord.webhookURL = webhookURL;
 	}
 
-	private static void modifyDiscordNotification(String notificationMessage, Color color, String bugReportDiscordWebhookID) {
+	private static void modifyDiscordNotification(
+			String playerUsername,
+			String playerUUID,
+			String playerWorld,
+			String playerLocation,
+			String playerGamemode,
+			String playerStatus,
+			String category,
+			String serverName,
+			String fullMessage,
+			String notificationMessage,
+			Color color,
+			String bugReportDiscordWebhookID
+	) {
 		String webhookURL = config.getString("webhookURL", "");
 		if (webhookURL.isEmpty()) {
 			String errorMessage = ErrorMessages.getErrorMessage(24);
@@ -65,14 +78,76 @@ public class LinkDiscord {
 			String discordEmbedFooter = config.getString("discordEmbedFooter", EMBED_FOOTER_TEXT);
 			String discordEmbedThumbnail = config.getString("discordEmbedThumbnail", EMBED_THUMBNAIL);
 
-			int colorInt = color.getRGB() & 0xFFFFFF;
+			StringBuilder jsonBuilder = new StringBuilder();
+			jsonBuilder.append("{\"embeds\":[{");
+			jsonBuilder.append("\"title\":\"").append(escapeJson(notificationMessage)).append("\",");
+			jsonBuilder.append("\"color\":").append(color.getRGB() & 0xFFFFFF).append(",");
+			jsonBuilder.append("\"footer\":{\"text\":\"").append(escapeJson(discordEmbedFooter)).append("\"},");
+			jsonBuilder.append("\"thumbnail\":{\"url\":\"").append(escapeJson(discordEmbedThumbnail)).append("\"}");
 
-			String jsonPayload = "{\"embeds\":[{" +
-					"\"title\":\"" + escapeJson(notificationMessage) + "\"," +
-					"\"color\":" + colorInt + "," +
-					"\"footer\":{\"text\":\"" + escapeJson(discordEmbedFooter) + "\"}," +
-					"\"thumbnail\":{\"url\":\"" + escapeJson(discordEmbedThumbnail) + "\"}" +
-					"}]}";
+			String discordEnableUserAuthor = config.getString("discordEnableUserAuthor");
+			if (Objects.equals(discordEnableUserAuthor, "true")) {
+				String userAuthorURL = "https://crafatar.com/avatars/" + playerUUID;
+				jsonBuilder.append(",\"author\":{\"name\":\"").append(escapeJson(playerUsername)).append("\",");
+				jsonBuilder.append("\"url\":\"").append(escapeJson(userAuthorURL)).append("\",");
+				jsonBuilder.append("\"icon_url\":\"").append(escapeJson(userAuthorURL)).append("\"}");
+			}
+
+			String discordIncludeDate = config.getString("discordIncludeDate");
+			if (Objects.equals(discordIncludeDate, "true")) {
+				jsonBuilder.append(",\"timestamp\":\"").append(new Date().toInstant().toString()).append("\"");
+			}
+
+			List<Map<?, ?>> discordEmbedFields = config.getMapList("discordEmbedFields");
+			if (!discordEmbedFields.isEmpty()) {
+				jsonBuilder.append(",\"fields\":[");
+
+				List<DiscordEmbedDetails> discordDetails = new ArrayList<>();
+				for (Map<?, ?> field : discordEmbedFields) {
+					String name = (String) field.get("name");
+					int id = (int) field.get("id");
+					String value = (String) field.get("value");
+					boolean inline = (boolean) field.get("inline");
+					discordDetails.add(new DiscordEmbedDetails(name, id, value, inline));
+				}
+
+				discordDetails.sort(Comparator.comparingInt(DiscordEmbedDetails::getId));
+
+				boolean firstField = true;
+				for (DiscordEmbedDetails detail : discordDetails) {
+					if (!firstField) {
+						jsonBuilder.append(",");
+					}
+					firstField = false;
+
+					String name = detail.getName();
+					String detailValue = detail.getValue();
+					String value = getValueForField(
+							detailValue,
+							playerUsername,
+							playerWorld,
+							playerLocation,
+							playerGamemode,
+							getStatusNameFromID(Integer.valueOf(playerStatus)),
+							getCategoryIdFromName(category),
+							fullMessage,
+							serverName
+					);
+					Boolean inline = detail.getInline();
+
+					jsonBuilder.append("{");
+					jsonBuilder.append("\"name\":\"").append(escapeJson(name)).append("\",");
+					jsonBuilder.append("\"value\":\"").append(escapeJson(value)).append("\",");
+					jsonBuilder.append("\"inline\":").append(inline);
+					jsonBuilder.append("}");
+				}
+
+				jsonBuilder.append("]");
+			}
+
+			jsonBuilder.append("}]}");
+
+			String jsonPayload = jsonBuilder.toString();
 			byte[] payloadBytes = jsonPayload.getBytes(StandardCharsets.UTF_8);
 
 			SSLSocketFactory sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
@@ -114,6 +189,30 @@ public class LinkDiscord {
 		}
 	}
 
+	private static String getStatusNameFromID(Integer statusID) {
+		if (statusID == 0) {
+			return "Active";
+		}
+
+		List<Map<?, ?>> statuses = config.getMapList("statuses");
+		for (Map<?, ?> statusMap : statuses) {
+			if (statusMap.get("id").equals(statusID)) {
+				return (String) statusMap.get("name");
+			}
+		}
+		return "Unknown Status";
+	}
+
+	private static Integer getCategoryIdFromName(String categoryName) {
+		List<Map<?, ?>> categoryList = config.getMapList("reportCategories");
+		for (Map<?, ?> categoryMap : categoryList) {
+			if (categoryMap.get("name").equals(categoryName)) {
+				return (Integer) categoryMap.get("id");
+			}
+		}
+		return 0;
+	}
+
 	private static @NotNull String escapeJson(String text) {
 		if (text == null) return "";
 		return text.replace("\\", "\\\\")
@@ -123,13 +222,39 @@ public class LinkDiscord {
 				.replace("\t", "\\t");
 	}
 
-	public static void modifyNotification(String bugReportDiscordWebhookID, Color color, String notificationMessage) {
+	public static void modifyNotification(
+			String playerUsername,
+			String playerUUID,
+			String playerWorld,
+			String playerLocation,
+			String playerGamemode,
+			String playerStatus,
+			String category,
+			String serverName,
+			String fullMessage,
+			String bugReportDiscordWebhookID,
+			Color color,
+			String notificationMessage
+	) {
 		if (webhookURL == null || webhookURL.isEmpty()) {
 			plugin.getLogger().info("Webhook URL is not configured. Notification not sent to Discord.");
 			return;
 		}
 
-		modifyDiscordNotification(notificationMessage, color, bugReportDiscordWebhookID);
+		modifyDiscordNotification(
+				playerUsername,
+				playerUUID,
+				playerWorld,
+				playerLocation,
+				playerGamemode,
+				playerStatus,
+				category,
+				serverName,
+				fullMessage,
+				notificationMessage,
+				color,
+				bugReportDiscordWebhookID
+		);
 	}
 
 	public void setWebhookURL(String webhookURL) {
@@ -226,7 +351,7 @@ public class LinkDiscord {
 			String name = detail.getName();
 			String detailValue = detail.getValue();
 
-			String value = getValueForField(detailValue, username, world, location, gamemode, category, message, serverName);
+			String value = getValueForField(detailValue, username, world, location, gamemode, "Active", category, message, serverName);
 
 			Boolean inline = detail.getInline();
 			embedObject.addField(name, value, inline);
@@ -235,12 +360,13 @@ public class LinkDiscord {
 		return sendEmptyEmbedOrDefault(username, embedObject);
 	}
 
-	private @NotNull String getValueForField(
+	private static @NotNull String getValueForField(
 			@NotNull String fieldValue,
 			String username,
 			String world,
 			String location,
 			String gamemode,
+			String status,
 			Integer category,
 			String message,
 			String serverName
@@ -256,7 +382,7 @@ public class LinkDiscord {
 		replacements.put("%report_uuid%", getUserIDFromAPI(username));
 		replacements.put("%report_world%", world);
 		replacements.put("%report_location%", location);
-		replacements.put("%report_status%", "Active");
+		replacements.put("%report_status%", status);
 		replacements.put("%report_gamemode%", gamemode);
 		replacements.put("%report_category%", getCategoryName(category));
 		replacements.put("%report_server_name%", serverName);
@@ -354,7 +480,7 @@ public class LinkDiscord {
 		return discordWebhookResult;
 	}
 
-	private String getCategoryName(Integer category) {
+	private static String getCategoryName(Integer category) {
 		List<Map<?, ?>> categoryList = config.getMapList("reportCategories");
 		for (Map<?, ?> categoryMap : categoryList) {
 			if (categoryMap.get("id").equals(category)) {
@@ -364,7 +490,7 @@ public class LinkDiscord {
 		return "Unknown Category";
 	}
 
-	private @NotNull String getUserIDFromAPI(String username) {
+	private static @NotNull String getUserIDFromAPI(String username) {
 		String url = "https://playerdb.co/api/player/minecraft/" + username;
 		StringBuilder content = new StringBuilder();
 

@@ -112,23 +112,79 @@ public class BugReportDatabase {
 		return 0;
 	}
 
-	public static String getBugReportById(int reportId, boolean isArchived) {
+	private static @NotNull String getField(@NotNull String input, String fieldName) {
+		String[] lines = input.split("\n");
+
+		String prefix = fieldName + ": ";
+		for (String line : lines) {
+			if (line.startsWith(prefix)) {
+				return line.substring(prefix.length());
+			}
+		}
+
+		return "Unknown";
+	}
+
+	public static @NotNull Map<String, String> getBugReportById(int reportId) {
+		Map<String, String> allData = new HashMap<>();
+
+		try (Connection connection = dataSource.getConnection()) {
+			PreparedStatement statement = connection.prepareStatement("SELECT * FROM bug_reports WHERE report_id = ?");
+			statement.setInt(1, reportId);
+			ResultSet resultSet = statement.executeQuery();
+
+			if (resultSet.next()) {
+				String Username = resultSet.getString("username");
+				String UUID = resultSet.getString("player_id");
+				String World = resultSet.getString("world");
+				String FullMessage = resultSet.getString("message");
+
+				String Header = resultSet.getString("header");
+				String CategoryID = getField(Header, "Category ID");
+
+				String Location = resultSet.getString("location");
+				String Gamemode = resultSet.getString("gamemode");
+				String Status = resultSet.getString("status");
+				String ServerName = resultSet.getString("serverName");
+
+				allData.put("Username", Username);
+				allData.put("UUID", UUID);
+				allData.put("World", World);
+				allData.put("FullMessage", FullMessage);
+				allData.put("Header", Header);
+				allData.put("CategoryID", CategoryID);
+				allData.put("Location", Location);
+				allData.put("Gamemode", Gamemode);
+				allData.put("Status", Status);
+				allData.put("ServerName", ServerName);
+			}
+
+			resultSet.close();
+			statement.close();
+		} catch (SQLException e) {
+			plugin.getLogger().severe("Failed to get bug report by ID.");
+			plugin.getLogger().severe(e.getMessage());
+		}
+
+		return allData;
+	}
+
+	public static @NotNull String getBugReportById(int reportId, boolean isArchived) {
 		StringBuilder reportBuilder = new StringBuilder();
 
 		try (Connection connection = dataSource.getConnection()) {
-			PreparedStatement statement = connection.prepareStatement(
-					"SELECT * FROM bug_reports WHERE report_id = ? AND archived = ?");
+			PreparedStatement statement = connection.prepareStatement("SELECT * FROM bug_reports WHERE report_id = ? AND archived = ?");
 			statement.setInt(1, reportId);
 			statement.setInt(2, isArchived ? 1 : 0);
 
 			ResultSet resultSet = statement.executeQuery();
 
 			if (resultSet.next()) {
-				String playerId = resultSet.getString("player_id");
-				String header = resultSet.getString("header");
-				String fullMessage = resultSet.getString("message");
 				String username = resultSet.getString("username");
+				String playerId = resultSet.getString("player_id");
 				String world = resultSet.getString("world");
+				String fullMessage = resultSet.getString("message");
+				String header = resultSet.getString("header");
 				String archived = resultSet.getString("archived");
 				String report_id = resultSet.getString("report_id");
 				long timestamp = resultSet.getLong("timestamp");
@@ -137,7 +193,8 @@ public class BugReportDatabase {
 				String serverName = resultSet.getString("serverName");
 				String status = resultSet.getString("status");
 
-				reportBuilder.append("Username: ").append(username).append("\n")
+				reportBuilder
+						.append("Username: ").append(username).append("\n")
 						.append("UUID: ").append(playerId).append("\n")
 						.append("World: ").append(world).append("\n")
 						.append("Full Message: ").append(fullMessage).append("\n")
