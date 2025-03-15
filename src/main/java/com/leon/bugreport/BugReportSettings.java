@@ -906,17 +906,17 @@ public class BugReportSettings {
 
 			ItemStack enableTitleMessage = createButton(Material.PAPER, ChatColor.YELLOW + getValueFromLanguageFile("buttonNames.enableTitleMessage", "Enable Title Message"));
 			ItemStack enablePlayerHeads = createButton(Material.PLAYER_HEAD, ChatColor.YELLOW + getValueFromLanguageFile("buttonNames.enablePlayerHeads", "Enable Player Heads"));
-			ItemStack enableReportBook = createButton(Material.WRITABLE_BOOK, ChatColor.YELLOW + getValueFromLanguageFile("buttonNames.enableReportBook", "Enable Report Book"));
+//			ItemStack enableReportBook = createButton(Material.WRITABLE_BOOK, ChatColor.YELLOW + getValueFromLanguageFile("buttonNames.enableReportBook", "Enable Report Book"));
 			ItemStack onIcon = createButton(Material.LIME_DYE, ChatColor.GREEN + getValueFromLanguageFile("buttonNames.true", "On"));
 			ItemStack offIcon = createButton(Material.GRAY_DYE, ChatColor.RED + getValueFromLanguageFile("buttonNames.false", "Off"));
 
 			gui.setItem(10, enableTitleMessage);
 			gui.setItem(11, enablePlayerHeads);
-			gui.setItem(12, enableReportBook);
+//			gui.setItem(12, enableReportBook);
 
 			gui.setItem(19, getTitleMessage() ? onIcon : offIcon);
 			gui.setItem(20, getPlayerHead() ? onIcon : offIcon);
-			gui.setItem(21, getReportBook() ? onIcon : offIcon);
+//			gui.setItem(21, getReportBook() ? onIcon : offIcon);
 
 			gui.setItem(40, createButton(Material.BARRIER, ChatColor.RED + getValueFromLanguageFile("buttonNames.back", "Back")));
 
