@@ -45,13 +45,35 @@ public class LinkDiscord {
 			String playerLocation,
 			String playerGamemode,
 			String playerStatus,
-			String category,
+			Integer category,
 			String serverName,
 			String fullMessage,
 			String notificationMessage,
 			Color color,
 			String bugReportDiscordWebhookID
 	) {
+		String newCategory;
+
+		playerUsername = validateParam("playerUsername", playerUsername, "Unknown Player");
+		playerUUID = validateParam("playerUUID", playerUUID, "");
+		playerWorld = validateParam("playerWorld", playerWorld, "Unknown World");
+		playerLocation = validateParam("playerLocation", playerLocation, "Unknown Location");
+		playerGamemode = validateParam("playerGamemode", playerGamemode, "Unknown Gamemode");
+		playerStatus = validateParam("playerStatus", playerStatus, "0");
+		newCategory = validateParam("category", getCategoryName(category), "Unknown Category");
+		serverName = validateParam("serverName", serverName, "Unknown Server");
+		fullMessage = validateParam("fullMessage", fullMessage, "");
+		notificationMessage = validateParam("notificationMessage", notificationMessage, "Bug Report");
+
+		if (color == null) {
+			String errorMessage = "Error: color is null";
+			plugin.getLogger().warning(errorMessage);
+			logErrorMessage(errorMessage);
+			color = Color.RED;
+		}
+
+		bugReportDiscordWebhookID = validateParam("bugReportDiscordWebhookID", bugReportDiscordWebhookID, "");
+
 		String webhookURL = config.getString("webhookURL", "");
 		if (webhookURL.isEmpty()) {
 			String errorMessage = ErrorMessages.getErrorMessage(24);
@@ -102,16 +124,7 @@ public class LinkDiscord {
 			if (!discordEmbedFields.isEmpty()) {
 				jsonBuilder.append(",\"fields\":[");
 
-				List<DiscordEmbedDetails> discordDetails = new ArrayList<>();
-				for (Map<?, ?> field : discordEmbedFields) {
-					String name = (String) field.get("name");
-					int id = (int) field.get("id");
-					String value = (String) field.get("value");
-					boolean inline = (boolean) field.get("inline");
-					discordDetails.add(new DiscordEmbedDetails(name, id, value, inline));
-				}
-
-				discordDetails.sort(Comparator.comparingInt(DiscordEmbedDetails::getId));
+				List<DiscordEmbedDetails> discordDetails = getDiscordEmbedDetails(discordEmbedFields);
 
 				boolean firstField = true;
 				for (DiscordEmbedDetails detail : discordDetails) {
@@ -129,7 +142,7 @@ public class LinkDiscord {
 							playerLocation,
 							playerGamemode,
 							getStatusNameFromID(Integer.valueOf(playerStatus)),
-							getCategoryIdFromName(category),
+							newCategory,
 							fullMessage,
 							serverName
 					);
@@ -183,10 +196,34 @@ public class LinkDiscord {
 				logErrorMessage(errorMessage);
 			}
 		} catch (Exception e) {
-			String errorMessage = ErrorMessages.getErrorMessageWithAdditionalMessage(25, "Error editing Discord message: " + e.getMessage());
+			String errorMessage = ErrorMessages.getErrorMessageWithAdditionalMessage(25, "Error sending Discord Edit message: " + e.getMessage());
 			plugin.getLogger().warning(errorMessage);
 			logErrorMessage(errorMessage);
 		}
+	}
+
+	private static List<DiscordEmbedDetails> getDiscordEmbedDetails(List<Map<?, ?>> discordEmbedFields) {
+		List<DiscordEmbedDetails> discordDetails = new ArrayList<>();
+		for (Map<?, ?> field : discordEmbedFields) {
+			String name = (String) field.get("name");
+			int id = (int) field.get("id");
+			String value = (String) field.get("value");
+			boolean inline = (boolean) field.get("inline");
+			discordDetails.add(new DiscordEmbedDetails(name, id, value, inline));
+		}
+
+		discordDetails.sort(Comparator.comparingInt(DiscordEmbedDetails::getId));
+		return discordDetails;
+	}
+
+	private static String validateParam(String paramName, String value, String defaultValue) {
+		if (value == null) {
+			String errorMessage = "Error: " + paramName + " is null";
+			plugin.getLogger().warning(errorMessage);
+			logErrorMessage(errorMessage);
+			return defaultValue;
+		}
+		return value;
 	}
 
 	private static String getStatusNameFromID(Integer statusID) {
@@ -201,16 +238,6 @@ public class LinkDiscord {
 			}
 		}
 		return "Unknown Status";
-	}
-
-	private static Integer getCategoryIdFromName(String categoryName) {
-		List<Map<?, ?>> categoryList = config.getMapList("reportCategories");
-		for (Map<?, ?> categoryMap : categoryList) {
-			if (categoryMap.get("name").equals(categoryName)) {
-				return (Integer) categoryMap.get("id");
-			}
-		}
-		return 0;
 	}
 
 	private static @NotNull String escapeJson(String text) {
@@ -229,7 +256,7 @@ public class LinkDiscord {
 			String playerLocation,
 			String playerGamemode,
 			String playerStatus,
-			String category,
+			Integer category,
 			String serverName,
 			String fullMessage,
 			String bugReportDiscordWebhookID,
@@ -255,6 +282,100 @@ public class LinkDiscord {
 				color,
 				bugReportDiscordWebhookID
 		);
+	}
+
+	private static @NotNull String getValueForField(
+			@NotNull String fieldValue,
+			String username,
+			String world,
+			String location,
+			String gamemode,
+			String status,
+			String category,
+			String message,
+			String serverName
+	) {
+		Player player = Bukkit.getPlayer(username);
+
+		if (player != null && PlaceholderAPI.containsPlaceholders(fieldValue)) {
+			fieldValue = PlaceholderAPI.setPlaceholders(player, fieldValue);
+		}
+
+		Map<String, String> replacements = new HashMap<>();
+		replacements.put("%report_username%", username);
+		replacements.put("%report_uuid%", getUserIDFromAPI(username));
+		replacements.put("%report_world%", world);
+		replacements.put("%report_location%", location);
+		replacements.put("%report_status%", status);
+		replacements.put("%report_gamemode%", gamemode);
+		replacements.put("%report_category%", category);
+		replacements.put("%report_server_name%", serverName);
+		replacements.put("%report_full_message%", message);
+
+		for (Map.Entry<String, String> entry : replacements.entrySet()) {
+			fieldValue = fieldValue.replace(entry.getKey(), entry.getValue());
+		}
+
+		return fieldValue;
+	}
+
+	private static String getCategoryName(Integer category) {
+		if (category == null) {
+			return "Unknown Category";
+		}
+
+		List<Map<?, ?>> categoryList = config.getMapList("reportCategories");
+		for (Map<?, ?> categoryMap : categoryList) {
+			if (categoryMap.get("id").equals(category)) {
+				return (String) categoryMap.get("name");
+			}
+		}
+
+		return "Unknown Category";
+	}
+
+	private static @NotNull String getUserIDFromAPI(String username) {
+		String url = "https://playerdb.co/api/player/minecraft/" + username;
+		StringBuilder content = new StringBuilder();
+
+		try {
+			URL playerdb = new URL(url);
+			HttpURLConnection connection = (HttpURLConnection) playerdb.openConnection();
+
+			connection.setRequestMethod("GET");
+			connection.setRequestProperty("Content-Type", "application/json");
+			connection.setRequestProperty("User-Agent", "BugReport/0.14.0");
+			connection.setConnectTimeout(5000);
+			connection.setReadTimeout(5000);
+			connection.setDoOutput(true);
+
+			BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+			String inputLine;
+			while ((inputLine = in.readLine()) != null) {
+				content.append(inputLine);
+			}
+			in.close();
+			connection.disconnect();
+			errorLogged = false;
+		} catch (Exception e) {
+			if (!errorLogged) {
+				String errorMessage = ErrorMessages.getErrorMessageWithAdditionalMessage(42, e.getMessage());
+
+				plugin.getLogger().warning(errorMessage);
+				logErrorMessage(errorMessage);
+
+				errorLogged = true;
+			}
+			return "Unknown UUID";
+		}
+
+		String[] splitContent = content.toString().split("\"raw_id\":\"");
+
+		if (splitContent.length > 1) {
+			return splitContent[1].split("\"")[0];
+		} else {
+			return "Unknown UUID";
+		}
 	}
 
 	public void setWebhookURL(String webhookURL) {
@@ -333,66 +454,22 @@ public class LinkDiscord {
 			String serverName,
 			@NotNull List<Map<?, ?>> discordEmbedFields
 	) {
-		List<DiscordEmbedDetails> discordDetails = new ArrayList<>();
-
-		for (Map<?, ?> field : discordEmbedFields) {
-			String name = (String) field.get("name");
-			int id = (int) field.get("id");
-			String value = (String) field.get("value");
-			boolean inline = (boolean) field.get("inline");
-			discordDetails.add(new DiscordEmbedDetails(name, id, value, inline));
-		}
-
-		discordDetails.sort(Comparator.comparingInt(DiscordEmbedDetails::getId));
-
+		List<DiscordEmbedDetails> discordDetails = getDiscordEmbedDetails(discordEmbedFields);
 		DiscordWebhook.EmbedObject embedObject = generateDefaultEmbed();
 
 		for (DiscordEmbedDetails detail : discordDetails) {
 			String name = detail.getName();
 			String detailValue = detail.getValue();
 
-			String value = getValueForField(detailValue, username, world, location, gamemode, "Active", category, message, serverName);
+			String newCategory = getCategoryName(category);
+
+			String value = getValueForField(detailValue, username, world, location, gamemode, "Active", newCategory, message, serverName);
 
 			Boolean inline = detail.getInline();
 			embedObject.addField(name, value, inline);
 		}
 
 		return sendEmptyEmbedOrDefault(username, embedObject);
-	}
-
-	private static @NotNull String getValueForField(
-			@NotNull String fieldValue,
-			String username,
-			String world,
-			String location,
-			String gamemode,
-			String status,
-			Integer category,
-			String message,
-			String serverName
-	) {
-		Player player = Bukkit.getPlayer(username);
-
-		if (player != null && PlaceholderAPI.containsPlaceholders(fieldValue)) {
-			fieldValue = PlaceholderAPI.setPlaceholders(player, fieldValue);
-		}
-
-		Map<String, String> replacements = new HashMap<>();
-		replacements.put("%report_username%", username);
-		replacements.put("%report_uuid%", getUserIDFromAPI(username));
-		replacements.put("%report_world%", world);
-		replacements.put("%report_location%", location);
-		replacements.put("%report_status%", status);
-		replacements.put("%report_gamemode%", gamemode);
-		replacements.put("%report_category%", getCategoryName(category));
-		replacements.put("%report_server_name%", serverName);
-		replacements.put("%report_full_message%", message);
-
-		for (Map.Entry<String, String> entry : replacements.entrySet()) {
-			fieldValue = fieldValue.replace(entry.getKey(), entry.getValue());
-		}
-
-		return fieldValue;
 	}
 
 	private String sendEmbed(DiscordWebhook.EmbedObject embedObject) {
@@ -478,59 +555,5 @@ public class LinkDiscord {
 		}
 
 		return discordWebhookResult;
-	}
-
-	private static String getCategoryName(Integer category) {
-		List<Map<?, ?>> categoryList = config.getMapList("reportCategories");
-		for (Map<?, ?> categoryMap : categoryList) {
-			if (categoryMap.get("id").equals(category)) {
-				return (String) categoryMap.get("name");
-			}
-		}
-		return "Unknown Category";
-	}
-
-	private static @NotNull String getUserIDFromAPI(String username) {
-		String url = "https://playerdb.co/api/player/minecraft/" + username;
-		StringBuilder content = new StringBuilder();
-
-		try {
-			URL playerdb = new URL(url);
-			HttpURLConnection connection = (HttpURLConnection) playerdb.openConnection();
-
-			connection.setRequestMethod("GET");
-			connection.setRequestProperty("Content-Type", "application/json");
-			connection.setRequestProperty("User-Agent", "BugReport/0.13.0");
-			connection.setConnectTimeout(5000);
-			connection.setReadTimeout(5000);
-			connection.setDoOutput(true);
-
-			BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-			String inputLine;
-			while ((inputLine = in.readLine()) != null) {
-				content.append(inputLine);
-			}
-			in.close();
-			connection.disconnect();
-			errorLogged = false;
-		} catch (Exception e) {
-			if (!errorLogged) {
-				String errorMessage = ErrorMessages.getErrorMessageWithAdditionalMessage(42, e.getMessage());
-
-				plugin.getLogger().warning(errorMessage);
-				logErrorMessage(errorMessage);
-
-				errorLogged = true;
-			}
-			return "Unknown UUID";
-		}
-
-		String[] splitContent = content.toString().split("\"raw_id\":\"");
-
-		if (splitContent.length > 1) {
-			return splitContent[1].split("\"")[0];
-		} else {
-			return "Unknown UUID";
-		}
 	}
 }

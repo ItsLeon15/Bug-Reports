@@ -912,12 +912,19 @@ public class BugReportManager implements Listener {
 				String bugReportDiscordWebhookID = BugReportDatabase.getBugReportDiscordWebhookMessageID(reportID);
 				if (bugReportDiscordWebhookID != null) {
 					Map<String, String> fullBugReportSplit = BugReportDatabase.getBugReportById(reportIDGUI);
+					System.out.println("UN-ARCHIVED bug report split: " + fullBugReportSplit);
 
 					String Username = fullBugReportSplit.get("Username");
 					String UUID = fullBugReportSplit.get("UUID");
 					String World = fullBugReportSplit.get("World");
 					String FullMessage = fullBugReportSplit.get("FullMessage");
+
 					String CategoryID = fullBugReportSplit.get("CategoryID");
+					if (CategoryID == null || CategoryID.equals("Unknown")) {
+						CategoryID = "0";
+					}
+					Integer FinalCategory = Integer.valueOf(CategoryID);
+
 					String Location = fullBugReportSplit.get("Location");
 					String Gamemode = fullBugReportSplit.get("Gamemode");
 					String Status = fullBugReportSplit.get("Status");
@@ -930,7 +937,7 @@ public class BugReportManager implements Listener {
 							Location,
 							Gamemode,
 							Status,
-							CategoryID,
+							FinalCategory,
 							ServerName,
 							FullMessage,
 							bugReportDiscordWebhookID,
