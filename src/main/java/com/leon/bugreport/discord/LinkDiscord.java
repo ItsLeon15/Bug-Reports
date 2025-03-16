@@ -28,7 +28,7 @@ import static com.leon.bugreport.commands.BugReportCommand.stringColorToColorCod
 
 public class LinkDiscord {
 	private static final String EMBED_TITLE = "New Bug Report";
-	private static final String EMBED_FOOTER_TEXT = "Bug Report V0.13.0";
+	private static final String EMBED_FOOTER_TEXT = "Bug Report V0.14.0";
 	private static final String EMBED_THUMBNAIL = "https://www.spigotmc.org/data/resource_icons/110/110732.jpg";
 	private static final Color EMBED_COLOR = Color.YELLOW;
 	private static boolean errorLogged = false;
@@ -156,7 +156,7 @@ public class LinkDiscord {
 			String requestBuilder = "PATCH " + path + " HTTP/1.1\r\n" +
 					"Host: " + host + "\r\n" +
 					"Content-Type: application/json\r\n" +
-					"User-Agent: BugReport/0.13.0\r\n" +
+					"User-Agent: BugReport/0.14.0\r\n" +
 					"Content-Length: " + payloadBytes.length + "\r\n" +
 					"Connection: close\r\n" +
 					"\r\n";

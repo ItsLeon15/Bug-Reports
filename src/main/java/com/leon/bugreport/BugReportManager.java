@@ -201,7 +201,7 @@ public class BugReportManager implements Listener {
 		defaults.put("update-checker-join", true);
 		defaults.put("discordEmbedColor", "Yellow");
 		defaults.put("discordEmbedTitle", "New Bug Report");
-		defaults.put("discordEmbedFooter", "Bug Report V0.13.0");
+		defaults.put("discordEmbedFooter", "Bug Report V0.14.0");
 		defaults.put("discordEmbedThumbnail", "https://www.spigotmc.org/data/resource_icons/110/110732.jpg");
 		defaults.put("discordEnableThumbnail", true);
 		defaults.put("discordEnableUserAuthor", true);

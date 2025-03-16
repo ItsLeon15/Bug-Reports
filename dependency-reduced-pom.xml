@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.leon.bugreport</groupId>
   <artifactId>BugReports</artifactId>
-  <version>0.13.0</version>
+  <version>0.14.0</version>
   <build>
     <plugins>
       <plugin>
@@ -94,7 +94,7 @@
     <dependency>
       <groupId>me.clip</groupId>
       <artifactId>placeholderapi</artifactId>
-      <version>2.11.1</version>
+      <version>2.11.6</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
