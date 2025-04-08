@@ -47,18 +47,18 @@ language selector and more!
 
 ## Bug List GUI
 
-![https://www.spigotmc.org/attachments/bug-report-list-gui-png.795626/](https://cdn.platinumhost.io/storage/images/BugReport/bug-report-list-gui.webp)
+![https://cdn.platinumhost.io/storage/images/BugReport/Bug%20Report%20List%20GUI.webp](https://cdn.platinumhost.io/storage/images/BugReport/Bug%20Report%20List%20GUI.webp)
 
 ## Bug Details GUI
 
-![https://cdn.platinumhost.io/storage/images/BugReport/bug-report-details.webp](https://cdn.platinumhost.io/storage/images/BugReport/bug-report-details.webp)
+![https://cdn.platinumhost.io/storage/images/BugReport/Bug%20Report%20Details.webp](https://cdn.platinumhost.io/storage/images/BugReport/Bug%20Report%20Details.webp)
 
 ## Plan Support
 
 Bug Report now supports the Plan API. To use Bug Report with Plan, you will need to install Plan onto your Spigot Server
 and it should set up everything automatically.
 
-![https://cdn.platinumhost.io/storage/images/BugReport/bug-report-details.webp](https://cdn.platinumhost.io/storage/images/BugReport/plan-bug-report.webp)
+![https://cdn.platinumhost.io/storage/images/BugReport/Bug%20Report%20Plan.webp](https://cdn.platinumhost.io/storage/images/BugReport/Bug%20Report%20Plan.webp)
 
 ## Placeholder API Support
 
